@@ -1,0 +1,20 @@
+{
+  "name": "verbum/studio",
+  "description": "Verbum Studio Core WordPress plugin.",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
+  "autoload": {
+    "psr-4": {
+      "VerbumStudio\\": "src/"
+    }
+  },
+  "require": {
+    "php": ">=7.4"
+  },
+  "scripts": {
+    "test": "php tests/run.php"
+  },
+  "config": {
+    "optimize-autoloader": true
+  }
+}
