@@ -1,7 +1,8 @@
 import { apiGet, apiPatch, apiPost } from './api-client';
-import type { CreateBookInput, CreateProjectInput, LibraryData, VerbumBook, VerbumProject } from '../types/verbum';
+import type { CreateBookInput, CreateProjectInput, LibraryData, VerbumBook, VerbumProject, WorkWorkspaceData } from '../types/verbum';
 
 export const getLibrary = () => apiGet<LibraryData>('/library');
+export const getWorkWorkspace = (id: string) => apiGet<WorkWorkspaceData>(`/books/${id}/workspace`);
 export const createProject = (input: CreateProjectInput) => apiPost<VerbumProject>('/projects', input);
 export const updateProject = (id: string, input: CreateProjectInput) => apiPatch<VerbumProject>(`/projects/${id}`, input);
 export const archiveProject = (id: string) => apiPost<VerbumProject>(`/projects/${id}/archive`);

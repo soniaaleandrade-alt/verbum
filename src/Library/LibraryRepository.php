@@ -9,6 +9,20 @@ use VerbumStudio\Exceptions\ValidationError;
 
 final class LibraryRepository
 {
+    private const WORKFLOW_STAGES = [
+        'identification' => 'Identificação',
+        'project' => 'Projeto da Obra',
+        'planning' => 'Planejamento',
+        'development' => 'Desenvolvimento',
+        'general_review' => 'Revisão Geral',
+        'versions' => 'Controle de Versões',
+        'audit' => 'Auditoria',
+        'editorial_desk' => 'Mesa Editorial',
+        'layout' => 'Diagramação',
+        'legal' => 'Trâmites Legais',
+        'publication' => 'Publicação',
+    ];
+
     private const BOOK_META_FIELDS = [
         'subtitle',
         'series',
@@ -47,6 +61,58 @@ final class LibraryRepository
         return [
             'projects' => array_map(fn (\WP_Post $post): array => $this->projectData($post), $projects),
             'books' => array_map(fn (\WP_Post $post): array => $this->bookData($post), $books),
+        ];
+    }
+
+    /** @return array<string, mixed> */
+    public function workspaceForBook(int $userId, int $bookId): array
+    {
+        $book = $this->ownedPost($bookId, LibraryPostTypes::BOOK, $userId);
+        $projectId = (int) get_post_meta($bookId, '_verbum_project_id', true);
+        $project = $this->ownedPost($projectId, LibraryPostTypes::PROJECT, $userId);
+        $currentStage = (string) (get_post_meta($bookId, '_verbum_stage', true) ?: 'identification');
+
+        if (! array_key_exists($currentStage, self::WORKFLOW_STAGES)) {
+            $currentStage = 'identification';
+        }
+
+        $stageKeys = array_keys(self::WORKFLOW_STAGES);
+        $currentIndex = array_search($currentStage, $stageKeys, true);
+        $completedMeta = get_post_meta($bookId, '_verbum_completed_stages', true);
+        $completedMeta = is_array($completedMeta) ? $completedMeta : [];
+        $workflow = [];
+        $completedCount = 0;
+
+        foreach (self::WORKFLOW_STAGES as $key => $label) {
+            $index = array_search($key, $stageKeys, true);
+            $completed = in_array($key, $completedMeta, true) || ($currentIndex !== false && $index < $currentIndex);
+            $status = $completed ? 'completed' : ($key === $currentStage ? 'in_progress' : 'locked');
+            if ($completed) {
+                $completedCount++;
+            }
+            $workflow[] = [
+                'key' => $key,
+                'label' => $label,
+                'status' => $status,
+                'order' => $index + 1,
+            ];
+        }
+
+        $progress = (int) round(($completedCount / count(self::WORKFLOW_STAGES)) * 100);
+
+        return [
+            'book' => $this->bookData($book),
+            'project' => $this->projectData($project),
+            'currentStage' => $currentStage,
+            'workflow' => $workflow,
+            'metrics' => [
+                'imo' => null,
+                'rme' => null,
+                'progress' => $progress,
+                'chapters' => 0,
+                'words' => (int) get_post_meta($bookId, '_verbum_word_count', true),
+                'lastEdited' => mysql_to_rfc3339($book->post_modified_gmt ?: $book->post_modified),
+            ],
         ];
     }
 
@@ -103,6 +169,7 @@ final class LibraryRepository
         update_post_meta($bookId, '_verbum_project_id', $projectId);
         update_post_meta($bookId, '_verbum_status', 'active');
         update_post_meta($bookId, '_verbum_stage', 'identification');
+        update_post_meta($bookId, '_verbum_completed_stages', []);
         $this->saveBookMeta($bookId, $fields);
 
         return $this->bookData($this->ownedPost($bookId, LibraryPostTypes::BOOK, $userId));

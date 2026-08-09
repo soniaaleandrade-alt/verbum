@@ -7,6 +7,19 @@ export type CurrentUser = { id: string; name: string; email: string };
 
 export type ProjectStatus = 'active' | 'archived';
 export type BookStatus = 'active' | 'archived';
+export type WorkflowStageStatus = 'locked' | 'available' | 'in_progress' | 'completed';
+export type WorkStageKey =
+  | 'identification'
+  | 'project'
+  | 'planning'
+  | 'development'
+  | 'general_review'
+  | 'versions'
+  | 'audit'
+  | 'editorial_desk'
+  | 'layout'
+  | 'legal'
+  | 'publication';
 
 export type VerbumProject = {
   id: string;
@@ -48,9 +61,33 @@ export type VerbumBook = {
   icon?: string;
   notes?: string;
   status: BookStatus;
-  stage: string;
+  stage: WorkStageKey | string;
   createdAt: string;
   updatedAt: string;
+};
+
+export type WorkWorkflowStep = {
+  key: WorkStageKey;
+  label: string;
+  status: WorkflowStageStatus;
+  order: number;
+};
+
+export type WorkMetrics = {
+  imo: number | null;
+  rme: number | null;
+  progress: number;
+  chapters: number;
+  words: number;
+  lastEdited: string;
+};
+
+export type WorkWorkspaceData = {
+  book: VerbumBook;
+  project: VerbumProject;
+  currentStage: WorkStageKey;
+  workflow: WorkWorkflowStep[];
+  metrics: WorkMetrics;
 };
 
 export type LibraryData = {

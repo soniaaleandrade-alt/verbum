@@ -65,6 +65,12 @@ final class LibraryController
                 'permission_callback' => $permission,
             ]);
 
+            register_rest_route($namespace, '/books/(?P<id>\d+)/workspace', [
+                'methods' => 'GET',
+                'callback' => [$this, 'workspace'],
+                'permission_callback' => $permission,
+            ]);
+
             register_rest_route($namespace, '/books/(?P<id>\d+)/archive', [
                 'methods' => 'POST',
                 'callback' => [$this, 'archiveBook'],
@@ -82,6 +88,17 @@ final class LibraryController
     {
         try {
             return $this->responses->success($this->library->libraryForUser(get_current_user_id()));
+        } catch (\Throwable $exception) {
+            return $this->responses->error($exception);
+        }
+    }
+
+    public function workspace(\WP_REST_Request $request): \WP_REST_Response
+    {
+        try {
+            return $this->responses->success(
+                $this->library->workspaceForBook(get_current_user_id(), (int) $request['id'])
+            );
         } catch (\Throwable $exception) {
             return $this->responses->error($exception);
         }
