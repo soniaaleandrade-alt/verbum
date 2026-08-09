@@ -1,11 +1,11 @@
 # Sprint 06 — Projeto da Obra
 
-**Projeto:** Verbum Studio — Sistema Operacional para Escritores  
-**Módulo:** Workspace da Obra  
-**Etapa:** Projeto da Obra  
-**Versão:** 1.0  
-**Prioridade:** Alta  
-**Status:** Implementado em branch, aguardando PR/merge  
+**Projeto:** Verbum Studio — Sistema Operacional para Escritores
+**Módulo:** Workspace da Obra
+**Etapa:** Projeto da Obra
+**Versão:** 1.0
+**Prioridade:** Alta
+**Status:** Implementado em branch, aguardando merge
 **Dependência:** Sprint 05 — Identificação da Obra
 
 ## Objetivo
@@ -108,7 +108,7 @@ Não fazem parte deste Sprint: Planejamento, estrutura inicial, índice, capítu
 
 ## Registro de implementação
 
-**Branch:** `sprint-06-projeto-da-obra`  
-**PR:** A definir  
-**Commit de merge:** A definir  
-**CI:** A definir
+**Branch:** `sprint-06-projeto-da-obra`
+**PR:** #8
+**Commit de merge:** A definir
+**CI:** Aguardando validação final
