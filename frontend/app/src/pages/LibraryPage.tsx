@@ -33,12 +33,14 @@ export function LibraryPage({
   const [status, setStatus] = useState<'active' | 'archived' | 'all'>('active');
   const [projectDialog, setProjectDialog] = useState<VerbumProject | 'new' | null>(null);
   const [bookDialog, setBookDialog] = useState<VerbumBook | 'new' | null>(null);
+  const [defaultBookProjectId, setDefaultBookProjectId] = useState('');
   const [actionError, setActionError] = useState('');
 
   const projects = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase('pt-BR');
     return data.projects.filter((project) => {
-      if (status !== 'all' && project.status !== status) return false;
+      const hasBookWithStatus = status !== 'all' && data.books.some((book) => book.projectId === project.id && book.status === status);
+      if (status !== 'all' && project.status !== status && !hasBookWithStatus) return false;
       if (!normalized) return true;
       const projectMatches = `${project.name} ${project.description}`.toLocaleLowerCase('pt-BR').includes(normalized);
       const bookMatches = data.books.some((book) => book.projectId === project.id && `${book.title} ${book.subtitle ?? ''} ${book.genre ?? ''}`.toLocaleLowerCase('pt-BR').includes(normalized));
@@ -48,6 +50,16 @@ export function LibraryPage({
 
   const activeProjects = data.projects.filter((project) => project.status === 'active');
   const activeBooks = data.books.filter((book) => book.status === 'active');
+
+  function openNewBook(projectId = '') {
+    setDefaultBookProjectId(projectId);
+    setBookDialog('new');
+  }
+
+  function closeBookDialog() {
+    setBookDialog(null);
+    setDefaultBookProjectId('');
+  }
 
   async function archiveProject(project: VerbumProject) {
     if (!window.confirm(`Arquivar o projeto “${project.name}” e suas obras?`)) return;
@@ -79,7 +91,7 @@ export function LibraryPage({
         </div>
         <div className="verbum-page-actions">
           <button type="button" className="verbum-secondary-button" onClick={() => setProjectDialog('new')}>Novo projeto</button>
-          <button type="button" className="verbum-primary-button" onClick={() => setBookDialog('new')} disabled={activeProjects.length === 0}>Criar nova obra</button>
+          <button type="button" className="verbum-primary-button" onClick={() => openNewBook()} disabled={activeProjects.length === 0}>Criar nova obra</button>
         </div>
       </section>
 
@@ -154,7 +166,10 @@ export function LibraryPage({
                         key={book.id}
                         book={book}
                         projectName={project.name}
-                        onEdit={() => setBookDialog(book)}
+                        onEdit={() => {
+                          setDefaultBookProjectId('');
+                          setBookDialog(book);
+                        }}
                         onArchive={() => archiveBook(book)}
                       />
                     ))}
@@ -162,7 +177,7 @@ export function LibraryPage({
                 ) : (
                   <div className="verbum-project-empty">
                     <p>Nenhuma obra neste projeto.</p>
-                    {project.status === 'active' && <button type="button" className="verbum-text-button" onClick={() => setBookDialog('new')}>Adicionar obra</button>}
+                    {project.status === 'active' && <button type="button" className="verbum-text-button" onClick={() => openNewBook(project.id)}>Adicionar obra</button>}
                   </div>
                 )}
               </section>
@@ -181,7 +196,8 @@ export function LibraryPage({
         open={bookDialog !== null}
         projects={data.projects}
         book={bookDialog && bookDialog !== 'new' ? bookDialog : null}
-        onClose={() => setBookDialog(null)}
+        defaultProjectId={defaultBookProjectId}
+        onClose={closeBookDialog}
         onSave={(input) => bookDialog && bookDialog !== 'new' ? onUpdateBook(bookDialog, input) : onCreateBook(input)}
       />
     </div>
