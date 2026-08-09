@@ -5,6 +5,7 @@ type BookDialogProps = {
   open: boolean;
   projects: VerbumProject[];
   book?: VerbumBook | null;
+  defaultProjectId?: string;
   onClose: () => void;
   onSave: (input: CreateBookInput) => Promise<void>;
 };
@@ -57,7 +58,7 @@ const emptyForm: FormState = {
   notes: '',
 };
 
-export function BookDialog({ open, projects, book, onClose, onSave }: BookDialogProps) {
+export function BookDialog({ open, projects, book, defaultProjectId, onClose, onSave }: BookDialogProps) {
   const [form, setForm] = useState<FormState>(emptyForm);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -88,12 +89,14 @@ export function BookDialog({ open, projects, book, onClose, onSave }: BookDialog
       notes: book.notes ?? '',
     } : {
       ...emptyForm,
-      projectId: projects.find((project) => project.status === 'active')?.id ?? '',
+      projectId: defaultProjectId || projects.find((project) => project.status === 'active')?.id || '',
     });
     setError('');
-  }, [open, book, projects]);
+  }, [open, book, projects, defaultProjectId]);
 
   if (!open) return null;
+
+  const selectableProjects = projects.filter((project) => project.status === 'active' || project.id === book?.projectId);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -168,7 +171,7 @@ export function BookDialog({ open, projects, book, onClose, onSave }: BookDialog
                 <span>Projeto *</span>
                 <select value={form.projectId} onChange={(event) => set('projectId', event.target.value)}>
                   <option value="">Selecione um projeto</option>
-                  {projects.filter((project) => project.status === 'active').map((project) => (
+                  {selectableProjects.map((project) => (
                     <option key={project.id} value={project.id}>{project.name}</option>
                   ))}
                 </select>
