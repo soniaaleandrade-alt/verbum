@@ -6,6 +6,7 @@ namespace VerbumStudio\Api;
 
 use VerbumStudio\Auth\Capabilities;
 use VerbumStudio\Core\Config;
+use VerbumStudio\Exceptions\ValidationError;
 use VerbumStudio\Library\LibraryRepository;
 
 final class LibraryController
@@ -71,6 +72,31 @@ final class LibraryController
                 'permission_callback' => $permission,
             ]);
 
+            register_rest_route($namespace, '/books/(?P<id>\d+)/identification', [
+                'methods' => 'PATCH',
+                'callback' => [$this, 'saveIdentification'],
+                'permission_callback' => $permission,
+            ]);
+
+            register_rest_route($namespace, '/books/(?P<id>\d+)/identification/complete', [
+                'methods' => 'POST',
+                'callback' => [$this, 'completeIdentification'],
+                'permission_callback' => $permission,
+            ]);
+
+            register_rest_route($namespace, '/books/(?P<id>\d+)/cover', [
+                [
+                    'methods' => 'POST',
+                    'callback' => [$this, 'uploadBookCover'],
+                    'permission_callback' => $permission,
+                ],
+                [
+                    'methods' => 'DELETE',
+                    'callback' => [$this, 'removeBookCover'],
+                    'permission_callback' => $permission,
+                ],
+            ]);
+
             register_rest_route($namespace, '/books/(?P<id>\d+)/archive', [
                 'methods' => 'POST',
                 'callback' => [$this, 'archiveBook'],
@@ -98,6 +124,119 @@ final class LibraryController
         try {
             return $this->responses->success(
                 $this->library->workspaceForBook(get_current_user_id(), (int) $request['id'])
+            );
+        } catch (\Throwable $exception) {
+            return $this->responses->error($exception);
+        }
+    }
+
+    public function saveIdentification(\WP_REST_Request $request): \WP_REST_Response
+    {
+        try {
+            $payload = $this->sanitizeIdentificationPayload($this->payload($request));
+            return $this->responses->success(
+                $this->library->saveIdentification(get_current_user_id(), (int) $request['id'], $payload)
+            );
+        } catch (\Throwable $exception) {
+            return $this->responses->error($exception);
+        }
+    }
+
+    public function completeIdentification(\WP_REST_Request $request): \WP_REST_Response
+    {
+        try {
+            return $this->responses->success(
+                $this->library->completeIdentification(get_current_user_id(), (int) $request['id'])
+            );
+        } catch (\Throwable $exception) {
+            return $this->responses->error($exception);
+        }
+    }
+
+    public function uploadBookCover(\WP_REST_Request $request): \WP_REST_Response
+    {
+        try {
+            $bookId = (int) $request['id'];
+            $userId = get_current_user_id();
+            $this->library->workspaceForBook($userId, $bookId);
+
+            $files = $request->get_file_params();
+            $file = $files['cover'] ?? null;
+            if (! is_array($file) || empty($file['tmp_name']) || empty($file['name'])) {
+                throw new ValidationError('Selecione uma imagem para a capa da obra.');
+            }
+
+            if ((int) ($file['error'] ?? UPLOAD_ERR_OK) !== UPLOAD_ERR_OK) {
+                throw new ValidationError('Não foi possível receber o arquivo da capa.');
+            }
+
+            $maximum = 10 * 1024 * 1024;
+            if (function_exists('wp_max_upload_size')) {
+                $maximum = min($maximum, (int) wp_max_upload_size());
+            }
+            if ((int) ($file['size'] ?? 0) > $maximum) {
+                throw new ValidationError('A capa deve ter no máximo 10 MB e respeitar o limite de upload do WordPress.');
+            }
+
+            $allowed = [
+                'jpg|jpeg' => 'image/jpeg',
+                'png' => 'image/png',
+                'webp' => 'image/webp',
+            ];
+            $extension = strtolower((string) pathinfo((string) $file['name'], PATHINFO_EXTENSION));
+            if (! in_array($extension, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+                throw new ValidationError('Use uma imagem JPG, JPEG, PNG ou WebP para a capa.');
+            }
+
+            if (! function_exists('wp_handle_sideload')) {
+                require_once ABSPATH . 'wp-admin/includes/file.php';
+            }
+            if (! function_exists('wp_generate_attachment_metadata')) {
+                require_once ABSPATH . 'wp-admin/includes/image.php';
+            }
+
+            $handled = wp_handle_sideload($file, [
+                'test_form' => false,
+                'mimes' => $allowed,
+            ]);
+            if (! is_array($handled) || isset($handled['error'])) {
+                throw new ValidationError((string) ($handled['error'] ?? 'Não foi possível salvar a capa.'));
+            }
+
+            $attachmentId = wp_insert_attachment([
+                'post_mime_type' => (string) ($handled['type'] ?? ''),
+                'post_title' => sanitize_text_field((string) pathinfo((string) $file['name'], PATHINFO_FILENAME)),
+                'post_status' => 'inherit',
+                'post_author' => $userId,
+            ], (string) $handled['file'], $bookId, true);
+
+            if (is_wp_error($attachmentId)) {
+                throw new \RuntimeException('Não foi possível registrar a capa na biblioteca de mídia.');
+            }
+
+            $metadata = wp_generate_attachment_metadata((int) $attachmentId, (string) $handled['file']);
+            if (is_array($metadata)) {
+                wp_update_attachment_metadata((int) $attachmentId, $metadata);
+            }
+
+            $url = wp_get_attachment_url((int) $attachmentId);
+            if (! is_string($url) || $url === '') {
+                $url = (string) ($handled['url'] ?? '');
+            }
+
+            return $this->responses->success(
+                $this->library->setBookCover($userId, $bookId, (int) $attachmentId, $url)
+            );
+        } catch (\Throwable $exception) {
+            return $this->responses->error($exception);
+        }
+    }
+
+    public function removeBookCover(\WP_REST_Request $request): \WP_REST_Response
+    {
+        try {
+            return $this->responses->success(
+                $this->library->removeBookCover(get_current_user_id(), (int) $request['id'])
             );
         } catch (\Throwable $exception) {
             return $this->responses->error($exception);
@@ -200,6 +339,32 @@ final class LibraryController
     /** @param array<string, mixed> $payload
      *  @return array<string, mixed>
      */
+    private function sanitizeIdentificationPayload(array $payload): array
+    {
+        $clean = [];
+        foreach (['title', 'subtitle', 'workflow_status', 'genre', 'language', 'audience'] as $field) {
+            if (array_key_exists($field, $payload)) {
+                $clean[$field] = sanitize_text_field((string) $payload[$field]);
+            }
+        }
+        if (array_key_exists('synopsis', $payload)) {
+            $clean['synopsis'] = sanitize_textarea_field((string) $payload['synopsis']);
+        }
+        if (array_key_exists('keywords', $payload)) {
+            $keywords = is_array($payload['keywords']) ? $payload['keywords'] : explode(',', (string) $payload['keywords']);
+            $clean['keywords'] = array_values(array_unique(array_filter(array_map('sanitize_text_field', $keywords))));
+        }
+        if (array_key_exists('color', $payload)) {
+            $color = sanitize_text_field((string) $payload['color']);
+            $clean['color'] = preg_match('/^#[0-9a-fA-F]{6}$/', $color) ? strtolower($color) : '';
+        }
+
+        return $clean;
+    }
+
+    /** @param array<string, mixed> $payload
+     *  @return array<string, mixed>
+     */
     private function sanitizeBookPayload(array $payload): array
     {
         $textFields = [
@@ -207,8 +372,8 @@ final class LibraryController
             'author_name', 'coauthor_name', 'keyword', 'target_date', 'workflow_status', 'collection', 'priority',
             'cover_url', 'color', 'icon',
         ];
-        $longFields = ['main_objective', 'reader_problem', 'reader_transformation', 'proposal_summary', 'notes'];
-        $numericFields = ['project_id', 'planned_chapters', 'word_goal'];
+        $longFields = ['main_objective', 'reader_problem', 'reader_transformation', 'proposal_summary', 'synopsis', 'notes'];
+        $numericFields = ['project_id', 'planned_chapters', 'word_goal', 'cover_id'];
 
         $clean = [];
         foreach ($textFields as $field) {
@@ -226,9 +391,11 @@ final class LibraryController
                 $clean[$field] = max(0, (int) $payload[$field]);
             }
         }
-        if (array_key_exists('tags', $payload)) {
-            $tags = is_array($payload['tags']) ? $payload['tags'] : explode(',', (string) $payload['tags']);
-            $clean['tags'] = array_values(array_filter(array_map('sanitize_text_field', $tags)));
+        foreach (['tags', 'keywords'] as $arrayField) {
+            if (array_key_exists($arrayField, $payload)) {
+                $items = is_array($payload[$arrayField]) ? $payload[$arrayField] : explode(',', (string) $payload[$arrayField]);
+                $clean[$arrayField] = array_values(array_filter(array_map('sanitize_text_field', $items)));
+            }
         }
 
         return $clean;
