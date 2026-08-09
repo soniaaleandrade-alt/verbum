@@ -1,0 +1,1 @@
+{"scripts":{"build":"npm --prefix frontend/app run build","dev":"npm --prefix frontend/app run dev","test":"npm --prefix frontend/app run test"},"devDependencies":{}}
