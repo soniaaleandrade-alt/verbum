@@ -24,18 +24,8 @@ final class WorkProjectRepository
     ];
 
     private const TEXT_FIELDS = [
-        'general_objective',
-        'purpose',
-        'audience',
-        'benefits',
-        'transformation',
-        'central_message',
-        'differentials',
-        'value_proposition',
-        'keyword',
-        'motivation',
-        'verse',
-        'guiding_phrase',
+        'general_objective', 'purpose', 'audience', 'benefits', 'transformation', 'central_message',
+        'differentials', 'value_proposition', 'keyword', 'motivation', 'verse', 'guiding_phrase',
     ];
 
     /** @return array<string, mixed> */
@@ -77,17 +67,11 @@ final class WorkProjectRepository
         $checklist = [];
         $completedCount = 0;
         foreach (self::CHECKLIST as $key => $label) {
-            $completed = $key === 'specific_objectives'
-                ? count($raw[$key]) > 0
-                : trim((string) $raw[$key]) !== '';
+            $completed = $key === 'specific_objectives' ? count($raw[$key]) > 0 : trim((string) $raw[$key]) !== '';
             if ($completed) {
                 $completedCount++;
             }
-            $checklist[] = [
-                'key' => $key,
-                'label' => $label,
-                'completed' => $completed,
-            ];
+            $checklist[] = ['key' => $key, 'label' => $label, 'completed' => $completed];
         }
 
         $completedStages = get_post_meta($bookId, '_verbum_completed_stages', true);
@@ -111,10 +95,9 @@ final class WorkProjectRepository
     public function save(int $bookId, array $fields): array
     {
         foreach (self::TEXT_FIELDS as $field) {
-            if (! array_key_exists($field, $fields)) {
-                continue;
+            if (array_key_exists($field, $fields)) {
+                update_post_meta($bookId, '_verbum_work_project_' . $field, sanitize_textarea_field((string) $fields[$field]));
             }
-            update_post_meta($bookId, '_verbum_work_project_' . $field, sanitize_textarea_field((string) $fields[$field]));
         }
 
         if (array_key_exists('specific_objectives', $fields)) {
@@ -129,14 +112,10 @@ final class WorkProjectRepository
                     continue;
                 }
                 $id = sanitize_key((string) ($objective['id'] ?? ''));
-                if ($id === '' || str_starts_with($id, 'new-')) {
+                if ($id === '' || strpos($id, 'new-') === 0) {
                     $id = 'objective-' . substr(md5($text . '|' . $index . '|' . microtime(true)), 0, 12);
                 }
-                $clean[] = [
-                    'id' => $id,
-                    'text' => $text,
-                    'order' => max(1, (int) ($objective['order'] ?? ($index + 1))),
-                ];
+                $clean[] = ['id' => $id, 'text' => $text, 'order' => max(1, (int) ($objective['order'] ?? ($index + 1)))];
             }
             usort($clean, static fn (array $a, array $b): int => $a['order'] <=> $b['order']);
             foreach ($clean as $index => &$objective) {
@@ -148,15 +127,13 @@ final class WorkProjectRepository
 
         $this->touchBook($bookId);
         $data = $this->data($bookId);
-
         if (! $data['ready']) {
             $completed = get_post_meta($bookId, '_verbum_completed_stages', true);
             $completed = is_array($completed) ? $completed : [];
             if (in_array('project', $completed, true)) {
                 update_post_meta($bookId, '_verbum_completed_stages', array_values(array_diff($completed, ['project'])));
                 $currentStage = (string) (get_post_meta($bookId, '_verbum_stage', true) ?: 'project');
-                $laterStages = ['project', 'planning', 'development', 'general_review', 'versions', 'audit', 'editorial_desk', 'layout', 'legal', 'publication'];
-                if (in_array($currentStage, $laterStages, true)) {
+                if (in_array($currentStage, ['project', 'planning', 'development', 'general_review', 'versions', 'audit', 'editorial_desk', 'layout', 'legal', 'publication'], true)) {
                     update_post_meta($bookId, '_verbum_stage', 'project');
                 }
             }
@@ -170,10 +147,7 @@ final class WorkProjectRepository
     {
         $data = $this->data($bookId);
         if (! $data['ready']) {
-            $pending = array_map(
-                static fn (array $item): string => (string) $item['label'],
-                array_values(array_filter($data['checklist'], static fn (array $item): bool => ! $item['completed']))
-            );
+            $pending = array_map(static fn (array $item): string => (string) $item['label'], array_values(array_filter($data['checklist'], static fn (array $item): bool => ! $item['completed'])));
             throw new ValidationError('Complete o Projeto da Obra antes de continuar: ' . implode(', ', $pending) . '.');
         }
 
@@ -197,13 +171,9 @@ final class WorkProjectRepository
     private function touchBook(int $bookId): void
     {
         $post = get_post($bookId);
-        if (! $post instanceof \WP_Post) {
-            return;
+        if ($post instanceof \WP_Post) {
+            wp_update_post(['ID' => $bookId, 'post_content' => $post->post_content]);
         }
-        wp_update_post([
-            'ID' => $bookId,
-            'post_content' => $post->post_content,
-        ]);
     }
 
     private function camelCase(string $value): string
