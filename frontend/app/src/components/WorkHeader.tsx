@@ -3,6 +3,7 @@ import type { WorkWorkspaceData } from '../types/verbum';
 type Props = {
   workspace: WorkWorkspaceData;
   onBack: () => void;
+  onOpenNavigation: () => void;
 };
 
 function relativeDate(value: string) {
@@ -15,12 +16,19 @@ function relativeDate(value: string) {
   return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
 }
 
-export function WorkHeader({ workspace, onBack }: Props) {
+export function WorkHeader({ workspace, onBack, onOpenNavigation }: Props) {
   const { book, metrics, currentStage, workflow } = workspace;
   const currentLabel = workflow.find((step) => step.key === currentStage)?.label ?? 'Identificação';
   return (
     <header className="verbum-work-header">
-      <button type="button" className="verbum-work-back" onClick={onBack}>‹ Obras</button>
+      <div className="verbum-work-header-actions">
+        <button type="button" className="verbum-mobile-menu" onClick={onOpenNavigation} aria-label="Abrir navegação">
+          <span />
+          <span />
+          <span />
+        </button>
+        <button type="button" className="verbum-work-back" onClick={onBack}>‹ Obras</button>
+      </div>
       <div className="verbum-work-summary">
         <div className="verbum-work-cover" style={{ backgroundColor: book.color || '#7a3042' }}>
           {book.coverUrl ? <img src={book.coverUrl} alt="" /> : <span>V</span>}
