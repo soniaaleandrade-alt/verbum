@@ -85,7 +85,7 @@ export type WorkMetrics = {
   lastEdited: string;
 };
 
-export type IdentificationChecklistItem = {
+export type StageChecklistItem = {
   key: string;
   label: string;
   completed: boolean;
@@ -97,7 +97,39 @@ export type IdentificationProgress = {
   total: number;
   ready: boolean;
   completed: boolean;
-  checklist: IdentificationChecklistItem[];
+  checklist: StageChecklistItem[];
+};
+
+export type WorkProjectObjective = {
+  id: string;
+  text: string;
+  order: number;
+};
+
+export type WorkProjectValues = {
+  generalObjective: string;
+  specificObjectives: WorkProjectObjective[];
+  purpose: string;
+  audience: string;
+  benefits: string;
+  transformation: string;
+  centralMessage: string;
+  differentials: string;
+  valueProposition: string;
+  keyword: string;
+  motivation: string;
+  verse: string;
+  guidingPhrase: string;
+};
+
+export type WorkProjectProgress = {
+  progress: number;
+  completedCount: number;
+  total: number;
+  ready: boolean;
+  completed: boolean;
+  checklist: StageChecklistItem[];
+  values: WorkProjectValues;
 };
 
 export type WorkWorkspaceData = {
@@ -106,6 +138,7 @@ export type WorkWorkspaceData = {
   currentStage: WorkStageKey;
   workflow: WorkWorkflowStep[];
   identification: IdentificationProgress;
+  projectStage: WorkProjectProgress;
   metrics: WorkMetrics;
 };
 
@@ -163,6 +196,22 @@ export type IdentificationInput = {
   synopsis: string;
   keywords: string[];
   color: string;
+};
+
+export type WorkProjectInput = {
+  general_objective: string;
+  purpose: string;
+  audience: string;
+  benefits: string;
+  transformation: string;
+  central_message: string;
+  differentials: string;
+  value_proposition: string;
+  keyword: string;
+  motivation: string;
+  verse: string;
+  guiding_phrase: string;
+  specific_objectives: Array<{ id?: string; text: string; order: number }>;
 };
 
 declare global {
