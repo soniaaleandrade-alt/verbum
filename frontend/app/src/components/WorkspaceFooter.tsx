@@ -25,7 +25,7 @@ export function WorkspaceFooter({
   canGoBack,
   onPrevious,
   onBackToLibrary,
-  previousDisabled = false,
+  previousDisabled,
   previousLabel,
   saveState = 'saved',
   saveDisabled = true,
@@ -34,13 +34,14 @@ export function WorkspaceFooter({
   onSave,
   onContinue,
 }: Props) {
-  const label = previousLabel ?? (canGoBack ? 'Etapa anterior' : 'Voltar para Obras');
+  const isPreviousDisabled = previousDisabled ?? !canGoBack;
+  const label = previousLabel ?? 'Etapa anterior';
   return (
     <footer className="verbum-workspace-footer">
       <button
         type="button"
         className="verbum-workspace-previous"
-        disabled={previousDisabled}
+        disabled={isPreviousDisabled}
         onClick={canGoBack ? onPrevious : onBackToLibrary}
       >
         ‹ {label}
