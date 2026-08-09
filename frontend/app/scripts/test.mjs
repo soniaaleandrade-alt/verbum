@@ -37,7 +37,7 @@ for (const expected of [
 }
 
 const workspaceFooter = await readFile(resolve(root, 'src/components/WorkspaceFooter.tsx'), 'utf8');
-for (const expected of ['Etapa anterior','Voltar para Obras','Salvar','Salvar e continuar','Alterações não salvas','Erro ao salvar']) {
+for (const expected of ['Etapa anterior','Salvar','Salvar e continuar','Alterações não salvas','Erro ao salvar','previousDisabled ?? !canGoBack']) {
   if (!workspaceFooter.includes(expected)) throw new Error(`WorkspaceFooter missing: ${expected}`);
 }
 
