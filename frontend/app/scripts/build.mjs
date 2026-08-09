@@ -21,9 +21,10 @@ const js = `(function(){
 
 const css = `@import url("../frontend/app/src/styles/verbum.css");
 @import url("../frontend/app/src/styles/library.css");
+@import url("../frontend/app/src/styles/workspace.css");
 `;
 
 await mkdir(buildDir, { recursive: true });
 await writeFile(resolve(buildDir, 'verbum-app.js'), js);
 await writeFile(resolve(buildDir, 'verbum-app.css'), css);
-console.log('Built Sprint 03 build/verbum-app.js and build/verbum-app.css');
+console.log('Built Sprint 04 build/verbum-app.js and build/verbum-app.css');
