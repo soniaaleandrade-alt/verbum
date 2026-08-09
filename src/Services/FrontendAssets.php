@@ -37,8 +37,23 @@ final class FrontendAssets
 
     public function shortcode(): string
     {
-        $this->enqueue();
+        if ($this->shouldEnqueueForCurrentRequest()) {
+            $this->enqueue();
+        }
 
         return '<div class="verbum-app" data-verbum-app></div>';
+    }
+
+    private function shouldEnqueueForCurrentRequest(): bool
+    {
+        if (defined('REST_REQUEST') && REST_REQUEST) {
+            return false;
+        }
+
+        if (function_exists('wp_is_json_request') && wp_is_json_request()) {
+            return false;
+        }
+
+        return true;
     }
 }
