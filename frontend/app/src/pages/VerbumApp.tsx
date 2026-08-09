@@ -15,6 +15,7 @@ import type { CreateBookInput, CreateProjectInput, CurrentUser, LibraryData, Ver
 import { Dashboard } from './Dashboard';
 import { LibraryPage } from './LibraryPage';
 import '../styles/verbum.css';
+import '../styles/library.css';
 
 const fallbackUser: CurrentUser = {
   id: '0',
