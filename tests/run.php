@@ -11,6 +11,7 @@ use VerbumStudio\Core\Config;
 use VerbumStudio\Core\Container;
 use VerbumStudio\Core\Plugin;
 use VerbumStudio\Exceptions\AuthenticationError;
+use VerbumStudio\Services\FrontendAssets;
 use VerbumStudio\Support\Logger;
 
 $tests = [];
@@ -110,6 +111,30 @@ test('me endpoint returns minimal current user data for authorized users', funct
     assert_same('7', $data['data']['id']);
     assert_same('Autora Teste', $data['data']['name']);
     assert_same('autora@example.test', $data['data']['email']);
+});
+
+test('shortcode returns markup without enqueueing assets during JSON editor requests', function (): void {
+    global $verbum_test_enqueued, $verbum_test_json_request;
+    $verbum_test_enqueued = [];
+    $verbum_test_json_request = true;
+
+    $html = (new FrontendAssets())->shortcode();
+
+    assert_same('<div class="verbum-app" data-verbum-app></div>', $html);
+    assert_same([], $verbum_test_enqueued, 'Shortcode must not enqueue or localize assets while WordPress is rendering REST editor content');
+
+    $verbum_test_json_request = false;
+});
+
+test('shortcode enqueues assets during normal frontend rendering', function (): void {
+    global $verbum_test_enqueued, $verbum_test_json_request;
+    $verbum_test_enqueued = [];
+    $verbum_test_json_request = false;
+
+    $html = (new FrontendAssets())->shortcode();
+
+    assert_same('<div class="verbum-app" data-verbum-app></div>', $html);
+    assert_true(count($verbum_test_enqueued) >= 3, 'Shortcode should enqueue style, script, and localized REST config outside JSON requests');
 });
 
 test('plugin registers shortcode and rest hooks', function (): void {
