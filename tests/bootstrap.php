@@ -5,10 +5,12 @@ declare(strict_types=1);
 define('ABSPATH', __DIR__ . '/wp/');
 define('WP_DEBUG', true);
 
-global $verbum_test_actions, $verbum_test_shortcodes, $verbum_test_routes, $verbum_test_logged_in, $verbum_test_caps, $verbum_test_user;
+global $verbum_test_actions, $verbum_test_shortcodes, $verbum_test_routes, $verbum_test_enqueued, $verbum_test_json_request, $verbum_test_logged_in, $verbum_test_caps, $verbum_test_user;
 $verbum_test_actions = [];
 $verbum_test_shortcodes = [];
 $verbum_test_routes = [];
+$verbum_test_enqueued = [];
+$verbum_test_json_request = false;
 $verbum_test_logged_in = false;
 $verbum_test_caps = [];
 $verbum_test_user = (object) ['ID' => 7, 'display_name' => 'Autora Teste', 'user_email' => 'autora@example.test'];
@@ -65,10 +67,11 @@ function sanitize_text_field($value): string { return trim(strip_tags((string) $
 function wp_json_encode($data): string { return json_encode($data); }
 function rest_url($path = ''): string { return 'https://example.test/wp-json/' . ltrim((string) $path, '/'); }
 function wp_create_nonce($action): string { return 'nonce-' . (string) $action; }
-function wp_enqueue_style($handle, $src, $deps = [], $ver = null): void {}
-function wp_enqueue_script($handle, $src, $deps = [], $ver = null, $in_footer = false): void {}
-function wp_localize_script($handle, $object_name, $l10n): void {}
+function wp_enqueue_style($handle, $src, $deps = [], $ver = null): void { global $verbum_test_enqueued; $verbum_test_enqueued[] = ['style', $handle, $src]; }
+function wp_enqueue_script($handle, $src, $deps = [], $ver = null, $in_footer = false): void { global $verbum_test_enqueued; $verbum_test_enqueued[] = ['script', $handle, $src]; }
+function wp_localize_script($handle, $object_name, $l10n): void { global $verbum_test_enqueued; $verbum_test_enqueued[] = ['localize', $handle, $object_name, $l10n]; }
 function did_action($hook): int { return 0; }
+function wp_is_json_request(): bool { global $verbum_test_json_request; return $verbum_test_json_request; }
 function __return_true(): bool { return true; }
 function is_wp_error($thing): bool { return false; }
 function wp_remote_get($url, $args = []) { return ['response' => ['code' => 200]]; }
