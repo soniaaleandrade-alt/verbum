@@ -10,7 +10,7 @@ const requiredFiles = [
   'src/components/ProjectDialog.tsx','src/components/BookDialog.tsx','src/components/BookCard.tsx',
   'src/components/WorkHeader.tsx','src/components/WorkWorkflow.tsx','src/components/WorkspaceFooter.tsx',
   'src/pages/Dashboard.tsx','src/pages/LibraryPage.tsx','src/pages/WorkWorkspace.tsx','src/pages/VerbumApp.tsx','src/main.tsx',
-  'src/styles/verbum.css','src/styles/library.css','src/styles/workspace.css','src/static-runtime.js','src/vite-env.d.ts',
+  'src/styles/verbum.css','src/styles/library.css','src/styles/workspace.css','src/static-runtime.js','src/workspace-mobile-runtime.js','src/vite-env.d.ts',
 ];
 for (const file of requiredFiles) {
   const contents = await readFile(resolve(root, file), 'utf8');
@@ -33,8 +33,8 @@ for (const expected of ['Etapa anterior','Voltar para Obras','Salvar','Salvar e 
 }
 
 const workHeader = await readFile(resolve(root, 'src/components/WorkHeader.tsx'), 'utf8');
-for (const expected of ['ETAPA ATUAL','IMO','RME','PROGRESSO','CAPÍTULOS','PALAVRAS','ÚLTIMA EDIÇÃO']) {
-  if (!workHeader.includes(expected)) throw new Error(`WorkHeader missing metric: ${expected}`);
+for (const expected of ['ETAPA ATUAL','IMO','RME','PROGRESSO','CAPÍTULOS','PALAVRAS','ÚLTIMA EDIÇÃO','onOpenNavigation']) {
+  if (!workHeader.includes(expected)) throw new Error(`WorkHeader missing metric/navigation: ${expected}`);
 }
 
 const workflow = await readFile(resolve(root, 'src/components/WorkWorkflow.tsx'), 'utf8');
@@ -65,9 +65,16 @@ for (const expected of ['/health','/me','/library','/workspace','verbum_work','v
   if (!runtime.includes(expected)) throw new Error(`Static runtime missing Sprint 04 requirement: ${expected}`);
 }
 
+const mobileRuntime = await readFile(resolve(root, 'src/workspace-mobile-runtime.js'), 'utf8');
+for (const expected of ['MutationObserver','data-nav-open','verbum-work-header','verbum-mobile-menu']) {
+  if (!mobileRuntime.includes(expected)) throw new Error(`Workspace mobile runtime missing: ${expected}`);
+}
+
 const buildJs = await readFile(resolve(repoRoot, 'build/verbum-app.js'), 'utf8');
 const buildCss = await readFile(resolve(repoRoot, 'build/verbum-app.css'), 'utf8');
-if (!buildJs.includes('frontend/app/src/static-runtime.js')) throw new Error('Static JS build must load runtime');
+for (const expected of ['static-runtime.js','workspace-mobile-runtime.js']) {
+  if (!buildJs.includes(expected)) throw new Error(`Static JS build must load: ${expected}`);
+}
 for (const expected of ['verbum.css','library.css','workspace.css']) {
   if (!buildCss.includes(expected)) throw new Error(`Static CSS build missing: ${expected}`);
 }
