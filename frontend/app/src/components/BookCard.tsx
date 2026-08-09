@@ -3,11 +3,12 @@ import type { VerbumBook } from '../types/verbum';
 type BookCardProps = {
   book: VerbumBook;
   projectName: string;
+  onOpen: () => void;
   onEdit: () => void;
   onArchive: () => void;
 };
 
-export function BookCard({ book, projectName, onEdit, onArchive }: BookCardProps) {
+export function BookCard({ book, projectName, onOpen, onEdit, onArchive }: BookCardProps) {
   const archived = book.status === 'archived';
   return (
     <article className={`verbum-book-card${archived ? ' is-archived' : ''}`}>
@@ -23,12 +24,10 @@ export function BookCard({ book, projectName, onEdit, onArchive }: BookCardProps
           <span>{book.genre || book.category || 'Sem gênero definido'}</span>
           <span>{book.plannedChapters ? `${book.plannedChapters} capítulos previstos` : 'Capítulos ainda não definidos'}</span>
         </div>
-        <div className="verbum-book-stage">
-          <span>Etapa atual</span>
-          <strong>Identificação da Obra</strong>
-        </div>
+        <div className="verbum-book-stage"><span>Etapa atual</span><strong>Identificação</strong></div>
       </div>
       <div className="verbum-book-card-actions">
+        {!archived && <button type="button" className="verbum-primary-button verbum-open-work" onClick={onOpen}>Abrir obra</button>}
         <button type="button" className="verbum-text-button" onClick={onEdit}>Editar</button>
         {!archived && <button type="button" className="verbum-text-button is-danger" onClick={onArchive}>Arquivar</button>}
       </div>
