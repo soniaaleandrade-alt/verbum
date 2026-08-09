@@ -11,6 +11,7 @@ use VerbumStudio\Core\Config;
 use VerbumStudio\Core\Container;
 use VerbumStudio\Core\Plugin;
 use VerbumStudio\Exceptions\AuthenticationError;
+use VerbumStudio\Library\LibraryPostTypes;
 use VerbumStudio\Services\FrontendAssets;
 use VerbumStudio\Support\Logger;
 
@@ -145,6 +146,43 @@ test('plugin registers shortcode and rest hooks', function (): void {
 
     assert_true(isset($verbum_test_shortcodes['verbum_app']), 'Shortcode was not registered');
     assert_true(isset($verbum_test_actions['rest_api_init']), 'REST hook was not registered');
+});
+
+test('sprint 03 registers private storage types for projects and books', function (): void {
+    global $verbum_test_post_types;
+    $verbum_test_post_types = [];
+
+    (new LibraryPostTypes())->register();
+
+    assert_true(isset($verbum_test_post_types[LibraryPostTypes::PROJECT]), 'Project post type was not registered');
+    assert_true(isset($verbum_test_post_types[LibraryPostTypes::BOOK]), 'Book post type was not registered');
+    assert_same(false, $verbum_test_post_types[LibraryPostTypes::PROJECT]['public']);
+    assert_same(false, $verbum_test_post_types[LibraryPostTypes::BOOK]['public']);
+});
+
+test('sprint 03 registers Banco de Obras REST routes', function (): void {
+    global $verbum_test_actions, $verbum_test_routes;
+    $verbum_test_actions = [];
+    $verbum_test_routes = [];
+
+    $plugin = new Plugin(new Container(), new Config());
+    $plugin->register();
+
+    foreach ($verbum_test_actions['rest_api_init'] ?? [] as $callback) {
+        $callback();
+    }
+
+    foreach ([
+        'verbum/v1/library',
+        'verbum/v1/projects',
+        'verbum/v1/projects/(?P<id>\\d+)',
+        'verbum/v1/projects/(?P<id>\\d+)/archive',
+        'verbum/v1/books',
+        'verbum/v1/books/(?P<id>\\d+)',
+        'verbum/v1/books/(?P<id>\\d+)/archive',
+    ] as $route) {
+        assert_true(isset($verbum_test_routes[$route]), 'Missing Sprint 03 REST route: ' . $route);
+    }
 });
 
 $failures = 0;
