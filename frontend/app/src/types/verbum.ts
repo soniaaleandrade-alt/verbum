@@ -48,7 +48,9 @@ export type VerbumBook = {
   readerProblem?: string;
   readerTransformation?: string;
   proposalSummary?: string;
+  synopsis?: string;
   keyword?: string;
+  keywords?: string[];
   plannedChapters?: string | number;
   wordGoal?: string | number;
   targetDate?: string;
@@ -56,6 +58,7 @@ export type VerbumBook = {
   tags?: string[];
   collection?: string;
   priority?: string;
+  coverId?: string | number;
   coverUrl?: string;
   color?: string;
   icon?: string;
@@ -82,11 +85,27 @@ export type WorkMetrics = {
   lastEdited: string;
 };
 
+export type IdentificationChecklistItem = {
+  key: string;
+  label: string;
+  completed: boolean;
+};
+
+export type IdentificationProgress = {
+  progress: number;
+  completedCount: number;
+  total: number;
+  ready: boolean;
+  completed: boolean;
+  checklist: IdentificationChecklistItem[];
+};
+
 export type WorkWorkspaceData = {
   book: VerbumBook;
   project: VerbumProject;
   currentStage: WorkStageKey;
   workflow: WorkWorkflowStep[];
+  identification: IdentificationProgress;
   metrics: WorkMetrics;
 };
 
@@ -117,7 +136,9 @@ export type CreateBookInput = {
   reader_problem?: string;
   reader_transformation?: string;
   proposal_summary?: string;
+  synopsis?: string;
   keyword?: string;
+  keywords?: string[];
   planned_chapters?: number;
   word_goal?: number;
   target_date?: string;
@@ -125,10 +146,23 @@ export type CreateBookInput = {
   tags?: string[];
   collection?: string;
   priority?: string;
+  cover_id?: number;
   cover_url?: string;
   color?: string;
   icon?: string;
   notes?: string;
+};
+
+export type IdentificationInput = {
+  title: string;
+  subtitle: string;
+  workflow_status: string;
+  genre: string;
+  language: string;
+  audience: string;
+  synopsis: string;
+  keywords: string[];
+  color: string;
 };
 
 declare global {
