@@ -6,6 +6,7 @@ import type {
   LibraryData,
   VerbumBook,
   VerbumProject,
+  WorkProjectInput,
   WorkWorkspaceData,
 } from '../types/verbum';
 
@@ -13,6 +14,8 @@ export const getLibrary = () => apiGet<LibraryData>('/library');
 export const getWorkWorkspace = (id: string) => apiGet<WorkWorkspaceData>(`/books/${id}/workspace`);
 export const saveIdentification = (id: string, input: IdentificationInput) => apiPatch<WorkWorkspaceData>(`/books/${id}/identification`, input);
 export const completeIdentification = (id: string) => apiPost<WorkWorkspaceData>(`/books/${id}/identification/complete`);
+export const saveWorkProject = (id: string, input: WorkProjectInput) => apiPatch<WorkWorkspaceData>(`/books/${id}/project-stage`, input);
+export const completeWorkProject = (id: string) => apiPost<WorkWorkspaceData>(`/books/${id}/project-stage/complete`);
 export const uploadBookCover = (id: string, file: File) => {
   const body = new FormData();
   body.append('cover', file);
