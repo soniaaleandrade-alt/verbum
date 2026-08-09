@@ -30,6 +30,7 @@ import '../styles/verbum.css';
 import '../styles/library.css';
 import '../styles/workspace.css';
 import '../styles/identification.css';
+import '../styles/project-stage.css';
 
 const fallbackUser: CurrentUser = { id: '0', name: 'Você', email: '' };
 const emptyLibrary: LibraryData = { projects: [], books: [] };
