@@ -23,6 +23,19 @@ final class LibraryRepository
         'publication' => 'Publicação',
     ];
 
+    private const IDENTIFICATION_CHECKLIST = [
+        'title' => 'Definir título',
+        'subtitle' => 'Definir subtítulo',
+        'synopsis' => 'Escrever sinopse',
+        'keywords' => 'Definir palavras-chave',
+        'workflow_status' => 'Definir status',
+        'genre' => 'Definir gênero',
+        'language' => 'Definir idioma',
+        'audience' => 'Definir público-alvo',
+        'color' => 'Escolher cor da obra',
+        'cover' => 'Enviar capa da obra',
+    ];
+
     private const BOOK_META_FIELDS = [
         'subtitle',
         'series',
@@ -38,7 +51,9 @@ final class LibraryRepository
         'reader_problem',
         'reader_transformation',
         'proposal_summary',
+        'synopsis',
         'keyword',
+        'keywords',
         'planned_chapters',
         'word_goal',
         'target_date',
@@ -46,6 +61,7 @@ final class LibraryRepository
         'tags',
         'collection',
         'priority',
+        'cover_id',
         'cover_url',
         'color',
         'icon',
@@ -105,6 +121,7 @@ final class LibraryRepository
             'project' => $this->projectData($project),
             'currentStage' => $currentStage,
             'workflow' => $workflow,
+            'identification' => $this->identificationData($book),
             'metrics' => [
                 'imo' => null,
                 'rme' => null,
@@ -114,6 +131,98 @@ final class LibraryRepository
                 'lastEdited' => mysql_to_rfc3339($book->post_modified_gmt ?: $book->post_modified),
             ],
         ];
+    }
+
+    /** @param array<string, mixed> $fields
+     *  @return array<string, mixed>
+     */
+    public function saveIdentification(int $userId, int $bookId, array $fields): array
+    {
+        $book = $this->ownedPost($bookId, LibraryPostTypes::BOOK, $userId);
+
+        if (array_key_exists('title', $fields)) {
+            $result = wp_update_post([
+                'ID' => $bookId,
+                'post_title' => trim((string) $fields['title']),
+                'post_content' => $book->post_content,
+            ], true);
+            if (is_wp_error($result)) {
+                throw new \RuntimeException('Não foi possível salvar a Identificação da Obra.');
+            }
+        }
+
+        $this->saveBookMeta($bookId, $fields);
+        $this->touchBook($bookId);
+        $book = $this->ownedPost($bookId, LibraryPostTypes::BOOK, $userId);
+        $identification = $this->identificationData($book);
+
+        if (! $identification['ready']) {
+            $completed = get_post_meta($bookId, '_verbum_completed_stages', true);
+            $completed = is_array($completed) ? $completed : [];
+            if (in_array('identification', $completed, true)) {
+                $completed = array_values(array_diff($completed, ['identification']));
+                update_post_meta($bookId, '_verbum_completed_stages', $completed);
+                update_post_meta($bookId, '_verbum_stage', 'identification');
+            }
+        }
+
+        return $this->workspaceForBook($userId, $bookId);
+    }
+
+    /** @return array<string, mixed> */
+    public function completeIdentification(int $userId, int $bookId): array
+    {
+        $book = $this->ownedPost($bookId, LibraryPostTypes::BOOK, $userId);
+        $identification = $this->identificationData($book);
+
+        if (! $identification['ready']) {
+            $pending = array_map(
+                static fn (array $item): string => (string) $item['label'],
+                array_values(array_filter($identification['checklist'], static fn (array $item): bool => ! $item['completed']))
+            );
+            throw new ValidationError('Complete a Identificação antes de continuar: ' . implode(', ', $pending) . '.');
+        }
+
+        $completed = get_post_meta($bookId, '_verbum_completed_stages', true);
+        $completed = is_array($completed) ? $completed : [];
+        if (! in_array('identification', $completed, true)) {
+            $completed[] = 'identification';
+        }
+
+        update_post_meta($bookId, '_verbum_completed_stages', array_values(array_unique($completed)));
+        update_post_meta($bookId, '_verbum_stage', 'project');
+        $this->touchBook($bookId);
+
+        return $this->workspaceForBook($userId, $bookId);
+    }
+
+    /** @return array<string, mixed> */
+    public function setBookCover(int $userId, int $bookId, int $attachmentId, string $url): array
+    {
+        $this->ownedPost($bookId, LibraryPostTypes::BOOK, $userId);
+        update_post_meta($bookId, '_verbum_cover_id', $attachmentId);
+        update_post_meta($bookId, '_verbum_cover_url', esc_url_raw($url));
+        $this->touchBook($bookId);
+
+        return $this->workspaceForBook($userId, $bookId);
+    }
+
+    /** @return array<string, mixed> */
+    public function removeBookCover(int $userId, int $bookId): array
+    {
+        $this->ownedPost($bookId, LibraryPostTypes::BOOK, $userId);
+        update_post_meta($bookId, '_verbum_cover_id', 0);
+        update_post_meta($bookId, '_verbum_cover_url', '');
+        $this->touchBook($bookId);
+
+        $completed = get_post_meta($bookId, '_verbum_completed_stages', true);
+        $completed = is_array($completed) ? $completed : [];
+        if (in_array('identification', $completed, true)) {
+            update_post_meta($bookId, '_verbum_completed_stages', array_values(array_diff($completed, ['identification'])));
+            update_post_meta($bookId, '_verbum_stage', 'identification');
+        }
+
+        return $this->workspaceForBook($userId, $bookId);
     }
 
     /** @return array<string, mixed> */
@@ -170,6 +279,9 @@ final class LibraryRepository
         update_post_meta($bookId, '_verbum_status', 'active');
         update_post_meta($bookId, '_verbum_stage', 'identification');
         update_post_meta($bookId, '_verbum_completed_stages', []);
+        if (! array_key_exists('workflow_status', $fields)) {
+            $fields['workflow_status'] = 'Planejamento';
+        }
         $this->saveBookMeta($bookId, $fields);
 
         return $this->bookData($this->ownedPost($bookId, LibraryPostTypes::BOOK, $userId));
@@ -286,13 +398,77 @@ final class LibraryRepository
 
             $value = $fields[$field];
             if (is_array($value)) {
-                $value = array_values(array_filter(array_map('sanitize_text_field', $value)));
+                $value = array_values(array_filter(array_map('sanitize_text_field', $value), static fn (string $item): bool => $item !== ''));
             } else {
                 $value = sanitize_textarea_field((string) $value);
             }
 
             update_post_meta($bookId, '_verbum_' . $field, $value);
         }
+    }
+
+    /** @return array<string, mixed> */
+    private function identificationData(\WP_Post $post): array
+    {
+        $keywords = get_post_meta($post->ID, '_verbum_keywords', true);
+        if (! is_array($keywords)) {
+            $legacyKeyword = trim((string) get_post_meta($post->ID, '_verbum_keyword', true));
+            $keywords = $legacyKeyword === '' ? [] : array_values(array_filter(array_map('trim', explode(',', $legacyKeyword))));
+        }
+
+        $values = [
+            'title' => trim((string) get_the_title($post)),
+            'subtitle' => trim((string) get_post_meta($post->ID, '_verbum_subtitle', true)),
+            'synopsis' => trim((string) get_post_meta($post->ID, '_verbum_synopsis', true)),
+            'keywords' => $keywords,
+            'workflow_status' => trim((string) get_post_meta($post->ID, '_verbum_workflow_status', true)),
+            'genre' => trim((string) get_post_meta($post->ID, '_verbum_genre', true)),
+            'language' => trim((string) get_post_meta($post->ID, '_verbum_language', true)),
+            'audience' => trim((string) get_post_meta($post->ID, '_verbum_audience', true)),
+            'color' => trim((string) get_post_meta($post->ID, '_verbum_color', true)),
+            'cover' => ((int) get_post_meta($post->ID, '_verbum_cover_id', true) > 0) || trim((string) get_post_meta($post->ID, '_verbum_cover_url', true)) !== '',
+        ];
+
+        $checklist = [];
+        $completedCount = 0;
+        foreach (self::IDENTIFICATION_CHECKLIST as $key => $label) {
+            $completed = $key === 'keywords'
+                ? count($values['keywords']) > 0
+                : ($key === 'cover' ? (bool) $values['cover'] : trim((string) $values[$key]) !== '');
+            if ($completed) {
+                $completedCount++;
+            }
+            $checklist[] = [
+                'key' => $key,
+                'label' => $label,
+                'completed' => $completed,
+            ];
+        }
+
+        $total = count(self::IDENTIFICATION_CHECKLIST);
+        $completedStages = get_post_meta($post->ID, '_verbum_completed_stages', true);
+        $completedStages = is_array($completedStages) ? $completedStages : [];
+
+        return [
+            'progress' => (int) round(($completedCount / $total) * 100),
+            'completedCount' => $completedCount,
+            'total' => $total,
+            'ready' => $completedCount === $total,
+            'completed' => in_array('identification', $completedStages, true),
+            'checklist' => $checklist,
+        ];
+    }
+
+    private function touchBook(int $bookId): void
+    {
+        $post = get_post($bookId);
+        if (! $post instanceof \WP_Post) {
+            return;
+        }
+        wp_update_post([
+            'ID' => $bookId,
+            'post_content' => $post->post_content,
+        ]);
     }
 
     /** @return array<string, mixed> */
