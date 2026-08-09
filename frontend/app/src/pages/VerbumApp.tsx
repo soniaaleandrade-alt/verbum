@@ -29,6 +29,7 @@ import { WorkWorkspace } from './WorkWorkspace';
 import '../styles/verbum.css';
 import '../styles/library.css';
 import '../styles/workspace.css';
+import '../styles/identification.css';
 
 const fallbackUser: CurrentUser = { id: '0', name: 'Você', email: '' };
 const emptyLibrary: LibraryData = { projects: [], books: [] };
@@ -178,7 +179,14 @@ export function VerbumApp() {
         {workspaceBookId ? (
           workspaceLoading ? <section className="verbum-workspace-state">Carregando a obra...</section> :
           workspaceError || !workspace ? <section className="verbum-workspace-state is-error"><h2>Não foi possível carregar esta obra</h2><p>{workspaceError || 'Obra não encontrada.'}</p><button type="button" className="verbum-primary-button" onClick={() => loadWorkspace(workspaceBookId, requestedStage)}>Tentar novamente</button><button type="button" className="verbum-secondary-button" onClick={closeWorkspace}>Voltar para Obras</button></section> :
-          <WorkWorkspace workspace={workspace} selectedStage={selectedStage} onStageChange={changeStage} onBackToLibrary={closeWorkspace} />
+          <WorkWorkspace
+            workspace={workspace}
+            selectedStage={selectedStage}
+            onStageChange={changeStage}
+            onBackToLibrary={closeWorkspace}
+            onWorkspaceChange={setWorkspace}
+            onPersisted={refreshLibrary}
+          />
         ) : activeSection === 'dashboard' ? (
           <Dashboard userName={user.name} library={library} onOpenLibrary={() => setActiveSection('library')} />
         ) : (
