@@ -12,7 +12,60 @@ const js = `(function(){
   function config(){return window.VerbumStudioConfig||{apiRoot:'/wp-json/verbum/v1',nonce:'',version:'1.0.0'};}
   function request(path){var c=config();return fetch(c.apiRoot+path,{credentials:'same-origin',headers:{'X-WP-Nonce':c.nonce||''}}).then(function(response){return response.json();}).then(function(payload){if(!payload.success){throw new Error((payload.error&&payload.error.message)||'Não foi possível comunicar com a API.');}return payload.data;});}
   function render(element,html){element.innerHTML=html;}
-  function mount(element){render(element,'<section class="verbum-app verbum-loading">Carregando Verbum Studio...</section>');Promise.all([request('/health'),request('/me')]).then(function(values){var health=values[0];var user=values[1];render(element,'<section class="verbum-app verbum-core"><h1>VERBUM STUDIO</h1><p>Sistema inicializado.</p><dl><dt>Núcleo:</dt><dd>OK</dd><dt>API:</dt><dd>'+(health.status==='ok'?'OK':'ERRO')+'</dd><dt>Usuário:</dt><dd>'+escapeHtml(user.name)+'</dd><dt>Versão:</dt><dd>'+escapeHtml(health.version)+'</dd></dl></section>');}).catch(function(){render(element,'<section class="verbum-app verbum-status verbum-error">Não foi possível carregar o Verbum Studio. Verifique sua autenticação e tente novamente.</section>');});}
+  function userInitial(name){return (String(name||'V').trim().charAt(0)||'V').toUpperCase();}
+  function shell(user){
+    var name=escapeHtml(user&&user.name?user.name:'Você');
+    var initial=escapeHtml(userInitial(user&&user.name));
+    return '<div class="verbum-app"><div class="verbum-shell">'+
+      '<button type="button" class="verbum-sidebar-backdrop" data-verbum-nav-close aria-label="Fechar navegação"></button>'+
+      '<aside class="verbum-sidebar" data-verbum-sidebar aria-label="Navegação principal">'+
+        '<div class="verbum-brand"><span class="verbum-brand-mark">V</span><span><strong>VERBUM</strong><small>STUDIO</small></span></div>'+
+        '<nav class="verbum-nav">'+
+          '<button type="button" class="verbum-nav-item is-active" aria-current="page"><span class="verbum-nav-dot"></span><span>Início</span></button>'+
+          '<button type="button" class="verbum-nav-item" aria-disabled="true"><span class="verbum-nav-dot"></span><span>Workspace</span></button>'+
+          '<button type="button" class="verbum-nav-item" aria-disabled="true"><span class="verbum-nav-dot"></span><span>Obras</span></button>'+
+          '<button type="button" class="verbum-nav-item" aria-disabled="true"><span class="verbum-nav-dot"></span><span>Calendário editorial</span></button>'+
+          '<button type="button" class="verbum-nav-item" aria-disabled="true"><span class="verbum-nav-dot"></span><span>Relatórios</span></button>'+
+          '<button type="button" class="verbum-nav-item" aria-disabled="true"><span class="verbum-nav-dot"></span><span>Ideias</span></button>'+
+        '</nav>'+
+        '<div class="verbum-sidebar-footer"><span class="verbum-sidebar-kicker">Ambiente editorial</span><p>Um espaço de trabalho para acompanhar cada etapa da sua obra.</p></div>'+
+      '</aside>'+
+      '<div class="verbum-shell-main">'+
+        '<header class="verbum-header">'+
+          '<div class="verbum-header-title"><button type="button" class="verbum-mobile-menu" data-verbum-nav-open aria-label="Abrir navegação"><span></span><span></span><span></span></button><div><span class="verbum-eyebrow">Área atual</span><h1>Início</h1></div></div>'+
+          '<div class="verbum-user-menu"><button type="button" class="verbum-user-trigger" data-verbum-user-trigger aria-haspopup="menu" aria-expanded="false"><span class="verbum-avatar">'+initial+'</span><span class="verbum-user-copy"><strong>'+name+'</strong><small>Minha conta</small></span><span class="verbum-user-chevron">⌄</span></button><div class="verbum-user-dropdown" data-verbum-user-dropdown role="menu" hidden><button type="button" role="menuitem">Meu perfil</button><button type="button" role="menuitem">Configurações</button><span class="verbum-menu-separator"></span><button type="button" role="menuitem">Sair</button></div></div>'+
+        '</header>'+
+        '<main class="verbum-main" id="verbum-dashboard"><div class="verbum-dashboard">'+
+          '<section class="verbum-welcome"><span class="verbum-eyebrow">Seu espaço de escrita</span><h2>Bom trabalho, '+name+'</h2><p>Organize sua obra com clareza, acompanhe cada etapa e mantenha o foco no que precisa ser escrito agora.</p></section>'+
+          '<section class="verbum-stats" aria-label="Indicadores do painel">'+
+            '<article class="verbum-stat-card"><span>Obras em andamento</span><strong>0</strong><small>Nenhuma obra ativa</small></article>'+
+            '<article class="verbum-stat-card"><span>Capítulos</span><strong>0</strong><small>Aguardando sua primeira obra</small></article>'+
+            '<article class="verbum-stat-card"><span>Palavras escritas</span><strong>0</strong><small>Seu progresso aparecerá aqui</small></article>'+
+            '<article class="verbum-stat-card"><span>Progresso médio</span><strong>0%</strong><small>Sem dados ainda</small></article>'+
+          '</section>'+
+          '<section class="verbum-panel verbum-continue"><div class="verbum-section-heading"><div><span class="verbum-eyebrow">Retome sua jornada</span><h2>Continue escrevendo</h2></div></div><div class="verbum-empty-state"><div class="verbum-empty-symbol">V</div><div><h3>Sua próxima obra começa aqui</h3><p>Crie uma obra para organizar planejamento, pesquisa, redação, revisão e publicação em um único fluxo.</p></div><button type="button" class="verbum-primary-button">Criar nova obra</button></div></section>'+
+          '<div class="verbum-dashboard-grid">'+
+            '<section class="verbum-panel verbum-quick-actions"><div class="verbum-section-heading"><div><span class="verbum-eyebrow">Atalhos</span><h2>Ações rápidas</h2></div></div><div class="verbum-action-list"><button type="button" class="verbum-action-card" aria-disabled="true"><span class="verbum-action-plus">+</span><span><strong>Criar nova obra</strong><small>Inicie um novo projeto editorial.</small></span></button><button type="button" class="verbum-action-card" aria-disabled="true"><span class="verbum-action-plus">+</span><span><strong>Registrar uma ideia</strong><small>Guarde um ponto para desenvolver depois.</small></span></button><button type="button" class="verbum-action-card" aria-disabled="true"><span class="verbum-action-plus">+</span><span><strong>Abrir calendário</strong><small>Visualize seu planejamento editorial.</small></span></button></div></section>'+
+            '<section class="verbum-panel verbum-recent-activity"><div class="verbum-section-heading"><div><span class="verbum-eyebrow">Histórico</span><h2>Atividade recente</h2></div></div><div class="verbum-activity-empty"><span class="verbum-activity-line"></span><p>Quando você começar a trabalhar em uma obra, suas atividades mais recentes aparecerão aqui.</p></div></section>'+
+          '</div>'+
+        '</div></main>'+
+      '</div>'+
+    '</div></div>';
+  }
+  function bind(element){
+    var sidebar=element.querySelector('[data-verbum-sidebar]');var backdrop=element.querySelector('[data-verbum-nav-close]');var openButton=element.querySelector('[data-verbum-nav-open]');
+    function closeNav(){if(sidebar)sidebar.classList.remove('is-open');if(backdrop)backdrop.classList.remove('is-visible');}
+    if(openButton)openButton.addEventListener('click',function(){if(sidebar)sidebar.classList.add('is-open');if(backdrop)backdrop.classList.add('is-visible');});
+    if(backdrop)backdrop.addEventListener('click',closeNav);
+    var trigger=element.querySelector('[data-verbum-user-trigger]');var dropdown=element.querySelector('[data-verbum-user-dropdown]');
+    if(trigger&&dropdown)trigger.addEventListener('click',function(){var opening=dropdown.hasAttribute('hidden');if(opening){dropdown.removeAttribute('hidden');trigger.setAttribute('aria-expanded','true');}else{dropdown.setAttribute('hidden','');trigger.setAttribute('aria-expanded','false');}});
+  }
+  function loading(){return '<section class="verbum-app verbum-app-state verbum-loading"><span class="verbum-state-mark">V</span><strong>Carregando Verbum Studio...</strong><small>Preparando seu espaço de escrita.</small></section>';}
+  function failure(){return '<section class="verbum-app verbum-app-state verbum-error" role="alert"><span class="verbum-state-mark">V</span><strong>Não foi possível abrir o Verbum Studio</strong><p>A API principal não está respondendo. Tente novamente em alguns instantes.</p></section>';}
+  function mount(element){
+    render(element,loading());
+    Promise.allSettled([request('/health'),request('/me')]).then(function(results){var health=results[0];var user=results[1];if(health.status!=='fulfilled'||!health.value||health.value.status!=='ok'){render(element,failure());return;}var currentUser=user.status==='fulfilled'&&user.value&&user.value.name?user.value:{id:'0',name:'Você',email:''};render(element,shell(currentUser));bind(element);}).catch(function(){render(element,failure());});
+  }
   document.querySelectorAll('[data-verbum-app]').forEach(mount);
 })();
 `;
@@ -20,4 +73,4 @@ const js = `(function(){
 await mkdir(buildDir, { recursive: true });
 await writeFile(resolve(buildDir, 'verbum-app.js'), js);
 await copyFile(resolve(appRoot, 'src/styles/verbum.css'), resolve(buildDir, 'verbum-app.css'));
-console.log('Built build/verbum-app.js and build/verbum-app.css');
+console.log('Built Sprint 02 build/verbum-app.js and build/verbum-app.css');
