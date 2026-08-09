@@ -15,6 +15,6 @@
 - [x] Testes estáticos do frontend ampliados.
 - [x] Cobertura PHP para registro dos tipos e rotas.
 - [x] CI do GitHub adicionada para validar PHP, frontend, build e whitespace.
-- [ ] CI verde no Pull Request.
+- [x] CI verde no Pull Request.
 - [ ] Revisão final do PR.
 - [ ] Merge em `main`.
