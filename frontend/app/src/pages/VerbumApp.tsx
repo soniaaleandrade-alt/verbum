@@ -122,11 +122,17 @@ export function VerbumApp() {
   }, [loading, workspaceBookId, loadWorkspace]);
 
   useEffect(() => {
+    if (!workspace || !requestedStage) return;
+    const requested = workspace.workflow.find((step) => step.key === requestedStage && step.status !== 'locked');
+    if (requested) setSelectedStage(requested.key);
+  }, [workspace, requestedStage]);
+
+  useEffect(() => {
     const onPopState = () => {
       const route = readWorkspaceRoute();
       setWorkspaceBookId(route?.bookId ?? null);
       setRequestedStage(route?.stage ?? null);
-      setActiveSection(route ? 'library' : 'library');
+      setActiveSection('library');
       if (!route) setWorkspace(null);
     };
     window.addEventListener('popstate', onPopState);
