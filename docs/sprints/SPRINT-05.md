@@ -1,11 +1,11 @@
 # Sprint 05 — Identificação da Obra
 
-**Projeto:** Verbum Studio — Sistema Operacional para Escritores  
-**Módulo:** Workspace da Obra  
-**Etapa:** Identificação  
-**Versão:** 2.0  
-**Prioridade:** Alta  
-**Status:** Implementado em branch, aguardando PR/merge  
+**Projeto:** Verbum Studio — Sistema Operacional para Escritores
+**Módulo:** Workspace da Obra
+**Etapa:** Identificação
+**Versão:** 2.0
+**Prioridade:** Alta
+**Status:** Implementado em branch, aguardando PR/merge
 **Dependência:** Sprint 04 — Workspace da Obra e Workflow Editorial
 
 ## Objetivo
@@ -101,7 +101,7 @@ Não fazem parte deste Sprint: objetivo geral, objetivos específicos, tese, per
 
 ## Registro de implementação
 
-**Branch:** `sprint-05-identificacao-da-obra`  
-**PR:** A definir  
-**Commit de merge:** A definir  
+**Branch:** `sprint-05-identificacao-da-obra`
+**PR:** A definir
+**Commit de merge:** A definir
 **CI:** A definir
