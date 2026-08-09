@@ -10,12 +10,14 @@ const buildDir = resolve(repoRoot, 'build');
 const js = `(function(){
   var current=document.currentScript;
   if(!current||!current.src){return;}
-  var source=current.src.replace(/build\\/verbum-app\\.js(?:\\?.*)?$/,'frontend/app/src/static-runtime.js');
-  if(!source||source===current.src){return;}
-  var script=document.createElement('script');
-  script.src=source;
-  script.defer=false;
-  document.head.appendChild(script);
+  ['static-runtime.js','workspace-mobile-runtime.js'].forEach(function(file){
+    var source=current.src.replace(/build\\/verbum-app\\.js(?:\\?.*)?$/,'frontend/app/src/'+file);
+    if(!source||source===current.src){return;}
+    var script=document.createElement('script');
+    script.src=source;
+    script.defer=false;
+    document.head.appendChild(script);
+  });
 })();
 `;
 
