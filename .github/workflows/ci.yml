@@ -39,7 +39,9 @@ jobs:
         run: npx tsc --noEmit
 
       - name: Static runtime syntax
-        run: node --check frontend/app/src/static-runtime.js
+        run: |
+          node --check frontend/app/src/static-runtime.js
+          node --check frontend/app/src/workspace-mobile-runtime.js
 
       - name: PHP tests
         run: composer test
