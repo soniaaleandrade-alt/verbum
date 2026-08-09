@@ -38,7 +38,7 @@ for (const expected of ['ETAPA ATUAL','IMO','RME','PROGRESSO','CAPÍTULOS','PALA
 }
 
 const workflow = await readFile(resolve(root, 'src/components/WorkWorkflow.tsx'), 'utf8');
-for (const expected of ['completed','locked','in_progress','aria-current']) {
+for (const expected of ['completed','locked','is-${step.status}','aria-current']) {
   if (!workflow.includes(expected)) throw new Error(`WorkWorkflow missing state support: ${expected}`);
 }
 
