@@ -168,7 +168,9 @@ export function VerbumApp() {
   if (loading) return <section className="verbum-app verbum-app-state verbum-loading" aria-live="polite"><span className="verbum-state-mark">V</span><strong>Carregando Verbum Studio...</strong><small>Preparando seu espaço de escrita.</small></section>;
   if (error) return <section className="verbum-app verbum-app-state verbum-error" role="alert"><span className="verbum-state-mark">V</span><strong>Não foi possível abrir o Verbum Studio</strong><p>{error}</p></section>;
 
-  const workspaceHeader = workspace ? <WorkHeader workspace={workspace} onBack={closeWorkspace} /> : undefined;
+  const workspaceHeader = workspace
+    ? (onOpenNavigation: () => void) => <WorkHeader workspace={workspace} onBack={closeWorkspace} onOpenNavigation={onOpenNavigation} />
+    : undefined;
 
   return (
     <div className="verbum-app">
