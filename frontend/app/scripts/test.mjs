@@ -10,7 +10,7 @@ const requiredFiles = [
   'src/components/ProjectDialog.tsx','src/components/BookDialog.tsx','src/components/BookCard.tsx',
   'src/components/WorkHeader.tsx','src/components/WorkWorkflow.tsx','src/components/WorkspaceFooter.tsx',
   'src/pages/Dashboard.tsx','src/pages/LibraryPage.tsx','src/pages/WorkWorkspace.tsx','src/pages/VerbumApp.tsx','src/main.tsx',
-  'src/styles/verbum.css','src/styles/library.css','src/styles/workspace.css','src/static-runtime.js',
+  'src/styles/verbum.css','src/styles/library.css','src/styles/workspace.css','src/static-runtime.js','src/vite-env.d.ts',
 ];
 for (const file of requiredFiles) {
   const contents = await readFile(resolve(root, file), 'utf8');
@@ -23,8 +23,13 @@ for (const expected of ['getHealth()','getCurrentUser()','getLibrary()','getWork
 }
 
 const workspace = await readFile(resolve(root, 'src/pages/WorkWorkspace.tsx'), 'utf8');
-for (const expected of ['WorkWorkflow','WorkspaceFooter','beforeunload','Etapa anterior','stageDescriptions']) {
+for (const expected of ['WorkWorkflow','WorkspaceFooter','beforeunload','stageDescriptions']) {
   if (!workspace.includes(expected)) throw new Error(`WorkWorkspace missing: ${expected}`);
+}
+
+const workspaceFooter = await readFile(resolve(root, 'src/components/WorkspaceFooter.tsx'), 'utf8');
+for (const expected of ['Etapa anterior','Voltar para Obras','Salvar','Salvar e continuar','Salvo']) {
+  if (!workspaceFooter.includes(expected)) throw new Error(`WorkspaceFooter missing: ${expected}`);
 }
 
 const workHeader = await readFile(resolve(root, 'src/components/WorkHeader.tsx'), 'utf8');
