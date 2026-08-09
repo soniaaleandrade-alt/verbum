@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { IdentificationStage } from '../components/IdentificationStage';
 import { WorkWorkflow } from '../components/WorkWorkflow';
 import { WorkspaceFooter } from '../components/WorkspaceFooter';
 import type { WorkStageKey, WorkWorkspaceData } from '../types/verbum';
@@ -22,10 +23,12 @@ type Props = {
   selectedStage: WorkStageKey;
   onStageChange: (stage: WorkStageKey) => void;
   onBackToLibrary: () => void;
+  onWorkspaceChange: (workspace: WorkWorkspaceData) => void;
+  onPersisted: () => void | Promise<void>;
 };
 
-export function WorkWorkspace({ workspace, selectedStage, onStageChange, onBackToLibrary }: Props) {
-  const [dirty] = useState(false);
+export function WorkWorkspace({ workspace, selectedStage, onStageChange, onBackToLibrary, onWorkspaceChange, onPersisted }: Props) {
+  const [dirty, setDirty] = useState(false);
   const selected = workspace.workflow.find((step) => step.key === selectedStage) ?? workspace.workflow[0];
   const accessibleSteps = useMemo(() => workspace.workflow.filter((step) => step.status !== 'locked'), [workspace.workflow]);
   const selectedAccessibleIndex = accessibleSteps.findIndex((step) => step.key === selected.key);
@@ -42,6 +45,7 @@ export function WorkWorkspace({ workspace, selectedStage, onStageChange, onBackT
 
   function guarded(action: () => void) {
     if (dirty && !window.confirm('Existem alterações que ainda não foram salvas. Sair sem salvar?')) return;
+    setDirty(false);
     action();
   }
 
@@ -55,21 +59,34 @@ export function WorkWorkspace({ workspace, selectedStage, onStageChange, onBackT
 
   return (
     <div className="verbum-workspace">
-      <div className="verbum-work-breadcrumb">Obras <span>›</span> {workspace.book.title} <span>›</span> {selected.label}</div>
+      <div className="verbum-work-breadcrumb">Obras <span>›</span> {workspace.book.title || 'Obra sem título'} <span>›</span> {selected.label}</div>
       <WorkWorkflow steps={workspace.workflow} selectedStage={selected.key} onSelect={(stage) => guarded(() => onStageChange(stage))} />
-      <section className="verbum-stage-content">
-        <div className="verbum-stage-placeholder">
-          <span className="verbum-eyebrow">Etapa {selected.order} de {workspace.workflow.length}</span>
-          <h2>{selected.label}</h2>
-          <p>{stageDescriptions[selected.key]}</p>
-          {selected.key === workspace.currentStage ? (
-            <div className="verbum-stage-notice is-current">Esta é a etapa atual da obra. O conteúdo funcional desta etapa será implementado no Sprint correspondente.</div>
-          ) : (
-            <div className="verbum-stage-notice">Você está consultando uma etapa anterior já liberada no fluxo editorial.</div>
-          )}
-        </div>
-      </section>
-      <WorkspaceFooter canGoBack={selectedAccessibleIndex > 0} onPrevious={previous} onBackToLibrary={() => guarded(onBackToLibrary)} />
+      {selected.key === 'identification' ? (
+        <IdentificationStage
+          workspace={workspace}
+          onWorkspaceChange={onWorkspaceChange}
+          onStageChange={onStageChange}
+          onBackToLibrary={() => guarded(onBackToLibrary)}
+          onDirtyChange={setDirty}
+          onPersisted={onPersisted}
+        />
+      ) : (
+        <>
+          <section className="verbum-stage-content">
+            <div className="verbum-stage-placeholder">
+              <span className="verbum-eyebrow">Etapa {selected.order} de {workspace.workflow.length}</span>
+              <h2>{selected.label}</h2>
+              <p>{stageDescriptions[selected.key]}</p>
+              {selected.key === workspace.currentStage ? (
+                <div className="verbum-stage-notice is-current">Esta é a etapa atual da obra. O conteúdo funcional desta etapa será implementado no Sprint correspondente.</div>
+              ) : (
+                <div className="verbum-stage-notice">Você está consultando uma etapa anterior já liberada no fluxo editorial.</div>
+              )}
+            </div>
+          </section>
+          <WorkspaceFooter canGoBack={selectedAccessibleIndex > 0} onPrevious={previous} onBackToLibrary={() => guarded(onBackToLibrary)} />
+        </>
+      )}
     </div>
   );
 }
