@@ -9,6 +9,7 @@ type LibraryPageProps = {
   loading: boolean;
   error: string;
   onReload: () => void;
+  onOpenBook: (book: VerbumBook) => void;
   onCreateProject: (input: CreateProjectInput) => Promise<void>;
   onUpdateProject: (project: VerbumProject, input: CreateProjectInput) => Promise<void>;
   onArchiveProject: (project: VerbumProject) => Promise<void>;
@@ -17,18 +18,7 @@ type LibraryPageProps = {
   onArchiveBook: (book: VerbumBook) => Promise<void>;
 };
 
-export function LibraryPage({
-  data,
-  loading,
-  error,
-  onReload,
-  onCreateProject,
-  onUpdateProject,
-  onArchiveProject,
-  onCreateBook,
-  onUpdateBook,
-  onArchiveBook,
-}: LibraryPageProps) {
+export function LibraryPage({ data, loading, error, onReload, onOpenBook, onCreateProject, onUpdateProject, onArchiveProject, onCreateBook, onUpdateBook, onArchiveBook }: LibraryPageProps) {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<'active' | 'archived' | 'all'>('active');
   const [projectDialog, setProjectDialog] = useState<VerbumProject | 'new' | null>(null);
@@ -64,35 +54,20 @@ export function LibraryPage({
   async function archiveProject(project: VerbumProject) {
     if (!window.confirm(`Arquivar o projeto “${project.name}” e suas obras?`)) return;
     setActionError('');
-    try {
-      await onArchiveProject(project);
-    } catch (cause) {
-      setActionError(cause instanceof Error ? cause.message : 'Não foi possível arquivar o projeto.');
-    }
+    try { await onArchiveProject(project); } catch (cause) { setActionError(cause instanceof Error ? cause.message : 'Não foi possível arquivar o projeto.'); }
   }
 
   async function archiveBook(book: VerbumBook) {
     if (!window.confirm(`Arquivar a obra “${book.title}”?`)) return;
     setActionError('');
-    try {
-      await onArchiveBook(book);
-    } catch (cause) {
-      setActionError(cause instanceof Error ? cause.message : 'Não foi possível arquivar a obra.');
-    }
+    try { await onArchiveBook(book); } catch (cause) { setActionError(cause instanceof Error ? cause.message : 'Não foi possível arquivar a obra.'); }
   }
 
   return (
     <div className="verbum-library">
       <section className="verbum-page-heading">
-        <div>
-          <span className="verbum-eyebrow">Seu acervo editorial</span>
-          <h2>Banco de Obras</h2>
-          <p>Organize seus projetos e livros. Cada obra permanece vinculada ao projeto em que nasceu.</p>
-        </div>
-        <div className="verbum-page-actions">
-          <button type="button" className="verbum-secondary-button" onClick={() => setProjectDialog('new')}>Novo projeto</button>
-          <button type="button" className="verbum-primary-button" onClick={() => openNewBook()} disabled={activeProjects.length === 0}>Criar nova obra</button>
-        </div>
+        <div><span className="verbum-eyebrow">Seu acervo editorial</span><h2>Banco de Obras</h2><p>Organize seus projetos e livros. Cada obra permanece vinculada ao projeto em que nasceu.</p></div>
+        <div className="verbum-page-actions"><button type="button" className="verbum-secondary-button" onClick={() => setProjectDialog('new')}>Novo projeto</button><button type="button" className="verbum-primary-button" onClick={() => openNewBook()} disabled={activeProjects.length === 0}>Criar nova obra</button></div>
       </section>
 
       <section className="verbum-library-summary" aria-label="Resumo do Banco de Obras">
@@ -102,83 +77,29 @@ export function LibraryPage({
       </section>
 
       <section className="verbum-library-toolbar">
-        <label className="verbum-search-field">
-          <span className="sr-only">Buscar</span>
-          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar projeto, título, subtítulo ou gênero..." />
-        </label>
-        <div className="verbum-filter-tabs" aria-label="Filtrar por status">
-          {(['active', 'archived', 'all'] as const).map((value) => (
-            <button key={value} type="button" className={status === value ? 'is-active' : ''} onClick={() => setStatus(value)}>
-              {value === 'active' ? 'Ativos' : value === 'archived' ? 'Arquivados' : 'Todos'}
-            </button>
-          ))}
-        </div>
+        <label className="verbum-search-field"><span className="sr-only">Buscar</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar projeto, título, subtítulo ou gênero..." /></label>
+        <div className="verbum-filter-tabs" aria-label="Filtrar por status">{(['active', 'archived', 'all'] as const).map((value) => <button key={value} type="button" className={status === value ? 'is-active' : ''} onClick={() => setStatus(value)}>{value === 'active' ? 'Ativos' : value === 'archived' ? 'Arquivados' : 'Todos'}</button>)}</div>
       </section>
 
-      {(error || actionError) && (
-        <div className="verbum-inline-error" role="alert">
-          <span>{actionError || error}</span>
-          {error && <button type="button" onClick={onReload}>Tentar novamente</button>}
-        </div>
-      )}
+      {(error || actionError) && <div className="verbum-inline-error" role="alert"><span>{actionError || error}</span>{error && <button type="button" onClick={onReload}>Tentar novamente</button>}</div>}
 
       {loading ? (
         <section className="verbum-library-loading" aria-live="polite">Carregando seu Banco de Obras...</section>
       ) : data.projects.length === 0 ? (
-        <section className="verbum-panel verbum-library-empty">
-          <span className="verbum-empty-symbol">V</span>
-          <div>
-            <span className="verbum-eyebrow">Primeiro passo</span>
-            <h3>Crie seu primeiro projeto</h3>
-            <p>O projeto reúne uma ou mais obras. Depois de criá-lo, você poderá cadastrar o primeiro livro e preencher sua identificação.</p>
-          </div>
-          <button type="button" className="verbum-primary-button" onClick={() => setProjectDialog('new')}>Criar projeto</button>
-        </section>
+        <section className="verbum-panel verbum-library-empty"><span className="verbum-empty-symbol">V</span><div><span className="verbum-eyebrow">Primeiro passo</span><h3>Crie seu primeiro projeto</h3><p>O projeto reúne uma ou mais obras. Depois de criá-lo, você poderá cadastrar o primeiro livro e preencher sua identificação.</p></div><button type="button" className="verbum-primary-button" onClick={() => setProjectDialog('new')}>Criar projeto</button></section>
       ) : projects.length === 0 ? (
-        <section className="verbum-panel verbum-library-empty compact">
-          <div>
-            <h3>Nenhum resultado encontrado</h3>
-            <p>Ajuste a busca ou o filtro para localizar suas obras.</p>
-          </div>
-        </section>
+        <section className="verbum-panel verbum-library-empty compact"><div><h3>Nenhum resultado encontrado</h3><p>Ajuste a busca ou o filtro para localizar suas obras.</p></div></section>
       ) : (
         <div className="verbum-project-list">
           {projects.map((project) => {
             const books = data.books.filter((book) => book.projectId === project.id && (status === 'all' || book.status === status));
             return (
               <section key={project.id} className={`verbum-panel verbum-project-section${project.status === 'archived' ? ' is-archived' : ''}`}>
-                <div className="verbum-project-heading">
-                  <div>
-                    <span className="verbum-eyebrow">Projeto</span>
-                    <h3>{project.name}</h3>
-                    {project.description && <p>{project.description}</p>}
-                  </div>
-                  <div className="verbum-project-actions">
-                    <span>{books.length} {books.length === 1 ? 'obra' : 'obras'}</span>
-                    <button type="button" className="verbum-text-button" onClick={() => setProjectDialog(project)}>Editar</button>
-                    {project.status !== 'archived' && <button type="button" className="verbum-text-button is-danger" onClick={() => archiveProject(project)}>Arquivar</button>}
-                  </div>
-                </div>
+                <div className="verbum-project-heading"><div><span className="verbum-eyebrow">Projeto</span><h3>{project.name}</h3>{project.description && <p>{project.description}</p>}</div><div className="verbum-project-actions"><span>{books.length} {books.length === 1 ? 'obra' : 'obras'}</span><button type="button" className="verbum-text-button" onClick={() => setProjectDialog(project)}>Editar</button>{project.status !== 'archived' && <button type="button" className="verbum-text-button is-danger" onClick={() => archiveProject(project)}>Arquivar</button>}</div></div>
                 {books.length > 0 ? (
-                  <div className="verbum-book-grid">
-                    {books.map((book) => (
-                      <BookCard
-                        key={book.id}
-                        book={book}
-                        projectName={project.name}
-                        onEdit={() => {
-                          setDefaultBookProjectId('');
-                          setBookDialog(book);
-                        }}
-                        onArchive={() => archiveBook(book)}
-                      />
-                    ))}
-                  </div>
+                  <div className="verbum-book-grid">{books.map((book) => <BookCard key={book.id} book={book} projectName={project.name} onOpen={() => onOpenBook(book)} onEdit={() => { setDefaultBookProjectId(''); setBookDialog(book); }} onArchive={() => archiveBook(book)} />)}</div>
                 ) : (
-                  <div className="verbum-project-empty">
-                    <p>Nenhuma obra neste projeto.</p>
-                    {project.status === 'active' && <button type="button" className="verbum-text-button" onClick={() => openNewBook(project.id)}>Adicionar obra</button>}
-                  </div>
+                  <div className="verbum-project-empty"><p>Nenhuma obra neste projeto.</p>{project.status === 'active' && <button type="button" className="verbum-text-button" onClick={() => openNewBook(project.id)}>Adicionar obra</button>}</div>
                 )}
               </section>
             );
@@ -186,20 +107,8 @@ export function LibraryPage({
         </div>
       )}
 
-      <ProjectDialog
-        open={projectDialog !== null}
-        project={projectDialog && projectDialog !== 'new' ? projectDialog : null}
-        onClose={() => setProjectDialog(null)}
-        onSave={(input) => projectDialog && projectDialog !== 'new' ? onUpdateProject(projectDialog, input) : onCreateProject(input)}
-      />
-      <BookDialog
-        open={bookDialog !== null}
-        projects={data.projects}
-        book={bookDialog && bookDialog !== 'new' ? bookDialog : null}
-        defaultProjectId={defaultBookProjectId}
-        onClose={closeBookDialog}
-        onSave={(input) => bookDialog && bookDialog !== 'new' ? onUpdateBook(bookDialog, input) : onCreateBook(input)}
-      />
+      <ProjectDialog open={projectDialog !== null} project={projectDialog && projectDialog !== 'new' ? projectDialog : null} onClose={() => setProjectDialog(null)} onSave={(input) => projectDialog && projectDialog !== 'new' ? onUpdateProject(projectDialog, input) : onCreateProject(input)} />
+      <BookDialog open={bookDialog !== null} projects={data.projects} book={bookDialog && bookDialog !== 'new' ? bookDialog : null} defaultProjectId={defaultBookProjectId} onClose={closeBookDialog} onSave={(input) => bookDialog && bookDialog !== 'new' ? onUpdateBook(bookDialog, input) : onCreateBook(input)} />
     </div>
   );
 }
