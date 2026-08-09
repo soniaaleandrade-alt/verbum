@@ -1,18 +1,22 @@
+export type AppSection = 'dashboard' | 'library';
+
 type SidebarProps = {
   open: boolean;
+  activeSection: AppSection;
   onClose: () => void;
+  onNavigate: (section: AppSection) => void;
 };
 
-const navigation = [
-  { label: 'Início', active: true },
+const navigation: Array<{ label: string; section?: AppSection }> = [
+  { label: 'Início', section: 'dashboard' },
   { label: 'Workspace' },
-  { label: 'Obras' },
+  { label: 'Obras', section: 'library' },
   { label: 'Calendário editorial' },
   { label: 'Relatórios' },
   { label: 'Ideias' },
 ];
 
-export function Sidebar({ open, onClose }: SidebarProps) {
+export function Sidebar({ open, activeSection, onClose, onNavigate }: SidebarProps) {
   return (
     <>
       <button
@@ -31,18 +35,28 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         </div>
 
         <nav className="verbum-nav">
-          {navigation.map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              className={`verbum-nav-item${item.active ? ' is-active' : ''}`}
-              aria-current={item.active ? 'page' : undefined}
-              aria-disabled={item.active ? undefined : true}
-            >
-              <span className="verbum-nav-dot" aria-hidden="true" />
-              <span>{item.label}</span>
-            </button>
-          ))}
+          {navigation.map((item) => {
+            const active = item.section === activeSection;
+            const disabled = !item.section;
+            return (
+              <button
+                key={item.label}
+                type="button"
+                className={`verbum-nav-item${active ? ' is-active' : ''}`}
+                aria-current={active ? 'page' : undefined}
+                aria-disabled={disabled || undefined}
+                disabled={disabled}
+                onClick={() => {
+                  if (!item.section) return;
+                  onNavigate(item.section);
+                  onClose();
+                }}
+              >
+                <span className="verbum-nav-dot" aria-hidden="true" />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
         </nav>
 
         <div className="verbum-sidebar-footer">

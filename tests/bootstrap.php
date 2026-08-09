@@ -5,10 +5,11 @@ declare(strict_types=1);
 define('ABSPATH', __DIR__ . '/wp/');
 define('WP_DEBUG', true);
 
-global $verbum_test_actions, $verbum_test_shortcodes, $verbum_test_routes, $verbum_test_enqueued, $verbum_test_json_request, $verbum_test_logged_in, $verbum_test_caps, $verbum_test_user;
+global $verbum_test_actions, $verbum_test_shortcodes, $verbum_test_routes, $verbum_test_post_types, $verbum_test_enqueued, $verbum_test_json_request, $verbum_test_logged_in, $verbum_test_caps, $verbum_test_user;
 $verbum_test_actions = [];
 $verbum_test_shortcodes = [];
 $verbum_test_routes = [];
+$verbum_test_post_types = [];
 $verbum_test_enqueued = [];
 $verbum_test_json_request = false;
 $verbum_test_logged_in = false;
@@ -35,6 +36,28 @@ final class WP_REST_Response
     {
         return $this->status;
     }
+}
+
+final class WP_REST_Request implements ArrayAccess
+{
+    private array $params;
+    private array $json;
+
+    public function __construct(array $params = [], array $json = [])
+    {
+        $this->params = $params;
+        $this->json = $json;
+    }
+
+    public function get_json_params(): array
+    {
+        return $this->json;
+    }
+
+    public function offsetExists($offset): bool { return isset($this->params[$offset]); }
+    public function offsetGet($offset) { return $this->params[$offset] ?? null; }
+    public function offsetSet($offset, $value): void { $this->params[$offset] = $value; }
+    public function offsetUnset($offset): void { unset($this->params[$offset]); }
 }
 
 final class Verbum_Test_Role
@@ -64,6 +87,7 @@ function esc_url_raw($url): string { return filter_var((string) $url, FILTER_SAN
 function sanitize_key($key): string { return preg_replace('/[^a-z0-9_\-]/', '', strtolower((string) $key)); }
 function sanitize_email($email): string { return filter_var((string) $email, FILTER_SANITIZE_EMAIL); }
 function sanitize_text_field($value): string { return trim(strip_tags((string) $value)); }
+function sanitize_textarea_field($value): string { return trim(strip_tags((string) $value)); }
 function wp_json_encode($data): string { return json_encode($data); }
 function rest_url($path = ''): string { return 'https://example.test/wp-json/' . ltrim((string) $path, '/'); }
 function wp_create_nonce($action): string { return 'nonce-' . (string) $action; }
@@ -79,9 +103,11 @@ function wp_remote_retrieve_response_code($response): int { return (int) ($respo
 function add_action($hook, $callback, $priority = 10, $accepted_args = 1): void { global $verbum_test_actions; $verbum_test_actions[$hook][] = $callback; }
 function add_shortcode($tag, $callback): void { global $verbum_test_shortcodes; $verbum_test_shortcodes[$tag] = $callback; }
 function register_rest_route($namespace, $route, $args): void { global $verbum_test_routes; $verbum_test_routes[$namespace . $route] = $args; }
+function register_post_type($post_type, $args = []): void { global $verbum_test_post_types; $verbum_test_post_types[$post_type] = $args; }
 function is_user_logged_in(): bool { global $verbum_test_logged_in; return $verbum_test_logged_in; }
 function current_user_can($capability): bool { global $verbum_test_caps; return in_array($capability, $verbum_test_caps, true); }
 function wp_get_current_user() { global $verbum_test_user; return $verbum_test_user; }
+function get_current_user_id(): int { global $verbum_test_user; return (int) $verbum_test_user->ID; }
 function get_role($name) { static $roles = []; return $roles[$name] ??= new Verbum_Test_Role(); }
 
 require_once __DIR__ . '/../verbum-studio.php';

@@ -1,10 +1,14 @@
-const actions = [
-  { title: 'Criar nova obra', description: 'Inicie um novo projeto editorial.' },
-  { title: 'Registrar uma ideia', description: 'Guarde um ponto para desenvolver depois.' },
-  { title: 'Abrir calendário', description: 'Visualize seu planejamento editorial.' },
-];
+type QuickActionsProps = {
+  onCreateWork: () => void;
+};
 
-export function QuickActions() {
+const actions = [
+  { title: 'Criar nova obra', description: 'Inicie um novo projeto editorial.', action: 'create' },
+  { title: 'Registrar uma ideia', description: 'Guarde um ponto para desenvolver depois.', action: 'future' },
+  { title: 'Abrir calendário', description: 'Visualize seu planejamento editorial.', action: 'future' },
+] as const;
+
+export function QuickActions({ onCreateWork }: QuickActionsProps) {
   return (
     <section className="verbum-panel verbum-quick-actions" aria-labelledby="verbum-quick-actions-title">
       <div className="verbum-section-heading">
@@ -14,15 +18,25 @@ export function QuickActions() {
         </div>
       </div>
       <div className="verbum-action-list">
-        {actions.map((action) => (
-          <button type="button" key={action.title} className="verbum-action-card" aria-disabled="true">
-            <span className="verbum-action-plus" aria-hidden="true">+</span>
-            <span>
-              <strong>{action.title}</strong>
-              <small>{action.description}</small>
-            </span>
-          </button>
-        ))}
+        {actions.map((action) => {
+          const enabled = action.action === 'create';
+          return (
+            <button
+              type="button"
+              key={action.title}
+              className="verbum-action-card"
+              aria-disabled={!enabled || undefined}
+              disabled={!enabled}
+              onClick={enabled ? onCreateWork : undefined}
+            >
+              <span className="verbum-action-plus" aria-hidden="true">+</span>
+              <span>
+                <strong>{action.title}</strong>
+                <small>{action.description}</small>
+              </span>
+            </button>
+          );
+        })}
       </div>
     </section>
   );

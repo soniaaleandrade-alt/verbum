@@ -3,10 +3,11 @@ import { UserMenu } from './UserMenu';
 
 type HeaderProps = {
   user: CurrentUser;
+  currentLabel: string;
   onOpenNavigation: () => void;
 };
 
-export function Header({ user, onOpenNavigation }: HeaderProps) {
+export function Header({ user, currentLabel, onOpenNavigation }: HeaderProps) {
   return (
     <header className="verbum-header">
       <div className="verbum-header-title">
@@ -17,7 +18,7 @@ export function Header({ user, onOpenNavigation }: HeaderProps) {
         </button>
         <div>
           <span className="verbum-eyebrow">Área atual</span>
-          <h1>Início</h1>
+          <h1>{currentLabel}</h1>
         </div>
       </div>
       <UserMenu user={user} />
