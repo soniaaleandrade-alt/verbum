@@ -4,6 +4,8 @@ type Props = {
   canGoBack: boolean;
   onPrevious: () => void;
   onBackToLibrary: () => void;
+  previousDisabled?: boolean;
+  previousLabel?: string;
   saveState?: SaveState;
   saveDisabled?: boolean;
   continueDisabled?: boolean;
@@ -23,6 +25,8 @@ export function WorkspaceFooter({
   canGoBack,
   onPrevious,
   onBackToLibrary,
+  previousDisabled = false,
+  previousLabel,
   saveState = 'saved',
   saveDisabled = true,
   continueDisabled = true,
@@ -30,10 +34,16 @@ export function WorkspaceFooter({
   onSave,
   onContinue,
 }: Props) {
+  const label = previousLabel ?? (canGoBack ? 'Etapa anterior' : 'Voltar para Obras');
   return (
     <footer className="verbum-workspace-footer">
-      <button type="button" className="verbum-workspace-previous" onClick={canGoBack ? onPrevious : onBackToLibrary}>
-        ‹ {canGoBack ? 'Etapa anterior' : 'Voltar para Obras'}
+      <button
+        type="button"
+        className="verbum-workspace-previous"
+        disabled={previousDisabled}
+        onClick={canGoBack ? onPrevious : onBackToLibrary}
+      >
+        ‹ {label}
       </button>
       <div className="verbum-workspace-save-actions">
         <span className={`verbum-save-state is-${saveState}`}>{stateLabels[saveState]}</span>
