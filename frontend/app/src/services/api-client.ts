@@ -10,6 +10,12 @@ type RequestOptions = {
 export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const config = window.VerbumStudioConfig;
   const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+  let requestBody: BodyInit | undefined;
+
+  if (options.body !== undefined) {
+    requestBody = isFormData ? options.body as FormData : JSON.stringify(options.body);
+  }
+
   const response = await fetch(`${config?.apiRoot ?? fallbackRoot}${path}`, {
     method: options.method ?? 'GET',
     credentials: 'same-origin',
@@ -17,7 +23,7 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
       'X-WP-Nonce': config?.nonce ?? '',
       ...(options.body === undefined || isFormData ? {} : { 'Content-Type': 'application/json' }),
     },
-    ...(options.body === undefined ? {} : { body: isFormData ? options.body : JSON.stringify(options.body) }),
+    body: requestBody,
   });
 
   let payload: ApiResponse<T>;
