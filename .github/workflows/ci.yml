@@ -1,0 +1,49 @@
+name: Verbum Studio CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - 'sprint-*'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: PHP tests
+        run: composer test
+
+      - name: Frontend static checks
+        run: node frontend/app/scripts/test.mjs
+
+      - name: Rebuild static assets
+        run: node frontend/app/scripts/build.mjs
+
+      - name: Verify build is committed
+        run: git diff --exit-code -- build/verbum-app.js build/verbum-app.css
+
+      - name: PHP syntax
+        run: |
+          php -l verbum-studio.php
+          find src tests -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Diff whitespace check
+        run: git diff --check HEAD^
