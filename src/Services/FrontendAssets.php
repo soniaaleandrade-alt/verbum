@@ -13,6 +13,7 @@ final class FrontendAssets
         'verbum-studio-identification' => 'frontend/app/src/styles/identification.css',
         'verbum-studio-project-stage' => 'frontend/app/src/styles/project-stage.css',
         'verbum-studio-technical' => 'frontend/app/src/styles/technical.css',
+        'verbum-studio-dashboard-official' => 'frontend/app/src/styles/dashboard-official.css',
     ];
 
     private const SCRIPT_FILES = [
@@ -22,6 +23,7 @@ final class FrontendAssets
         'frontend/app/src/identification-runtime.js',
         'frontend/app/src/project-stage-runtime.js',
         'frontend/app/src/technical-runtime.js',
+        'frontend/app/src/dashboard-official-runtime.js',
     ];
 
     public function register(): void
