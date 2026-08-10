@@ -34,6 +34,7 @@ final class FrontendAssets
         'frontend/app/src/project-stage-runtime.js',
         'frontend/app/src/planning-stage-runtime.js',
         'frontend/app/src/development-stage-runtime.js',
+        'frontend/app/src/chapter-workflow-runtime.js',
         'frontend/app/src/chapter-preparation-runtime.js',
         'frontend/app/src/chapter-research-runtime.js',
         'frontend/app/src/technical-runtime.js',
