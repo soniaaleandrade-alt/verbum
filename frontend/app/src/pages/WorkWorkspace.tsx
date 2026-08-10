@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { IdentificationStage } from '../components/IdentificationStage';
+import { PlanningStage } from '../components/PlanningStage';
 import { ProjectStage } from '../components/ProjectStage';
 import { WorkWorkflow } from '../components/WorkWorkflow';
 import { WorkspaceFooter } from '../components/WorkspaceFooter';
@@ -57,12 +58,14 @@ export function WorkWorkspace({ workspace, selectedStage, onStageChange, onBackT
 
   return (
     <div className="verbum-workspace">
-      <div className="verbum-work-breadcrumb">Obras <span>›</span> {workspace.book.title || 'Obra sem título'} <span>›</span> {selected.label}</div>
+      <div className="verbum-work-breadcrumb">Minhas Obras <span>›</span> {workspace.book.title || 'Obra sem título'} <span>›</span> {selected.label}</div>
       <WorkWorkflow steps={workspace.workflow} selectedStage={selected.key} onSelect={(stage) => guarded(() => onStageChange(stage))} />
       {selected.key === 'identification' ? (
         <IdentificationStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={onStageChange} onBackToLibrary={() => guarded(onBackToLibrary)} onDirtyChange={setDirty} onPersisted={onPersisted} />
       ) : selected.key === 'project' ? (
         <ProjectStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={(stage) => guarded(() => onStageChange(stage))} onDirtyChange={setDirty} onPersisted={onPersisted} />
+      ) : selected.key === 'planning' ? (
+        <PlanningStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={(stage) => guarded(() => onStageChange(stage))} onDirtyChange={setDirty} onPersisted={onPersisted} />
       ) : (
         <>
           <section className="verbum-stage-content">
