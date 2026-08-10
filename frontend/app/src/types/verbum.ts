@@ -9,6 +9,7 @@ export type ProjectStatus = 'active' | 'archived';
 export type BookStatus = 'active' | 'archived';
 export type WorkflowStageStatus = 'locked' | 'available' | 'in_progress' | 'completed';
 export type WorkStageKey = 'identification' | 'project' | 'planning' | 'development' | 'general_review' | 'versions' | 'audit' | 'editorial_desk' | 'layout' | 'legal' | 'publication';
+export type ChapterStageKey = 'preparation' | 'research' | 'writing' | 'revision';
 
 export type VerbumProject = { id: string; name: string; description: string; status: ProjectStatus; createdAt: string; updatedAt: string };
 export type VerbumBook = {
@@ -31,6 +32,13 @@ export type WorkPlanningCounts = { parts: number; chapters: number; subchapters:
 export type WorkPlanningProgress = { progress: number; completedCount: number; total: number; ready: boolean; completed: boolean; checklist: StageChecklistItem[]; values: WorkPlanningValues; counts: WorkPlanningCounts; generatedChapterIds: string[]; chaptersGenerated: boolean };
 export type WorkPlanningInput = { central_question: string; main_thesis: string; overview: string; methodology: string; presentation_form: string; approach: string; general_structure: string; editorial_notes: string; writing_strategy: string; initial_schedule: string; target_chapters: number; target_words: number; target_pages: number; structure_items: Array<{ id?: string; type: PlanningStructureType; title: string; parentId?: string; order: number }> };
 export type WorkPlanningMutationResponse = { planningStage: WorkPlanningProgress; workspace: WorkWorkspaceData };
+
+export type ChapterWorkflowStep = { key: ChapterStageKey; label: string; status: WorkflowStageStatus; order: number };
+export type DevelopmentChapter = { id: string; bookId: string; planningItemId: string; number: number; title: string; stage: ChapterStageKey; stageLabel: string; progress: number; completed: boolean; completedStages: ChapterStageKey[]; workflow: ChapterWorkflowStep[]; wordCount: number; lastEdited: string; previousId?: string | null; nextId?: string | null; position?: number; totalChapters?: number };
+export type DevelopmentSummary = { total: number; completed: number; preparation: number; research: number; writing: number; revision: number; progress: number; words: number };
+export type DevelopmentOutlineItem = { type: 'part' | 'chapter' | 'subchapter'; title?: string; part?: string; chapterId?: string | null; chapter?: DevelopmentChapter };
+export type WorkDevelopmentProgress = { summary: DevelopmentSummary; chapters: DevelopmentChapter[]; outline: DevelopmentOutlineItem[]; ready: boolean; completed: boolean };
+export type WorkDevelopmentMutationResponse = { developmentStage: WorkDevelopmentProgress; workspace: WorkWorkspaceData };
 
 export type WorkWorkspaceData = { book: VerbumBook; project: VerbumProject; currentStage: WorkStageKey; workflow: WorkWorkflowStep[]; identification: IdentificationProgress; metrics: WorkMetrics };
 export type LibraryData = { projects: VerbumProject[]; books: VerbumBook[] };
