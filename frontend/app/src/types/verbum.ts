@@ -58,6 +58,22 @@ export type ChapterResearchSourceInput = { category: ResearchCategory; title: st
 export type ChapterResearchStateInput = { direction_reviewed: boolean; reviewed_categories: ResearchCategory[]; ideas: ChapterResearchIdea[] };
 export type ChapterResearchMutationResponse = { research: ChapterResearchProgress; chapter: DevelopmentChapter; developmentStage: WorkDevelopmentProgress; source?: ChapterResearchSource };
 
+export type ChapterWritingSection = { id: string; title: string; content: string; order: number; sourceStructureItemId: string };
+export type ChapterWritingNote = { id: string; text: string; createdAt: string };
+export type ChapterWritingSource = { id: string; category: ResearchCategory; title: string; author: string; reference: string; excerpt: string; application: string; structureItemId: string; highlighted: boolean; selectedForWriting: boolean; used: boolean };
+export type ChapterWritingIdea = ChapterResearchIdea & { used: boolean };
+export type ChapterWritingVersion = { id: string; savedAt: string; kind: 'autosave' | 'manual' | 'completion' | string; wordCount: number; characterCount: number };
+export type ChapterWritingFlags = { thesis_covered?: boolean; sources_used?: boolean; citations_verified?: boolean; author_reviewed?: boolean; goal_analyzed?: boolean; ready_for_revision?: boolean };
+export type ChapterWritingProgress = {
+  chapterId: string; title: string; researchCompleted: boolean; preparation: { objective: string; centralQuestion: string; thesis: string; keywords: string[]; structureItems: ChapterPreparationStructureItem[] };
+  introduction: string; sections: ChapterWritingSection[]; conclusion: string; wordGoal: number; wordCount: number; characterCount: number; goalProgress: number; timeSeconds: number; startedAt: string;
+  notes: ChapterWritingNote[]; comments: ChapterWritingNote[]; flags: ChapterWritingFlags; sources: ChapterWritingSource[]; ideas: ChapterWritingIdea[]; usedIdeaIds: string[]; versions: ChapterWritingVersion[];
+  progress: number; completedCount: number; total: number; checklist: StageChecklistItem[]; ready: boolean; completed: boolean; completedAt: string; lastSavedAt: string;
+};
+export type ChapterWritingInput = { introduction: string; sections: ChapterWritingSection[]; conclusion: string; word_goal: number; notes: ChapterWritingNote[]; comments: ChapterWritingNote[]; flags: ChapterWritingFlags; used_source_ids: string[]; used_idea_ids: string[]; session_seconds: number; save_mode: 'autosave' | 'manual' };
+export type ChapterWritingMutationResponse = { writing: ChapterWritingProgress; chapter: DevelopmentChapter; developmentStage: WorkDevelopmentProgress };
+export type ChapterWritingAssistantResponse = { suggestion: string; action: string };
+
 export type WorkWorkspaceData = { book: VerbumBook; project: VerbumProject; currentStage: WorkStageKey; workflow: WorkWorkflowStep[]; identification: IdentificationProgress; metrics: WorkMetrics };
 export type LibraryData = { projects: VerbumProject[]; books: VerbumBook[] };
 export type CreateProjectInput = { name: string; description?: string };
