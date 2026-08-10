@@ -8,7 +8,7 @@ const requiredFiles = [
   'src/components/AppShell.tsx','src/components/Sidebar.tsx','src/components/Header.tsx','src/components/UserMenu.tsx',
   'src/components/ProjectDialog.tsx','src/components/BookDialog.tsx','src/components/BookCard.tsx',
   'src/components/WorkHeader.tsx','src/components/WorkWorkflow.tsx','src/components/WorkspaceFooter.tsx','src/components/IdentificationStage.tsx','src/components/ProjectStage.tsx',
-  'src/pages/Dashboard.tsx','src/pages/LibraryPage.tsx','src/pages/WorkWorkspace.tsx','src/pages/VerbumApp.tsx','src/main.tsx',
+  'src/pages/Dashboard.tsx','src/pages/LibraryPage.tsx','src/pages/WorkWorkspace.tsx','src/main.tsx','src/pages/VerbumApp.tsx',
   'src/styles/verbum.css','src/styles/library.css','src/styles/workspace.css','src/styles/identification.css','src/styles/project-stage.css','src/styles/technical.css','src/styles/dashboard-official.css','src/styles/minhas-obras.css','src/styles/auth-profile.css','src/styles/profile-polish.css',
   'src/auth-profile-runtime.js','src/static-runtime.js','src/workspace-mobile-runtime.js','src/identification-runtime.js','src/project-stage-runtime.js','src/technical-runtime.js','src/dashboard-official-runtime.js','src/sidebar-profile-runtime.js','src/minhas-obras-runtime.js','src/profile-polish-runtime.js','src/vite-env.d.ts',
 ];
@@ -47,7 +47,7 @@ const profilePolish = await readFile(resolve(root, 'src/profile-polish-runtime.j
 requireAll(profilePolish, ['data-profile-form','stopImmediatePropagation','Alterações salvas.','verbum:profile-updated','removeAreaAtual','/profile/avatar'], 'Profile polish runtime');
 
 const profilePolishCss = await readFile(resolve(root, 'src/styles/profile-polish.css'), 'utf8');
-requireAll(profilePolishCss, ['.verbum-sidebar-profile-main','.verbum-sidebar-avatar img','object-fit:cover','.verbum-profile-avatar img','.verbum-header-title .verbum-eyebrow'], 'Profile polish CSS');
+requireAll(profilePolishCss, ['.verbum-sidebar-profile-main','grid-template-areas:"avatar copy"','.verbum-sidebar-avatar','grid-area:avatar','.verbum-sidebar-profile-copy','grid-area:copy','.verbum-sidebar-avatar img','position:absolute','object-fit:cover','.verbum-profile-avatar img','.verbum-header-title .verbum-eyebrow'], 'Profile polish CSS');
 
 const sidebarRuntime = await readFile(resolve(root, 'src/sidebar-profile-runtime.js'), 'utf8');
 requireAll(sidebarRuntime, ['data-verbum-profile','avatarUrl','VerbumAuthProfile.logout','data-sidebar-collapse'], 'Sidebar profile runtime');
