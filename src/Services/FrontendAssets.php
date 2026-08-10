@@ -15,6 +15,7 @@ final class FrontendAssets
         'verbum-studio-technical' => 'frontend/app/src/styles/technical.css',
         'verbum-studio-dashboard-official' => 'frontend/app/src/styles/dashboard-official.css',
         'verbum-studio-dashboard-polish' => 'frontend/app/src/styles/dashboard-polish.css',
+        'verbum-studio-sidebar-profile' => 'frontend/app/src/styles/sidebar-profile.css',
     ];
 
     private const SCRIPT_FILES = [
@@ -25,6 +26,7 @@ final class FrontendAssets
         'frontend/app/src/project-stage-runtime.js',
         'frontend/app/src/technical-runtime.js',
         'frontend/app/src/dashboard-official-runtime.js',
+        'frontend/app/src/sidebar-profile-runtime.js',
     ];
 
     public function register(): void
@@ -53,10 +55,14 @@ final class FrontendAssets
             true
         );
 
+        $charset = function_exists('get_bloginfo') ? (string) get_bloginfo('charset') : 'UTF-8';
+        $logoutUrl = html_entity_decode(wp_logout_url(home_url('/')), ENT_QUOTES, $charset !== '' ? $charset : 'UTF-8');
+
         wp_localize_script('verbum-studio-app', 'VerbumStudioConfig', [
             'apiRoot' => esc_url_raw(rest_url('verbum/v1')),
             'nonce' => wp_create_nonce('wp_rest'),
             'version' => VERBUM_STUDIO_VERSION,
+            'logoutUrl' => esc_url_raw($logoutUrl),
         ]);
     }
 
