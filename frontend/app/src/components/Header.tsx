@@ -17,7 +17,6 @@ export function Header({ user, currentLabel, onOpenNavigation }: HeaderProps) {
           <span />
         </button>
         <div>
-          <span className="verbum-eyebrow">Área atual</span>
           <h1>{currentLabel}</h1>
         </div>
       </div>
