@@ -1,5 +1,13 @@
 import { apiDelete, apiGet, apiPatch, apiPost } from './api-client';
 import type {
+  GeneralReviewAssistantResponse,
+  GeneralReviewInput,
+  GeneralReviewIssueInput,
+  GeneralReviewMutationResponse,
+  GeneralReviewProgress,
+  GeneralReviewReading,
+} from '../types/general-review';
+import type {
   ChapterPreparationInput,
   ChapterPreparationMutationResponse,
   ChapterPreparationProgress,
@@ -68,6 +76,14 @@ export const updateChapterRevisionIssue = (id: string, chapterId: string, issueI
 export const deleteChapterRevisionIssue = (id: string, chapterId: string, issueId: string) => apiDelete<ChapterRevisionMutationResponse>(`/books/${id}/chapters/${chapterId}/revision/issues/${issueId}`);
 export const completeChapterRevision = (id: string, chapterId: string) => apiPost<ChapterRevisionMutationResponse>(`/books/${id}/chapters/${chapterId}/revision/complete`);
 export const assistChapterRevision = (id: string, chapterId: string, action: string, text: string) => apiPost<ChapterRevisionAssistantResponse>(`/books/${id}/chapters/${chapterId}/revision/assist`, { action, text });
+export const getGeneralReview = (id: string) => apiGet<GeneralReviewProgress>(`/books/${id}/general-review`);
+export const saveGeneralReview = (id: string, input: GeneralReviewInput) => apiPatch<GeneralReviewMutationResponse>(`/books/${id}/general-review`, input);
+export const getGeneralReviewReading = (id: string) => apiGet<GeneralReviewReading>(`/books/${id}/general-review/reading`);
+export const createGeneralReviewIssue = (id: string, input: GeneralReviewIssueInput) => apiPost<GeneralReviewMutationResponse>(`/books/${id}/general-review/issues`, input);
+export const updateGeneralReviewIssue = (id: string, issueId: string, input: GeneralReviewIssueInput) => apiPatch<GeneralReviewMutationResponse>(`/books/${id}/general-review/issues/${issueId}`, input);
+export const deleteGeneralReviewIssue = (id: string, issueId: string) => apiDelete<GeneralReviewMutationResponse>(`/books/${id}/general-review/issues/${issueId}`);
+export const completeGeneralReview = (id: string) => apiPost<GeneralReviewMutationResponse>(`/books/${id}/general-review/complete`);
+export const assistGeneralReview = (id: string, action: string) => apiPost<GeneralReviewAssistantResponse>(`/books/${id}/general-review/assist`, { action });
 export const uploadBookCover = (id: string, file: File) => {
   const body = new FormData();
   body.append('cover', file);
