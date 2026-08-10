@@ -9,6 +9,7 @@ type AppShellProps = {
   onNavigate: (section: AppSection) => void;
   children: ReactNode;
   customHeader?: (onOpenNavigation: () => void) => ReactNode;
+  hideHeader?: boolean;
 };
 
 const sectionLabels: Record<AppSection, string> = {
@@ -16,17 +17,17 @@ const sectionLabels: Record<AppSection, string> = {
   library: 'Obras',
 };
 
-export function AppShell({ user, activeSection, onNavigate, children, customHeader }: AppShellProps) {
+export function AppShell({ user, activeSection, onNavigate, children, customHeader, hideHeader = false }: AppShellProps) {
   const [navigationOpen, setNavigationOpen] = useState(false);
   const openNavigation = () => setNavigationOpen(true);
 
   return (
-    <div className="verbum-shell">
+    <div className={`verbum-shell${hideHeader ? ' has-hidden-header' : ''}`}>
       <Sidebar open={navigationOpen} activeSection={activeSection} onClose={() => setNavigationOpen(false)} onNavigate={onNavigate} />
       <div className="verbum-shell-main">
-        {customHeader ? customHeader(openNavigation) : (
+        {!hideHeader && (customHeader ? customHeader(openNavigation) : (
           <Header user={user} currentLabel={sectionLabels[activeSection]} onOpenNavigation={openNavigation} />
-        )}
+        ))}
         <main className="verbum-main" id="verbum-main-content">{children}</main>
       </div>
     </div>
