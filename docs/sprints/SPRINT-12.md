@@ -1,7 +1,7 @@
 # Sprint 12 — Revisão do Capítulo
 
-**Versão:** 1.8.0  
-**Etapa interna:** 4 de 4  
+**Versão:** 1.8.0
+**Etapa interna:** 4 de 4
 **Fluxo:** Preparação ✓ → Pesquisa ✓ → Redação ✓ → Revisão
 
 ## Objetivo
