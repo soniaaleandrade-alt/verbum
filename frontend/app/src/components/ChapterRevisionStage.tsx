@@ -29,6 +29,13 @@ type Props = {
 type EditorKey = 'introduction' | 'conclusion' | `section:${string}`;
 type Draft = { introduction: string; sections: ChapterWritingSection[]; conclusion: string };
 type ReviewMode = 'content' | 'structure' | 'clarity' | 'language';
+type RevisionMeta = {
+  flags: ChapterRevisionFlags;
+  verifiedSourceIds: string[];
+  dismissedSourceIds: string[];
+  resolvedNoteIds: string[];
+  resolvedCommentIds: string[];
+};
 
 const reviewModes: Array<{ key: ReviewMode; label: string; description: string }> = [
   { key: 'content', label: 'Conteúdo', description: 'Objetivo, pergunta central, tese, argumentos, lacunas e repetições.' },
@@ -69,6 +76,7 @@ export function ChapterRevisionStage({ bookId, chapter, chapters, onOpenChapter,
   const [issueType, setIssueType] = useState<ChapterRevisionIssueType>('clarity');
   const [issueDescription, setIssueDescription] = useState('');
   const draftRef = useRef<Draft>({ introduction: '', sections: [], conclusion: '' });
+  const metaRef = useRef<RevisionMeta>({ flags: {}, verifiedSourceIds: [], dismissedSourceIds: [], resolvedNoteIds: [], resolvedCommentIds: [] });
   const activeEditorRef = useRef<HTMLDivElement | null>(null);
   const activeKeyRef = useRef<EditorKey>('introduction');
   const saveTimerRef = useRef<number | null>(null);
@@ -81,11 +89,19 @@ export function ChapterRevisionStage({ bookId, chapter, chapters, onOpenChapter,
     getChapterRevision(bookId, chapter.id).then((result) => {
       if (!active) return;
       draftRef.current = { introduction: result.introduction, sections: result.sections, conclusion: result.conclusion };
-      setFlags(result.flags);
-      setVerifiedSourceIds(result.verifiedSourceIds);
-      setDismissedSourceIds(result.dismissedSourceIds);
-      setResolvedNoteIds(result.resolvedNoteIds);
-      setResolvedCommentIds(result.resolvedCommentIds);
+      const meta: RevisionMeta = {
+        flags: result.flags,
+        verifiedSourceIds: result.verifiedSourceIds,
+        dismissedSourceIds: result.dismissedSourceIds,
+        resolvedNoteIds: result.resolvedNoteIds,
+        resolvedCommentIds: result.resolvedCommentIds,
+      };
+      metaRef.current = meta;
+      setFlags(meta.flags);
+      setVerifiedSourceIds(meta.verifiedSourceIds);
+      setDismissedSourceIds(meta.dismissedSourceIds);
+      setResolvedNoteIds(meta.resolvedNoteIds);
+      setResolvedCommentIds(meta.resolvedCommentIds);
       setData(result);
       setTick((value) => value + 1);
     }).catch((cause) => setError(cause instanceof Error ? cause.message : 'Não foi possível carregar a Revisão.'));
@@ -95,16 +111,23 @@ export function ChapterRevisionStage({ bookId, chapter, chapters, onOpenChapter,
     };
   }, [bookId, chapter.id]);
 
+  useEffect(() => { metaRef.current.flags = flags; }, [flags]);
+  useEffect(() => { metaRef.current.verifiedSourceIds = verifiedSourceIds; }, [verifiedSourceIds]);
+  useEffect(() => { metaRef.current.dismissedSourceIds = dismissedSourceIds; }, [dismissedSourceIds]);
+  useEffect(() => { metaRef.current.resolvedNoteIds = resolvedNoteIds; }, [resolvedNoteIds]);
+  useEffect(() => { metaRef.current.resolvedCommentIds = resolvedCommentIds; }, [resolvedCommentIds]);
+
   function payload(saveMode: 'autosave' | 'manual') {
+    const meta = metaRef.current;
     return {
       introduction: draftRef.current.introduction,
       sections: draftRef.current.sections,
       conclusion: draftRef.current.conclusion,
-      flags,
-      verified_source_ids: verifiedSourceIds,
-      dismissed_source_ids: dismissedSourceIds,
-      resolved_note_ids: resolvedNoteIds,
-      resolved_comment_ids: resolvedCommentIds,
+      flags: meta.flags,
+      verified_source_ids: meta.verifiedSourceIds,
+      dismissed_source_ids: meta.dismissedSourceIds,
+      resolved_note_ids: meta.resolvedNoteIds,
+      resolved_comment_ids: meta.resolvedCommentIds,
       save_mode: saveMode,
     } as const;
   }
@@ -151,8 +174,11 @@ export function ChapterRevisionStage({ bookId, chapter, chapters, onOpenChapter,
     updateDraft(activeKeyRef.current, editor.innerHTML); setAssistantSuggestion('');
   }
 
-  async function toggleFlag(key: keyof ChapterRevisionFlags, checked: boolean) {
-    const next = { ...flags, [key]: checked }; setFlags(next); scheduleSave();
+  function toggleFlag(key: keyof ChapterRevisionFlags, checked: boolean) {
+    const next = { ...metaRef.current.flags, [key]: checked };
+    metaRef.current.flags = next;
+    setFlags(next);
+    scheduleSave();
   }
   function toggleId(current: string[], id: string, checked: boolean, setter: (ids: string[]) => void) {
     setter(checked ? Array.from(new Set([...current, id])) : current.filter((item) => item !== id)); scheduleSave();
@@ -228,7 +254,7 @@ export function ChapterRevisionStage({ bookId, chapter, chapters, onOpenChapter,
         <section className="verbum-revision-checklist"><div className="verbum-revision-progress-head"><span className="verbum-revision-label">Progresso da Revisão</span><strong>{data.progress}%</strong></div><div className="verbum-revision-progress"><span style={{ width: `${data.progress}%` }} /></div>{data.checklist.map((item) => {
           const manual = !item.automatic && item.key !== 'completed';
           const checked = manual ? Boolean(flags[item.key as keyof ChapterRevisionFlags]) : item.completed;
-          return <label key={item.key} className={checked ? 'is-complete' : ''}><input type="checkbox" checked={checked} disabled={!manual} onChange={(event) => manual && void toggleFlag(item.key as keyof ChapterRevisionFlags, event.target.checked)} /><span>{item.label}</span></label>;
+          return <label key={item.key} className={checked ? 'is-complete' : ''}><input type="checkbox" checked={checked} disabled={!manual} onChange={(event) => manual && toggleFlag(item.key as keyof ChapterRevisionFlags, event.target.checked)} /><span>{item.label}</span></label>;
         })}<button type="button" className="verbum-primary-button" disabled={!data.ready || data.completed} onClick={() => void finish()}>{data.completed ? 'Revisão concluída ✓' : 'Concluir Revisão'}</button></section>
       </aside>
 
