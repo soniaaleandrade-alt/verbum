@@ -1,7 +1,7 @@
 (function(){
 'use strict';
 var live={bookId:null,chapterId:null,data:null,development:null,form:null,busy:false,saveTimer:null,active:null,activeKey:'introduction',assistant:'',mode:'content'};
-function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c];});}
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot',"'":'&#039;'}[c];});}
 function cfg(){return window.VerbumStudioConfig||{apiRoot:'/wp-json/verbum/v1',nonce:''};}
 function api(path,opt){opt=opt||{};var h={'X-WP-Nonce':cfg().nonce||''};if(opt.body!==undefined)h['Content-Type']='application/json';return fetch(cfg().apiRoot+path,{method:opt.method||'GET',credentials:'same-origin',headers:h,body:opt.body===undefined?undefined:JSON.stringify(opt.body)}).then(function(r){return r.json().catch(function(){throw new Error('A API retornou uma resposta inválida.');}).then(function(p){if(!r.ok||!p||!p.success)throw new Error(p&&p.error&&p.error.message?p.error.message:'Não foi possível comunicar com a API.');return p.data;});});}
 function route(){var p=new URLSearchParams(location.search);return{book:p.get('verbum_work'),stage:p.get('verbum_stage'),chapter:p.get('verbum_chapter'),view:p.get('verbum_chapter_stage')};}
@@ -10,7 +10,7 @@ function payload(mode){return{introduction:live.form.introduction,sections:live.
 function setSave(node,text,kind){var s=node.querySelector('[data-revision-save-state]');if(s){s.textContent=text;s.className='verbum-revision-save is-'+kind;}}
 function message(node,text){var m=node.querySelector('[data-revision-message]');if(!m)return;m.hidden=!text;m.textContent=text||'';}
 function schedule(node){setSave(node,'Salvando...','saving');if(live.saveTimer)clearTimeout(live.saveTimer);live.saveTimer=setTimeout(function(){save(node,'autosave');},1600);}
-function save(node,mode){if(live.busy||!live.data)return Promise.resolve(null);if(live.saveTimer){clearTimeout(live.saveTimer);live.saveTimer=null;}live.busy=true;setSave(node,'Salvando...','saving');return api('/books/'+live.bookId+'/chapters/'+live.chapterId+'/revision',{method:'PATCH',body:payload(mode)}).then(function(r){live.busy=false;live.data=r.revision;live.development=r.developmentStage;live.form=clone(live.data);setSave(node,'Salvo','saved');message(node,'');rerender(node);return r;}).catch(function(e){live.busy=false;setSave(node,'Erro ao salvar','error');message(node,e.message);throw e;});}
+function save(node,mode){if(live.busy||!live.data)return Promise.resolve(null);if(live.saveTimer){clearTimeout(live.saveTimer);live.saveTimer=null;}live.busy=true;setSave(node,'Salvando...','saving');return api('/books/'+live.bookId+'/chapters/'+live.chapterId+'/revision',{method:'PATCH',body:payload(mode)}).then(function(r){live.busy=false;live.data=r.revision;live.development=r.developmentStage;setSave(node,'Salvo','saved');message(node,'');if(mode==='manual'){live.form=clone(live.data);rerender(node);}return r;}).catch(function(e){live.busy=false;setSave(node,'Erro ao salvar','error');message(node,e.message);throw e;});}
 function checked(list,id){return list.indexOf(String(id))>=0;}
 function toggle(list,id,on){id=String(id);var next=list.filter(function(x){return x!==id;});if(on)next.push(id);return next;}
 function editor(key,html){return'<div class="verbum-revision-editor" contenteditable="true" data-revision-editor="'+esc(key)+'">'+(html||'')+'</div>';}
