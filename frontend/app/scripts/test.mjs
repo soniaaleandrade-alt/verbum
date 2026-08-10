@@ -115,9 +115,11 @@ for (const expected of ['VERBUM STUDIO','Próxima Ação','Projeto da Obra','Rad
 }
 
 const minhasRuntime = await readFile(resolve(root, 'src/minhas-obras-runtime.js'), 'utf8');
-for (const expected of ['Minhas Obras','Pesquisar obras','data-minhas-stage','data-minhas-status','data-minhas-sort','data-minhas-view','Ainda não calculado','Abrir Obra','MutationObserver']) {
+for (const expected of ['Minhas Obras','Pesquisar obras','data-minhas-stage','data-minhas-status','data-minhas-sort','data-minhas-view','Ainda não calculado','Abrir Obra','MutationObserver','setTextIfChanged',"=== '‹ Obras'"]) {
   if (!minhasRuntime.includes(expected)) throw new Error(`Minhas Obras runtime missing: ${expected}`);
 }
+if (minhasRuntime.includes("if (shortcut) shortcut.textContent = 'Minhas Obras';")) throw new Error('Minhas Obras runtime must not rewrite identical dashboard labels inside MutationObserver');
+if (minhasRuntime.includes('/Obras/.test(back.textContent')) throw new Error('Minhas Obras runtime back-label match must be idempotent');
 
 const buildJs = await readFile(resolve(repoRoot, 'build/verbum-app.js'), 'utf8');
 const buildCss = await readFile(resolve(repoRoot, 'build/verbum-app.css'), 'utf8');
