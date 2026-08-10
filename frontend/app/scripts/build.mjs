@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -23,19 +23,16 @@ const js = `(function(){
 })();
 `;
 
-const dashboardCss = await readFile(resolve(appRoot, 'src/styles/dashboard-official.css'), 'utf8');
 const css = `@import url("../frontend/app/src/styles/verbum.css");
 @import url("../frontend/app/src/styles/library.css");
 @import url("../frontend/app/src/styles/workspace.css");
 @import url("../frontend/app/src/styles/identification.css");
 @import url("../frontend/app/src/styles/project-stage.css");
 @import url("../frontend/app/src/styles/technical.css");
-
-/* Dashboard oficial é incorporado ao bundle para não depender de @import em produção. */
-${dashboardCss}
+@import url("../frontend/app/src/styles/dashboard-official.css");
 `;
 
 await mkdir(buildDir, { recursive: true });
 await writeFile(resolve(buildDir, 'verbum-app.js'), js);
 await writeFile(resolve(buildDir, 'verbum-app.css'), css);
-console.log('Built official dashboard assets with bundled dashboard CSS');
+console.log('Built official dashboard assets for Verbum Studio');
