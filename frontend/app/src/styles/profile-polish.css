@@ -1,0 +1,22 @@
+.verbum-header-title .verbum-eyebrow{display:none!important}
+.verbum-header-title>div{display:flex;align-items:center;min-height:42px}
+.verbum-sidebar-profile{display:block!important;padding:2px 0 10px!important}
+.verbum-sidebar-profile-main{display:grid;grid-template-columns:42px minmax(0,1fr);align-items:center;gap:10px;width:100%;padding:0;border:0;background:transparent;color:inherit;text-align:left;cursor:pointer}
+.verbum-sidebar-profile-main:hover .verbum-sidebar-profile-copy strong{color:#fff}
+.verbum-sidebar-avatar{display:grid!important;place-items:center!important;width:42px!important;height:42px!important;min-width:42px!important;min-height:42px!important;overflow:hidden!important;border-radius:50%!important;background:#ccebea!important;color:#0e6577!important;font-family:Georgia,"Times New Roman",serif!important;font-size:13px!important;font-weight:800!important;line-height:1!important}
+.verbum-sidebar-avatar img{display:block!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:cover!important;object-position:center!important;border-radius:inherit!important}
+.verbum-sidebar-profile-copy{display:flex!important;min-width:0!important;flex-direction:column!important;justify-content:center!important;line-height:1.25!important}
+.verbum-sidebar-profile-copy strong{display:block!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;color:#fff!important;font-size:10.5px!important;font-weight:700!important}
+.verbum-sidebar-profile-copy small{display:block!important;margin-top:3px!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;color:#9fa9bd!important;font-size:9px!important}
+.verbum-sidebar-logout{display:flex!important;align-items:center!important;gap:7px!important;width:auto!important;margin:7px 0 0 52px!important;padding:3px 0 2px!important;border:0!important;background:transparent!important;color:#b9c1d0!important;cursor:pointer!important;font-size:9.5px!important}
+.verbum-sidebar-logout:hover{color:#fff!important}
+.verbum-user-trigger .verbum-avatar{overflow:hidden}
+.verbum-user-trigger .verbum-avatar img{display:block;width:100%;height:100%;object-fit:cover;object-position:center;border-radius:inherit}
+.verbum-profile-avatar{overflow:hidden!important;border-radius:50%!important}
+.verbum-profile-avatar img{display:block!important;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;object-fit:cover!important;object-position:center!important;border-radius:inherit!important}
+.verbum-profile-saved{margin-top:8px!important;padding:10px 12px!important;border:1px solid #b9ded3!important;border-radius:9px!important;background:#eff9f5!important;color:#176748!important;font-size:12px!important}
+.verbum-shell.is-sidebar-collapsed .verbum-sidebar-profile-main{display:flex!important;justify-content:center!important}
+.verbum-shell.is-sidebar-collapsed .verbum-sidebar-avatar{width:42px!important;height:42px!important;min-width:42px!important}
+.verbum-shell.is-sidebar-collapsed .verbum-sidebar-profile-copy{display:none!important}
+.verbum-shell.is-sidebar-collapsed .verbum-sidebar-logout{justify-content:center!important;margin:5px auto 0!important;padding:6px!important}
+@media(max-width:820px){.verbum-sidebar-profile-main{grid-template-columns:42px minmax(0,1fr)}.verbum-sidebar-logout{margin-left:52px!important}}
