@@ -7,6 +7,11 @@ import type {
   ChapterResearchProgress,
   ChapterResearchSourceInput,
   ChapterResearchStateInput,
+  ChapterRevisionAssistantResponse,
+  ChapterRevisionInput,
+  ChapterRevisionIssueInput,
+  ChapterRevisionMutationResponse,
+  ChapterRevisionProgress,
   ChapterWritingAssistantResponse,
   ChapterWritingInput,
   ChapterWritingMutationResponse,
@@ -56,6 +61,13 @@ export const getChapterWriting = (id: string, chapterId: string) => apiGet<Chapt
 export const saveChapterWriting = (id: string, chapterId: string, input: ChapterWritingInput) => apiPatch<ChapterWritingMutationResponse>(`/books/${id}/chapters/${chapterId}/writing`, input);
 export const completeChapterWriting = (id: string, chapterId: string) => apiPost<ChapterWritingMutationResponse>(`/books/${id}/chapters/${chapterId}/writing/complete`);
 export const assistChapterWriting = (id: string, chapterId: string, action: string, text: string) => apiPost<ChapterWritingAssistantResponse>(`/books/${id}/chapters/${chapterId}/writing/assist`, { action, text });
+export const getChapterRevision = (id: string, chapterId: string) => apiGet<ChapterRevisionProgress>(`/books/${id}/chapters/${chapterId}/revision`);
+export const saveChapterRevision = (id: string, chapterId: string, input: ChapterRevisionInput) => apiPatch<ChapterRevisionMutationResponse>(`/books/${id}/chapters/${chapterId}/revision`, input);
+export const createChapterRevisionIssue = (id: string, chapterId: string, input: ChapterRevisionIssueInput) => apiPost<ChapterRevisionMutationResponse>(`/books/${id}/chapters/${chapterId}/revision/issues`, input);
+export const updateChapterRevisionIssue = (id: string, chapterId: string, issueId: string, input: ChapterRevisionIssueInput) => apiPatch<ChapterRevisionMutationResponse>(`/books/${id}/chapters/${chapterId}/revision/issues/${issueId}`, input);
+export const deleteChapterRevisionIssue = (id: string, chapterId: string, issueId: string) => apiDelete<ChapterRevisionMutationResponse>(`/books/${id}/chapters/${chapterId}/revision/issues/${issueId}`);
+export const completeChapterRevision = (id: string, chapterId: string) => apiPost<ChapterRevisionMutationResponse>(`/books/${id}/chapters/${chapterId}/revision/complete`);
+export const assistChapterRevision = (id: string, chapterId: string, action: string, text: string) => apiPost<ChapterRevisionAssistantResponse>(`/books/${id}/chapters/${chapterId}/revision/assist`, { action, text });
 export const uploadBookCover = (id: string, file: File) => {
   const body = new FormData();
   body.append('cover', file);
