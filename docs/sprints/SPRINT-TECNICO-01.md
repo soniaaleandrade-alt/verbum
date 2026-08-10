@@ -1,9 +1,9 @@
 # SPRINT TÉCNICO 01 — Ajustes após teste real
 
-**Projeto:** Verbum Studio — Sistema Operacional para Escritores  
-**Tipo:** Sprint técnico de estabilização  
-**Prioridade:** Alta  
-**Base:** Sprints 01 a 06 integrados  
+**Projeto:** Verbum Studio — Sistema Operacional para Escritores
+**Tipo:** Sprint técnico de estabilização
+**Prioridade:** Alta
+**Base:** Sprints 01 a 06 integrados
 **Origem:** Teste funcional realizado no WordPress real em 09/08/2026
 
 ## Objetivo
