@@ -14,6 +14,7 @@ final class FrontendAssets
         'verbum-studio-project-stage' => 'frontend/app/src/styles/project-stage.css',
         'verbum-studio-planning-stage' => 'frontend/app/src/styles/planning-stage.css',
         'verbum-studio-development-stage' => 'frontend/app/src/styles/development-stage.css',
+        'verbum-studio-chapter-workflow' => 'frontend/app/src/styles/chapter-workflow.css',
         'verbum-studio-chapter-preparation' => 'frontend/app/src/styles/chapter-preparation.css',
         'verbum-studio-chapter-research' => 'frontend/app/src/styles/chapter-research.css',
         'verbum-studio-technical' => 'frontend/app/src/styles/technical.css',
