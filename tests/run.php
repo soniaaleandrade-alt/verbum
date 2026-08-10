@@ -22,7 +22,7 @@ function assert_same($expected, $actual, string $message = ''): void { if ($expe
 
 test('config exposes core defaults and production mode', function (): void {
     $config = new Config(['environment' => 'production']);
-    assert_same('1.0.6', $config->get('version'));
+    assert_same('1.0.7', $config->get('version'));
     assert_same('verbum/v1', $config->get('api_namespace'));
     assert_true($config->isProduction());
 });
@@ -51,7 +51,7 @@ test('health endpoint returns ok and version', function (): void {
     assert_same(200, $response->get_status());
     assert_same(true, $data['success']);
     assert_same('ok', $data['data']['status']);
-    assert_same('1.0.6', $data['data']['version']);
+    assert_same('1.0.7', $data['data']['version']);
 });
 
 test('me endpoint rejects visitors', function (): void {
@@ -65,7 +65,7 @@ test('me endpoint rejects visitors', function (): void {
     assert_same('unauthorized', $data['error']['code']);
 });
 
-test('me endpoint returns minimal current user data for authorized users', function (): void {
+test('me endpoint returns the account full name for authorized users', function (): void {
     global $verbum_test_logged_in, $verbum_test_caps;
     $verbum_test_logged_in = true;
     $verbum_test_caps = [Capabilities::ACCESS];
@@ -73,7 +73,7 @@ test('me endpoint returns minimal current user data for authorized users', funct
     $data = $controller->me()->get_data();
     assert_same(true, $data['success']);
     assert_same('7', $data['data']['id']);
-    assert_same('Autora Teste', $data['data']['name']);
+    assert_same('Sonia Andrade', $data['data']['name']);
 });
 
 test('shortcode avoids assets during JSON editor requests', function (): void {

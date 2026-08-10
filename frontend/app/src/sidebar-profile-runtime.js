@@ -49,15 +49,14 @@
     var state = root.__vs || {};
     var user = state.user || {};
     var name = user.name || 'Usuário';
-    var email = user.email || name;
 
     footer.setAttribute('data-profile-footer', '1');
     footer.innerHTML =
       '<div class="verbum-sidebar-profile">' +
         '<span class="verbum-sidebar-avatar" aria-hidden="true">' + esc(initial(name)) + '</span>' +
         '<span class="verbum-sidebar-profile-copy">' +
-          '<strong title="' + esc(email) + '">' + esc(email) + '</strong>' +
-          '<small>' + esc(name) + '</small>' +
+          '<strong title="' + esc(name) + '">' + esc(name) + '</strong>' +
+          '<small>Minha conta</small>' +
         '</span>' +
         '<button type="button" class="verbum-sidebar-logout" data-verbum-logout aria-label="Sair da conta" title="Sair">' +
           '<span class="verbum-sidebar-logout-icon" aria-hidden="true"></span>' +

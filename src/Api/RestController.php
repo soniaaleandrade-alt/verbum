@@ -59,10 +59,14 @@ final class RestController
             }
 
             $user = wp_get_current_user();
+            $firstName = sanitize_text_field((string) $user->first_name);
+            $lastName = sanitize_text_field((string) $user->last_name);
+            $fullName = trim($firstName . ' ' . $lastName);
+            $displayName = $fullName !== '' ? $fullName : sanitize_text_field($user->display_name);
 
             return $this->responses->success([
                 'id' => (string) $user->ID,
-                'name' => sanitize_text_field($user->display_name),
+                'name' => $displayName,
                 'email' => sanitize_email($user->user_email),
             ]);
         } catch (\Throwable $exception) {
