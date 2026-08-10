@@ -12,6 +12,7 @@ final class FrontendAssets
         'verbum-studio-workspace' => 'frontend/app/src/styles/workspace.css',
         'verbum-studio-identification' => 'frontend/app/src/styles/identification.css',
         'verbum-studio-project-stage' => 'frontend/app/src/styles/project-stage.css',
+        'verbum-studio-technical' => 'frontend/app/src/styles/technical.css',
     ];
 
     private const SCRIPT_FILES = [
