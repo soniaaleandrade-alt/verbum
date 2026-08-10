@@ -103,6 +103,7 @@ export function ChapterWritingStage({ bookId, chapter, chapters, onOpenChapter, 
   const [assistantSuggestion, setAssistantSuggestion] = useState('');
   const draftRef = useRef<Draft>({ introduction: '', sections: [], conclusion: '' });
   const metaRef = useRef<WritingMeta>({ wordGoal: 0, notes: [], comments: [], flags: {}, usedSourceIds: [], usedIdeaIds: [] });
+  const loadedRef = useRef(false);
   const activeEditorRef = useRef<HTMLDivElement | null>(null);
   const activeKeyRef = useRef<EditorKey>('introduction');
   const saveTimerRef = useRef<number | null>(null);
@@ -111,6 +112,7 @@ export function ChapterWritingStage({ bookId, chapter, chapters, onOpenChapter, 
 
   useEffect(() => {
     let active = true;
+    loadedRef.current = false;
     setError('');
     getChapterWriting(bookId, chapter.id).then((result) => {
       if (!active) return;
@@ -134,6 +136,7 @@ export function ChapterWritingStage({ bookId, chapter, chapters, onOpenChapter, 
       setData(result);
       setTick((value) => value + 1);
       lastSessionSaveRef.current = Date.now();
+      loadedRef.current = true;
     }).catch((cause) => setError(cause instanceof Error ? cause.message : 'Não foi possível carregar a Redação.'));
     return () => {
       active = false;
@@ -150,6 +153,15 @@ export function ChapterWritingStage({ bookId, chapter, chapters, onOpenChapter, 
     const timer = window.setInterval(() => setTick((value) => value + 1), 30000);
     return () => window.clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => flushKeepalive();
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      flushKeepalive();
+    };
+  }, [bookId, chapter.id]);
 
   function updateDraft(key: EditorKey, html: string) {
     if (key === 'introduction') draftRef.current.introduction = html;
@@ -185,6 +197,23 @@ export function ChapterWritingStage({ bookId, chapter, chapters, onOpenChapter, 
       session_seconds: sessionSeconds,
       save_mode: mode,
     } as const;
+  }
+
+  function flushKeepalive() {
+    if (!loadedRef.current) return;
+    const config = window.VerbumStudioConfig;
+    if (!config?.apiRoot) return;
+    try {
+      void fetch(`${config.apiRoot}/books/${bookId}/chapters/${chapter.id}/writing`, {
+        method: 'PATCH',
+        credentials: 'same-origin',
+        keepalive: true,
+        headers: { 'Content-Type': 'application/json', 'X-WP-Nonce': config.nonce || '' },
+        body: JSON.stringify(inputPayload('autosave')),
+      }).catch(() => undefined);
+    } catch {
+      // Best-effort flush. Normal autosave remains the primary persistence path.
+    }
   }
 
   async function persist(mode: 'autosave' | 'manual'): Promise<boolean> {
