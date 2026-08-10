@@ -8,6 +8,7 @@ use VerbumStudio\Api\AuthController;
 use VerbumStudio\Api\LibraryController;
 use VerbumStudio\Api\ResponseFactory;
 use VerbumStudio\Api\RestController;
+use VerbumStudio\Api\WorkPlanningController;
 use VerbumStudio\Api\WorkProjectController;
 use VerbumStudio\Auth\Capabilities;
 use VerbumStudio\Integrations\Elementor\ElementorIntegration;
@@ -15,6 +16,7 @@ use VerbumStudio\Integrations\Supabase\SupabaseClient;
 use VerbumStudio\Integrations\Supabase\SupabaseConfig;
 use VerbumStudio\Library\LibraryPostTypes;
 use VerbumStudio\Library\LibraryRepository;
+use VerbumStudio\Library\WorkPlanningRepository;
 use VerbumStudio\Library\WorkProjectRepository;
 use VerbumStudio\Services\FrontendAssets;
 use VerbumStudio\Support\Logger;
@@ -28,7 +30,6 @@ final class Plugin
     {
         $this->container = $container;
         $this->config = $config;
-
         $this->registerServices();
     }
 
@@ -38,6 +39,7 @@ final class Plugin
         $this->container->get(AuthController::class)->register();
         $this->container->get(LibraryController::class)->register();
         $this->container->get(WorkProjectController::class)->register();
+        $this->container->get(WorkPlanningController::class)->register();
         $this->container->get(FrontendAssets::class)->register();
 
         add_action('init', function (): void {
@@ -56,19 +58,14 @@ final class Plugin
 
         add_filter('show_admin_bar', function ($show) {
             $capabilities = $this->container->get(Capabilities::class);
-            if ($capabilities->currentUserCanAccess() && ! $capabilities->currentUserIsAdmin()) {
-                return false;
-            }
+            if ($capabilities->currentUserCanAccess() && ! $capabilities->currentUserIsAdmin()) return false;
             return $show;
         });
 
         add_action('plugins_loaded', function (): void {
             $elementor = $this->container->get(ElementorIntegration::class);
             $this->container->get(Logger::class)->info($elementor->statusMessage());
-
-            if ($elementor->isAvailable()) {
-                $elementor->register();
-            }
+            if ($elementor->isAvailable()) $elementor->register();
         }, 20);
     }
 
@@ -83,32 +80,15 @@ final class Plugin
         $this->container->set(Logger::class, static fn (): Logger => new Logger());
         $this->container->set(Capabilities::class, static fn (): Capabilities => new Capabilities());
         $this->container->set(ResponseFactory::class, static fn (Container $container): ResponseFactory => new ResponseFactory($container->get(Config::class)));
-        $this->container->set(RestController::class, static fn (Container $container): RestController => new RestController(
-            $container->get(Config::class),
-            $container->get(ResponseFactory::class),
-            $container->get(Capabilities::class)
-        ));
-        $this->container->set(AuthController::class, static fn (Container $container): AuthController => new AuthController(
-            $container->get(Config::class),
-            $container->get(ResponseFactory::class),
-            $container->get(Capabilities::class)
-        ));
+        $this->container->set(RestController::class, static fn (Container $container): RestController => new RestController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class)));
+        $this->container->set(AuthController::class, static fn (Container $container): AuthController => new AuthController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class)));
         $this->container->set(LibraryPostTypes::class, static fn (): LibraryPostTypes => new LibraryPostTypes());
         $this->container->set(LibraryRepository::class, static fn (): LibraryRepository => new LibraryRepository());
         $this->container->set(WorkProjectRepository::class, static fn (): WorkProjectRepository => new WorkProjectRepository());
-        $this->container->set(LibraryController::class, static fn (Container $container): LibraryController => new LibraryController(
-            $container->get(Config::class),
-            $container->get(ResponseFactory::class),
-            $container->get(Capabilities::class),
-            $container->get(LibraryRepository::class)
-        ));
-        $this->container->set(WorkProjectController::class, static fn (Container $container): WorkProjectController => new WorkProjectController(
-            $container->get(Config::class),
-            $container->get(ResponseFactory::class),
-            $container->get(Capabilities::class),
-            $container->get(LibraryRepository::class),
-            $container->get(WorkProjectRepository::class)
-        ));
+        $this->container->set(WorkPlanningRepository::class, static fn (): WorkPlanningRepository => new WorkPlanningRepository());
+        $this->container->set(LibraryController::class, static fn (Container $container): LibraryController => new LibraryController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class)));
+        $this->container->set(WorkProjectController::class, static fn (Container $container): WorkProjectController => new WorkProjectController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkProjectRepository::class)));
+        $this->container->set(WorkPlanningController::class, static fn (Container $container): WorkPlanningController => new WorkPlanningController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkPlanningRepository::class)));
         $this->container->set(FrontendAssets::class, static fn (): FrontendAssets => new FrontendAssets());
         $this->container->set(SupabaseConfig::class, static fn (Container $container): SupabaseConfig => new SupabaseConfig($container->get(Config::class)));
         $this->container->set(SupabaseClient::class, static fn (Container $container): SupabaseClient => new SupabaseClient($container->get(SupabaseConfig::class)));

@@ -8,6 +8,7 @@ final class LibraryPostTypes
 {
     public const PROJECT = 'verbum_project';
     public const BOOK = 'verbum_book';
+    public const CHAPTER = 'verbum_chapter';
 
     public function register(): void
     {
@@ -23,6 +24,16 @@ final class LibraryPostTypes
 
         register_post_type(self::BOOK, [
             'label' => 'Obras Verbum',
+            'public' => false,
+            'show_ui' => false,
+            'show_in_rest' => false,
+            'supports' => ['title', 'editor', 'author'],
+            'capability_type' => 'post',
+            'map_meta_cap' => true,
+        ]);
+
+        register_post_type(self::CHAPTER, [
+            'label' => 'Capítulos Verbum',
             'public' => false,
             'show_ui' => false,
             'show_in_rest' => false,

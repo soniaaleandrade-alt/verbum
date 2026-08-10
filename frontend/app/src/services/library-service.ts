@@ -6,6 +6,9 @@ import type {
   LibraryData,
   VerbumBook,
   VerbumProject,
+  WorkPlanningInput,
+  WorkPlanningMutationResponse,
+  WorkPlanningProgress,
   WorkProjectInput,
   WorkProjectMutationResponse,
   WorkProjectProgress,
@@ -19,6 +22,10 @@ export const completeIdentification = (id: string) => apiPost<WorkWorkspaceData>
 export const getWorkProject = (id: string) => apiGet<WorkProjectProgress>(`/books/${id}/project-stage`);
 export const saveWorkProject = (id: string, input: WorkProjectInput) => apiPatch<WorkProjectMutationResponse>(`/books/${id}/project-stage`, input);
 export const completeWorkProject = (id: string) => apiPost<WorkProjectMutationResponse>(`/books/${id}/project-stage/complete`);
+export const getWorkPlanning = (id: string) => apiGet<WorkPlanningProgress>(`/books/${id}/planning-stage`);
+export const saveWorkPlanning = (id: string, input: WorkPlanningInput) => apiPatch<WorkPlanningMutationResponse>(`/books/${id}/planning-stage`, input);
+export const generatePlanningChapters = (id: string) => apiPost<WorkPlanningMutationResponse>(`/books/${id}/planning-stage/generate-chapters`);
+export const completeWorkPlanning = (id: string) => apiPost<WorkPlanningMutationResponse>(`/books/${id}/planning-stage/complete`);
 export const uploadBookCover = (id: string, file: File) => {
   const body = new FormData();
   body.append('cover', file);

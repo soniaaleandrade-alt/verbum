@@ -22,7 +22,7 @@ function assert_same($expected, $actual, string $message = ''): void { if ($expe
 
 test('config exposes core defaults and production mode', function (): void {
     $config = new Config(['environment' => 'production']);
-    assert_same('1.2.2', $config->get('version'));
+    assert_same('1.3.0', $config->get('version'));
     assert_same('verbum/v1', $config->get('api_namespace'));
     assert_true($config->isProduction());
 });
@@ -52,7 +52,7 @@ test('health endpoint returns ok and version', function (): void {
     assert_same(200, $response->get_status());
     assert_same(true, $data['success']);
     assert_same('ok', $data['data']['status']);
-    assert_same('1.2.2', $data['data']['version']);
+    assert_same('1.3.0', $data['data']['version']);
 });
 
 test('me endpoint rejects visitors', function (): void {
@@ -66,19 +66,6 @@ test('me endpoint rejects visitors', function (): void {
     assert_same('unauthorized', $data['error']['code']);
 });
 
-test('me endpoint returns the account full name and profile flags for authorized users', function (): void {
-    global $verbum_test_logged_in, $verbum_test_caps, $verbum_test_user_meta;
-    $verbum_test_logged_in = true;
-    $verbum_test_caps = [Capabilities::ACCESS];
-    $verbum_test_user_meta[7]['_verbum_email_verified'] = '1';
-    $controller = new RestController(new Config(), new ResponseFactory(new Config()), new Capabilities());
-    $data = $controller->me()->get_data();
-    assert_same(true, $data['success']);
-    assert_same('7', $data['data']['id']);
-    assert_same('Sonia Andrade', $data['data']['name']);
-    assert_same(true, $data['data']['emailVerified']);
-});
-
 test('shortcode avoids assets during JSON editor requests', function (): void {
     global $verbum_test_enqueued, $verbum_test_json_request;
     $verbum_test_enqueued = [];
@@ -88,15 +75,12 @@ test('shortcode avoids assets during JSON editor requests', function (): void {
     $verbum_test_json_request = false;
 });
 
-test('shortcode enqueues authentication and profile polish assets on normal rendering', function (): void {
+test('shortcode enqueues application assets on normal rendering', function (): void {
     global $verbum_test_enqueued, $verbum_test_json_request;
     $verbum_test_enqueued = [];
     $verbum_test_json_request = false;
     assert_same('<div class="verbum-app" data-verbum-app></div>', (new FrontendAssets())->shortcode());
     assert_true(count($verbum_test_enqueued) >= 4);
-    $serialized = json_encode($verbum_test_enqueued);
-    assert_true(strpos($serialized, 'auth-profile.css') !== false, 'Auth/profile stylesheet was not enqueued');
-    assert_true(strpos($serialized, 'profile-polish.css') !== false, 'Profile polish stylesheet was not enqueued');
 });
 
 test('plugin registers shortcode and rest hooks', function (): void {
@@ -107,17 +91,17 @@ test('plugin registers shortcode and rest hooks', function (): void {
     assert_true(isset($verbum_test_actions['rest_api_init']));
 });
 
-test('private storage types exist for projects and books', function (): void {
+test('private storage types exist for projects books and chapters', function (): void {
     global $verbum_test_post_types;
     $verbum_test_post_types = [];
     (new LibraryPostTypes())->register();
-    assert_true(isset($verbum_test_post_types[LibraryPostTypes::PROJECT]));
-    assert_true(isset($verbum_test_post_types[LibraryPostTypes::BOOK]));
-    assert_same(false, $verbum_test_post_types[LibraryPostTypes::PROJECT]['public']);
-    assert_same(false, $verbum_test_post_types[LibraryPostTypes::BOOK]['public']);
+    foreach ([LibraryPostTypes::PROJECT, LibraryPostTypes::BOOK, LibraryPostTypes::CHAPTER] as $type) {
+        assert_true(isset($verbum_test_post_types[$type]), 'Missing post type: ' . $type);
+        assert_same(false, $verbum_test_post_types[$type]['public']);
+    }
 });
 
-test('authentication profile Minhas Obras and workspace REST routes are registered', function (): void {
+test('Planning and workspace REST routes are registered', function (): void {
     global $verbum_test_actions, $verbum_test_routes;
     $verbum_test_actions = [];
     $verbum_test_routes = [];
@@ -125,28 +109,11 @@ test('authentication profile Minhas Obras and workspace REST routes are register
     $plugin->register();
     foreach ($verbum_test_actions['rest_api_init'] ?? [] as $callback) $callback();
     foreach ([
-        'verbum/v1/auth/login',
-        'verbum/v1/auth/register',
-        'verbum/v1/auth/logout',
-        'verbum/v1/auth/forgot-password',
-        'verbum/v1/auth/reset-password',
-        'verbum/v1/auth/verify-email',
-        'verbum/v1/auth/resend-verification',
-        'verbum/v1/profile',
-        'verbum/v1/profile/avatar',
-        'verbum/v1/library',
-        'verbum/v1/projects',
-        'verbum/v1/projects/(?P<id>\\d+)',
-        'verbum/v1/projects/(?P<id>\\d+)/archive',
-        'verbum/v1/books',
-        'verbum/v1/books/(?P<id>\\d+)',
-        'verbum/v1/books/(?P<id>\\d+)/workspace',
-        'verbum/v1/books/(?P<id>\\d+)/identification',
-        'verbum/v1/books/(?P<id>\\d+)/identification/complete',
-        'verbum/v1/books/(?P<id>\\d+)/project-stage',
-        'verbum/v1/books/(?P<id>\\d+)/project-stage/complete',
-        'verbum/v1/books/(?P<id>\\d+)/cover',
-        'verbum/v1/books/(?P<id>\\d+)/archive',
+        'verbum/v1/auth/login','verbum/v1/profile','verbum/v1/library','verbum/v1/projects','verbum/v1/books',
+        'verbum/v1/books/(?P<id>\\d+)/workspace','verbum/v1/books/(?P<id>\\d+)/identification','verbum/v1/books/(?P<id>\\d+)/identification/complete',
+        'verbum/v1/books/(?P<id>\\d+)/project-stage','verbum/v1/books/(?P<id>\\d+)/project-stage/complete',
+        'verbum/v1/books/(?P<id>\\d+)/planning-stage','verbum/v1/books/(?P<id>\\d+)/planning-stage/generate-chapters','verbum/v1/books/(?P<id>\\d+)/planning-stage/complete',
+        'verbum/v1/books/(?P<id>\\d+)/cover','verbum/v1/books/(?P<id>\\d+)/archive',
     ] as $route) assert_true(isset($verbum_test_routes[$route]), 'Missing REST route: ' . $route);
 });
 

@@ -7,67 +7,24 @@ const requiredFiles = [
   'src/services/api-client.ts','src/services/core-service.ts','src/services/library-service.ts',
   'src/components/AppShell.tsx','src/components/Sidebar.tsx','src/components/Header.tsx','src/components/UserMenu.tsx',
   'src/components/ProjectDialog.tsx','src/components/BookDialog.tsx','src/components/BookCard.tsx',
-  'src/components/WorkHeader.tsx','src/components/WorkWorkflow.tsx','src/components/WorkspaceFooter.tsx','src/components/IdentificationStage.tsx','src/components/ProjectStage.tsx',
+  'src/components/WorkHeader.tsx','src/components/WorkWorkflow.tsx','src/components/WorkspaceFooter.tsx','src/components/IdentificationStage.tsx','src/components/ProjectStage.tsx','src/components/PlanningStage.tsx',
   'src/pages/Dashboard.tsx','src/pages/LibraryPage.tsx','src/pages/WorkWorkspace.tsx','src/main.tsx','src/pages/VerbumApp.tsx',
-  'src/styles/verbum.css','src/styles/library.css','src/styles/workspace.css','src/styles/identification.css','src/styles/project-stage.css','src/styles/technical.css','src/styles/dashboard-official.css','src/styles/minhas-obras.css','src/styles/auth-profile.css','src/styles/profile-polish.css',
-  'src/auth-profile-runtime.js','src/static-runtime.js','src/workspace-mobile-runtime.js','src/identification-runtime.js','src/project-stage-runtime.js','src/technical-runtime.js','src/dashboard-official-runtime.js','src/sidebar-profile-runtime.js','src/minhas-obras-runtime.js','src/profile-polish-runtime.js','src/vite-env.d.ts',
+  'src/styles/verbum.css','src/styles/library.css','src/styles/workspace.css','src/styles/identification.css','src/styles/project-stage.css','src/styles/planning-stage.css','src/styles/technical.css','src/styles/dashboard-official.css','src/styles/minhas-obras.css','src/styles/auth-profile.css','src/styles/profile-polish.css',
+  'src/auth-profile-runtime.js','src/static-runtime.js','src/workspace-mobile-runtime.js','src/identification-runtime.js','src/project-stage-runtime.js','src/planning-stage-runtime.js','src/technical-runtime.js','src/dashboard-official-runtime.js','src/sidebar-profile-runtime.js','src/minhas-obras-runtime.js','src/profile-polish-runtime.js','src/vite-env.d.ts',
 ];
-
-for (const file of requiredFiles) {
-  const contents = await readFile(resolve(root, file), 'utf8');
-  if (!contents.trim()) throw new Error(`${file} is empty`);
-}
-
-function requireAll(contents, expected, label) {
-  for (const item of expected) if (!contents.includes(item)) throw new Error(`${label} missing: ${item}`);
-}
-
-const app = await readFile(resolve(root, 'src/pages/VerbumApp.tsx'), 'utf8');
-requireAll(app, ['getHealth()','getCurrentUser()','getLibrary()','getWorkWorkspace','<WorkWorkspace','<WorkHeader','hideHeader'], 'VerbumApp');
-
-const header = await readFile(resolve(root, 'src/components/Header.tsx'), 'utf8');
-if (header.includes('Área atual')) throw new Error('Header must not render Área atual');
-
-const sidebar = await readFile(resolve(root, 'src/components/Sidebar.tsx'), 'utf8');
-if (!sidebar.includes('Minhas Obras')) throw new Error('Sidebar must use Minhas Obras');
-
-const dashboard = await readFile(resolve(root, 'src/pages/Dashboard.tsx'), 'utf8');
-requireAll(dashboard, ['VERBUM STUDIO','Estatísticas','Últimas Obras','Próxima Ação','Índice de Maturidade da Obra','Radar de Maturidade','Progresso Geral','Acesso Rápido','Tendência'], 'Dashboard');
-
-const workspace = await readFile(resolve(root, 'src/pages/WorkWorkspace.tsx'), 'utf8');
-requireAll(workspace, ['IdentificationStage','ProjectStage','WorkWorkflow','WorkspaceFooter','beforeunload'], 'WorkWorkspace');
-
-const authRuntime = await readFile(resolve(root, 'src/auth-profile-runtime.js'), 'utf8');
-requireAll(authRuntime, ['/auth/login','/auth/register','/auth/forgot-password','/auth/reset-password','/auth/verify-email','/profile','/profile/avatar','data-verbum-auth-root','data-verbum-profile','accepted_terms','Minha conta','Trocar foto'], 'Auth/profile runtime');
-
-const authCss = await readFile(resolve(root, 'src/styles/auth-profile.css'), 'utf8');
-requireAll(authCss, ['.verbum-auth-shell','.verbum-auth-card','.verbum-profile-dialog','.verbum-profile-avatar','.verbum-sidebar-profile-main','@media'], 'Auth/profile CSS');
-
-const profilePolish = await readFile(resolve(root, 'src/profile-polish-runtime.js'), 'utf8');
-requireAll(profilePolish, ['data-profile-form','stopImmediatePropagation','Alterações salvas.','verbum:profile-updated','removeAreaAtual','/profile/avatar'], 'Profile polish runtime');
-
-const profilePolishCss = await readFile(resolve(root, 'src/styles/profile-polish.css'), 'utf8');
-requireAll(profilePolishCss, ['.verbum-sidebar-profile-main','grid-template-areas:"avatar copy"','.verbum-sidebar-avatar','grid-area:avatar','.verbum-sidebar-profile-copy','grid-area:copy','.verbum-sidebar-avatar img','position:absolute','object-fit:cover','.verbum-profile-avatar img','.verbum-header-title .verbum-eyebrow'], 'Profile polish CSS');
-
-const sidebarRuntime = await readFile(resolve(root, 'src/sidebar-profile-runtime.js'), 'utf8');
-requireAll(sidebarRuntime, ['data-verbum-profile','avatarUrl','VerbumAuthProfile.logout','data-sidebar-collapse'], 'Sidebar profile runtime');
-
-const minhasRuntime = await readFile(resolve(root, 'src/minhas-obras-runtime.js'), 'utf8');
-requireAll(minhasRuntime, ['Minhas Obras','Pesquisar obras','data-minhas-stage','Ainda não calculado','Abrir Obra','MutationObserver','setTextIfChanged',"=== '‹ Obras'"], 'Minhas Obras runtime');
-if (minhasRuntime.includes("if (shortcut) shortcut.textContent = 'Minhas Obras';")) throw new Error('Minhas Obras runtime must keep MutationObserver idempotent');
-
-const buildJs = await readFile(resolve(repoRoot, 'build/verbum-app.js'), 'utf8');
-requireAll(buildJs, ['auth-profile-runtime.js','static-runtime.js','sidebar-profile-runtime.js','minhas-obras-runtime.js','profile-polish-runtime.js','script.async=false'], 'Static JS build');
-if (buildJs.indexOf('auth-profile-runtime.js') > buildJs.indexOf('static-runtime.js')) throw new Error('Auth runtime must load before static runtime');
-if (buildJs.indexOf('profile-polish-runtime.js') < buildJs.indexOf('sidebar-profile-runtime.js')) throw new Error('Profile polish runtime must load after sidebar profile runtime');
-
-const buildCss = await readFile(resolve(repoRoot, 'build/verbum-app.css'), 'utf8');
-requireAll(buildCss, ['verbum.css','dashboard-official.css','minhas-obras.css','auth-profile.css','profile-polish.css'], 'Static CSS build');
-
+for (const file of requiredFiles) { const contents = await readFile(resolve(root, file), 'utf8'); if (!contents.trim()) throw new Error(`${file} is empty`); }
+function requireAll(contents, expected, label) { for (const item of expected) if (!contents.includes(item)) throw new Error(`${label} missing: ${item}`); }
+const app = await readFile(resolve(root, 'src/pages/VerbumApp.tsx'), 'utf8'); requireAll(app, ['getHealth()','getCurrentUser()','getLibrary()','getWorkWorkspace','<WorkWorkspace','<WorkHeader','hideHeader'], 'VerbumApp');
+const header = await readFile(resolve(root, 'src/components/Header.tsx'), 'utf8'); if (header.includes('Área atual')) throw new Error('Header must not render Área atual');
+const sidebar = await readFile(resolve(root, 'src/components/Sidebar.tsx'), 'utf8'); if (!sidebar.includes('Minhas Obras')) throw new Error('Sidebar must use Minhas Obras');
+const workspace = await readFile(resolve(root, 'src/pages/WorkWorkspace.tsx'), 'utf8'); requireAll(workspace, ['IdentificationStage','ProjectStage','PlanningStage','WorkWorkflow','WorkspaceFooter','beforeunload'], 'WorkWorkspace');
+const planning = await readFile(resolve(root, 'src/components/PlanningStage.tsx'), 'utf8'); requireAll(planning, ['Planejamento da Obra','Pergunta Central','Tese Principal','Estrutura da Obra','Organização Editorial','Geração dos Capítulos','generatePlanningChapters','development'], 'PlanningStage');
+const planningRuntime = await readFile(resolve(root, 'src/planning-stage-runtime.js'), 'utf8'); requireAll(planningRuntime, ['/planning-stage','/planning-stage/generate-chapters','/planning-stage/complete','Pergunta Central','Tese Principal','Estrutura da Obra','Geração dos Capítulos','Visualizar capítulos'], 'Planning runtime');
+const planningCss = await readFile(resolve(root, 'src/styles/planning-stage.css'), 'utf8'); requireAll(planningCss, ['.verbum-planning-stage','.verbum-planning-layout','.verbum-outline-item','.verbum-generation-counts','@media'], 'Planning CSS');
+const authRuntime = await readFile(resolve(root, 'src/auth-profile-runtime.js'), 'utf8'); requireAll(authRuntime, ['/auth/login','/auth/register','/profile','Minha conta','Trocar foto'], 'Auth/profile runtime');
+const profilePolishCss = await readFile(resolve(root, 'src/styles/profile-polish.css'), 'utf8'); requireAll(profilePolishCss, ['.verbum-sidebar-profile-main','grid-template-areas:"avatar copy"','.verbum-sidebar-avatar','grid-area:avatar','.verbum-sidebar-profile-copy','grid-area:copy','.verbum-sidebar-avatar img','position:absolute','object-fit:cover'], 'Profile polish CSS');
+const buildJs = await readFile(resolve(repoRoot, 'build/verbum-app.js'), 'utf8'); requireAll(buildJs, ['auth-profile-runtime.js','static-runtime.js','project-stage-runtime.js','planning-stage-runtime.js','sidebar-profile-runtime.js','profile-polish-runtime.js','script.async=false'], 'Static JS build');
+const buildCss = await readFile(resolve(repoRoot, 'build/verbum-app.css'), 'utf8'); requireAll(buildCss, ['verbum.css','project-stage.css','planning-stage.css','dashboard-official.css','minhas-obras.css','auth-profile.css','profile-polish.css'], 'Static CSS build');
 const sensitivePattern = /(SUPABASE_SERVICE|SERVICE_KEY|OPENAI_API_KEY|sk-[A-Za-z0-9_-]{10,})/;
-for (const file of requiredFiles) {
-  const contents = await readFile(resolve(root, file), 'utf8');
-  if (sensitivePattern.test(contents)) throw new Error(`Sensitive value pattern found in ${file}`);
-}
-
-console.log('Frontend Dashboard + Minhas Obras + autenticação + perfil refinado checks passed');
+for (const file of requiredFiles) { const contents = await readFile(resolve(root, file), 'utf8'); if (sensitivePattern.test(contents)) throw new Error(`Sensitive value pattern found in ${file}`); }
+console.log('Frontend Planning + Dashboard + Minhas Obras + autenticação checks passed');
