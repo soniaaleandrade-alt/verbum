@@ -14,7 +14,7 @@ $verbum_test_enqueued = [];
 $verbum_test_json_request = false;
 $verbum_test_logged_in = false;
 $verbum_test_caps = [];
-$verbum_test_user = (object) ['ID' => 7, 'display_name' => 'Autora Teste', 'user_email' => 'autora@example.test'];
+$verbum_test_user = (object) ['ID' => 7, 'display_name' => 'gestor', 'first_name' => 'Sonia', 'last_name' => 'Andrade', 'user_email' => 'autora@example.test'];
 
 final class WP_REST_Response
 {
