@@ -14,6 +14,7 @@ final class FrontendAssets
         'verbum-studio-project-stage' => 'frontend/app/src/styles/project-stage.css',
         'verbum-studio-planning-stage' => 'frontend/app/src/styles/planning-stage.css',
         'verbum-studio-development-stage' => 'frontend/app/src/styles/development-stage.css',
+        'verbum-studio-chapter-preparation' => 'frontend/app/src/styles/chapter-preparation.css',
         'verbum-studio-technical' => 'frontend/app/src/styles/technical.css',
         'verbum-studio-dashboard-official' => 'frontend/app/src/styles/dashboard-official.css',
         'verbum-studio-dashboard-polish' => 'frontend/app/src/styles/dashboard-polish.css',
@@ -32,6 +33,7 @@ final class FrontendAssets
         'frontend/app/src/project-stage-runtime.js',
         'frontend/app/src/planning-stage-runtime.js',
         'frontend/app/src/development-stage-runtime.js',
+        'frontend/app/src/chapter-preparation-runtime.js',
         'frontend/app/src/technical-runtime.js',
         'frontend/app/src/dashboard-official-runtime.js',
         'frontend/app/src/sidebar-profile-runtime.js',
@@ -48,26 +50,14 @@ final class FrontendAssets
     {
         $dependencies = [];
         foreach (self::STYLE_FILES as $handle => $relativePath) {
-            wp_enqueue_style(
-                $handle,
-                VERBUM_STUDIO_URL . $relativePath,
-                $dependencies,
-                $this->assetVersion($relativePath)
-            );
+            wp_enqueue_style($handle, VERBUM_STUDIO_URL . $relativePath, $dependencies, $this->assetVersion($relativePath));
             $dependencies = [$handle];
         }
 
-        wp_enqueue_script(
-            'verbum-studio-app',
-            VERBUM_STUDIO_URL . 'build/verbum-app.js',
-            [],
-            $this->latestAssetVersion(self::SCRIPT_FILES),
-            true
-        );
+        wp_enqueue_script('verbum-studio-app', VERBUM_STUDIO_URL . 'build/verbum-app.js', [], $this->latestAssetVersion(self::SCRIPT_FILES), true);
 
         $charset = function_exists('get_bloginfo') ? (string) get_bloginfo('charset') : 'UTF-8';
         $logoutUrl = html_entity_decode(wp_logout_url(home_url('/')), ENT_QUOTES, $charset !== '' ? $charset : 'UTF-8');
-
         wp_localize_script('verbum-studio-app', 'VerbumStudioConfig', [
             'apiRoot' => esc_url_raw(rest_url('verbum/v1')),
             'nonce' => wp_create_nonce('wp_rest'),
@@ -80,10 +70,7 @@ final class FrontendAssets
 
     public function shortcode(): string
     {
-        if ($this->shouldEnqueueForCurrentRequest()) {
-            $this->enqueue();
-        }
-
+        if ($this->shouldEnqueueForCurrentRequest()) $this->enqueue();
         return '<div class="verbum-app" data-verbum-app></div>';
     }
 
@@ -91,7 +78,6 @@ final class FrontendAssets
     {
         $path = VERBUM_STUDIO_PATH . $relativePath;
         $modified = is_file($path) ? filemtime($path) : false;
-
         return $modified === false ? VERBUM_STUDIO_VERSION : (string) $modified;
     }
 
@@ -101,28 +87,17 @@ final class FrontendAssets
         $latest = 0;
         foreach ($relativePaths as $relativePath) {
             $path = VERBUM_STUDIO_PATH . $relativePath;
-            if (! is_file($path)) {
-                continue;
-            }
+            if (! is_file($path)) continue;
             $modified = filemtime($path);
-            if ($modified !== false) {
-                $latest = max($latest, $modified);
-            }
+            if ($modified !== false) $latest = max($latest, $modified);
         }
-
         return $latest > 0 ? (string) $latest : VERBUM_STUDIO_VERSION;
     }
 
     private function shouldEnqueueForCurrentRequest(): bool
     {
-        if (defined('REST_REQUEST') && REST_REQUEST) {
-            return false;
-        }
-
-        if (function_exists('wp_is_json_request') && wp_is_json_request()) {
-            return false;
-        }
-
+        if (defined('REST_REQUEST') && REST_REQUEST) return false;
+        if (function_exists('wp_is_json_request') && wp_is_json_request()) return false;
         return true;
     }
 }
