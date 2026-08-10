@@ -26,6 +26,14 @@ type Props = {
 
 type Draft = { introduction: string; sections: ChapterWritingSection[]; conclusion: string };
 type EditorKey = 'introduction' | 'conclusion' | `section:${string}`;
+type WritingMeta = {
+  wordGoal: number;
+  notes: ChapterWritingNote[];
+  comments: ChapterWritingNote[];
+  flags: ChapterWritingFlags;
+  usedSourceIds: string[];
+  usedIdeaIds: string[];
+};
 
 type RichEditorProps = {
   html: string;
@@ -94,6 +102,7 @@ export function ChapterWritingStage({ bookId, chapter, chapters, onOpenChapter, 
   const [assistantBusy, setAssistantBusy] = useState(false);
   const [assistantSuggestion, setAssistantSuggestion] = useState('');
   const draftRef = useRef<Draft>({ introduction: '', sections: [], conclusion: '' });
+  const metaRef = useRef<WritingMeta>({ wordGoal: 0, notes: [], comments: [], flags: {}, usedSourceIds: [], usedIdeaIds: [] });
   const activeEditorRef = useRef<HTMLDivElement | null>(null);
   const activeKeyRef = useRef<EditorKey>('introduction');
   const saveTimerRef = useRef<number | null>(null);
@@ -105,13 +114,22 @@ export function ChapterWritingStage({ bookId, chapter, chapters, onOpenChapter, 
     setError('');
     getChapterWriting(bookId, chapter.id).then((result) => {
       if (!active) return;
+      const sourceIds = result.sources.filter((source) => source.used).map((source) => source.id);
       draftRef.current = { introduction: result.introduction, sections: result.sections, conclusion: result.conclusion };
+      metaRef.current = {
+        wordGoal: result.wordGoal,
+        notes: result.notes,
+        comments: result.comments,
+        flags: result.flags,
+        usedSourceIds: sourceIds,
+        usedIdeaIds: result.usedIdeaIds,
+      };
       setSections(result.sections);
       setWordGoal(result.wordGoal);
       setNotes(result.notes);
       setComments(result.comments);
       setFlags(result.flags);
-      setUsedSourceIds(result.sources.filter((source) => source.used).map((source) => source.id));
+      setUsedSourceIds(sourceIds);
       setUsedIdeaIds(result.usedIdeaIds);
       setData(result);
       setTick((value) => value + 1);
@@ -153,23 +171,24 @@ export function ChapterWritingStage({ bookId, chapter, chapters, onOpenChapter, 
   function inputPayload(mode: 'autosave' | 'manual') {
     const now = Date.now();
     const sessionSeconds = Math.max(0, Math.min(3600, Math.floor((now - lastSessionSaveRef.current) / 1000)));
+    const meta = metaRef.current;
     return {
       introduction: draftRef.current.introduction,
       sections: draftRef.current.sections,
       conclusion: draftRef.current.conclusion,
-      word_goal: wordGoal,
-      notes,
-      comments,
-      flags,
-      used_source_ids: usedSourceIds,
-      used_idea_ids: usedIdeaIds,
+      word_goal: meta.wordGoal,
+      notes: meta.notes,
+      comments: meta.comments,
+      flags: meta.flags,
+      used_source_ids: meta.usedSourceIds,
+      used_idea_ids: meta.usedIdeaIds,
       session_seconds: sessionSeconds,
       save_mode: mode,
     } as const;
   }
 
-  async function persist(mode: 'autosave' | 'manual') {
-    if (!data || savingRef.current) return;
+  async function persist(mode: 'autosave' | 'manual'): Promise<boolean> {
+    if (!data || savingRef.current) return false;
     if (saveTimerRef.current) { window.clearTimeout(saveTimerRef.current); saveTimerRef.current = null; }
     savingRef.current = true;
     setStatus('saving');
@@ -181,9 +200,11 @@ export function ChapterWritingStage({ bookId, chapter, chapters, onOpenChapter, 
       onDevelopmentChange(result.developmentStage);
       setStatus('saved');
       setError('');
+      return true;
     } catch (cause) {
       setStatus('error');
       setError(cause instanceof Error ? cause.message : 'Não foi possível salvar a Redação.');
+      return false;
     } finally {
       savingRef.current = false;
     }
@@ -192,6 +213,7 @@ export function ChapterWritingStage({ bookId, chapter, chapters, onOpenChapter, 
   function setActive(key: EditorKey, node: HTMLDivElement) {
     activeKeyRef.current = key;
     activeEditorRef.current = node;
+    setTick((value) => value + 1);
   }
 
   function command(name: string, value?: string) {
@@ -242,7 +264,15 @@ export function ChapterWritingStage({ bookId, chapter, chapters, onOpenChapter, 
     const text = window.prompt(kind === 'note' ? 'Digite a nota de produção:' : 'Digite o comentário:');
     if (!text?.trim()) return;
     const item = { id: `new-${Date.now()}`, text: text.trim(), createdAt: new Date().toISOString() };
-    if (kind === 'note') setNotes((current) => [...current, item]); else setComments((current) => [...current, item]);
+    if (kind === 'note') {
+      const next = [...metaRef.current.notes, item];
+      metaRef.current.notes = next;
+      setNotes(next);
+    } else {
+      const next = [...metaRef.current.comments, item];
+      metaRef.current.comments = next;
+      setComments(next);
+    }
     scheduleSave();
   }
 
@@ -250,14 +280,20 @@ export function ChapterWritingStage({ bookId, chapter, chapters, onOpenChapter, 
     const excerpt = source.excerpt ? `<p>${escapeHtml(source.excerpt)}</p>` : '';
     const reference = source.reference || source.title || source.author;
     insertHtml(`<blockquote class="verbum-writing-inserted-source">${excerpt}${reference ? `<cite>${escapeHtml(reference)}</cite>` : ''}</blockquote><p><br></p>`);
-    setUsedSourceIds((current) => current.includes(source.id) ? current : [...current, source.id]);
+    const next = metaRef.current.usedSourceIds.includes(source.id) ? metaRef.current.usedSourceIds : [...metaRef.current.usedSourceIds, source.id];
+    metaRef.current.usedSourceIds = next;
+    setUsedSourceIds(next);
     scheduleSave();
   }
 
   function useIdea(id: string, title: string, description: string) {
     const text = [title, description].filter(Boolean).join(': ');
-    setNotes((current) => [...current, { id: `new-${Date.now()}`, text, createdAt: new Date().toISOString() }]);
-    setUsedIdeaIds((current) => current.includes(id) ? current : [...current, id]);
+    const nextNotes = [...metaRef.current.notes, { id: `new-${Date.now()}`, text, createdAt: new Date().toISOString() }];
+    const nextIds = metaRef.current.usedIdeaIds.includes(id) ? metaRef.current.usedIdeaIds : [...metaRef.current.usedIdeaIds, id];
+    metaRef.current.notes = nextNotes;
+    metaRef.current.usedIdeaIds = nextIds;
+    setNotes(nextNotes);
+    setUsedIdeaIds(nextIds);
     scheduleSave();
   }
 
@@ -281,7 +317,8 @@ export function ChapterWritingStage({ bookId, chapter, chapters, onOpenChapter, 
 
   async function finish() {
     if (!data || savingRef.current) return;
-    await persist('manual');
+    const saved = await persist('manual');
+    if (!saved) return;
     setStatus('saving');
     try {
       const result = await completeChapterWriting(bookId, chapter.id);
@@ -309,7 +346,7 @@ export function ChapterWritingStage({ bookId, chapter, chapters, onOpenChapter, 
     <div className="verbum-writing-layout">
       <aside className="verbum-writing-chapters">
         <span className="verbum-writing-panel-label">Capítulos da obra</span>
-        <div>{chapters.map((item) => <button key={item.id} className={item.id === chapter.id ? 'is-active' : ''} onClick={() => item.id !== chapter.id && onOpenChapter(item.id)}><small>Capítulo {item.number} · {item.stageLabel}</small><strong>{item.title}</strong><span>{item.progress}%</span></button>)}</div>
+        <div>{chapters.map((item) => <button key={item.id} className={item.id === chapter.id ? 'is-active' : ''} onClick={async () => { if (item.id === chapter.id) return; const saved = await persist('autosave'); if (saved) onOpenChapter(item.id); }}><small>Capítulo {item.number} · {item.stageLabel}</small><strong>{item.title}</strong><span>{item.progress}%</span></button>)}</div>
       </aside>
 
       <main className="verbum-writing-center">
@@ -343,7 +380,7 @@ export function ChapterWritingStage({ bookId, chapter, chapters, onOpenChapter, 
           <section className="verbum-writing-block"><div className="verbum-writing-block-title"><span>Conclusão</span></div><RichEditor html={draftRef.current.conclusion} editorKey="conclusion" placeholder="Retome a mensagem essencial e conduza o leitor ao fechamento do capítulo..." onFocus={setActive} onChange={updateDraft} /></section>
         </article>
 
-        <div className="verbum-writing-metrics"><span><strong>{metrics.words.toLocaleString('pt-BR')}</strong> palavras</span><span><strong>{metrics.characters.toLocaleString('pt-BR')}</strong> caracteres</span><span><strong>{formatTime(elapsed)}</strong> de escrita</span><label>Meta <input type="number" min="0" value={wordGoal || ''} onChange={(event) => { setWordGoal(Math.max(0, Number(event.target.value))); scheduleSave(); }} placeholder="0" /> palavras</label><span><strong>{goalProgress}%</strong> da meta</span></div>
+        <div className="verbum-writing-metrics"><span><strong>{metrics.words.toLocaleString('pt-BR')}</strong> palavras</span><span><strong>{metrics.characters.toLocaleString('pt-BR')}</strong> caracteres</span><span><strong>{formatTime(elapsed)}</strong> de escrita</span><label>Meta <input type="number" min="0" value={wordGoal || ''} onChange={(event) => { const next = Math.max(0, Number(event.target.value)); metaRef.current.wordGoal = next; setWordGoal(next); scheduleSave(); }} placeholder="0" /> palavras</label><span><strong>{goalProgress}%</strong> da meta</span></div>
       </main>
 
       <aside className="verbum-writing-research">
@@ -361,7 +398,7 @@ export function ChapterWritingStage({ bookId, chapter, chapters, onOpenChapter, 
 
         <section className="verbum-writing-progress"><div className="verbum-writing-progress-top"><span className="verbum-writing-panel-label">Progresso da Redação</span><strong>{data.progress}%</strong></div><div className="verbum-writing-progress-bar"><span style={{ width: `${data.progress}%` }} /></div>{data.checklist.map((item) => {
           const manual = Object.prototype.hasOwnProperty.call(flags, item.key);
-          return <label key={item.key} className={item.completed ? 'is-complete' : ''}><input type="checkbox" disabled={!manual || item.key === 'completed'} checked={manual ? !!flags[item.key as keyof ChapterWritingFlags] : item.completed} onChange={(event) => { const next = { ...flags, [item.key]: event.target.checked }; setFlags(next); scheduleSave(); }} /><span>{item.label}</span></label>;
+          return <label key={item.key} className={item.completed ? 'is-complete' : ''}><input type="checkbox" disabled={!manual || item.key === 'completed'} checked={manual ? !!flags[item.key as keyof ChapterWritingFlags] : item.completed} onChange={(event) => { const next = { ...metaRef.current.flags, [item.key]: event.target.checked }; metaRef.current.flags = next; setFlags(next); scheduleSave(); }} /><span>{item.label}</span></label>;
         })}<button type="button" className="verbum-primary-button" disabled={!data.ready || data.completed || status === 'saving'} onClick={() => void finish()}>{data.completed ? 'Redação concluída ✓' : 'Concluir Redação ›'}</button></section>
 
         <section className="verbum-writing-versions"><span className="verbum-writing-panel-label">Histórico de versões</span>{data.versions.length === 0 ? <p>As versões de segurança aparecerão aqui.</p> : data.versions.slice(0, 5).map((version) => <div key={version.id}><span>{new Date(version.savedAt).toLocaleString('pt-BR')}</span><small>{version.wordCount.toLocaleString('pt-BR')} palavras · {version.kind}</small></div>)}</section>
