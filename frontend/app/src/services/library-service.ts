@@ -1,5 +1,8 @@
 import { apiDelete, apiGet, apiPatch, apiPost } from './api-client';
 import type {
+  ChapterPreparationInput,
+  ChapterPreparationMutationResponse,
+  ChapterPreparationProgress,
   CreateBookInput,
   CreateProjectInput,
   DevelopmentChapter,
@@ -32,6 +35,9 @@ export const completeWorkPlanning = (id: string) => apiPost<WorkPlanningMutation
 export const getWorkDevelopment = (id: string) => apiGet<WorkDevelopmentProgress>(`/books/${id}/development-stage`);
 export const getDevelopmentChapter = (id: string, chapterId: string) => apiGet<DevelopmentChapter>(`/books/${id}/chapters/${chapterId}`);
 export const completeWorkDevelopment = (id: string) => apiPost<WorkDevelopmentMutationResponse>(`/books/${id}/development-stage/complete`);
+export const getChapterPreparation = (id: string, chapterId: string) => apiGet<ChapterPreparationProgress>(`/books/${id}/chapters/${chapterId}/preparation`);
+export const saveChapterPreparation = (id: string, chapterId: string, input: ChapterPreparationInput) => apiPatch<ChapterPreparationMutationResponse>(`/books/${id}/chapters/${chapterId}/preparation`, input);
+export const completeChapterPreparation = (id: string, chapterId: string) => apiPost<ChapterPreparationMutationResponse>(`/books/${id}/chapters/${chapterId}/preparation/complete`);
 export const uploadBookCover = (id: string, file: File) => {
   const body = new FormData();
   body.append('cover', file);

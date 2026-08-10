@@ -8,6 +8,7 @@ use VerbumStudio\Api\AuthController;
 use VerbumStudio\Api\LibraryController;
 use VerbumStudio\Api\ResponseFactory;
 use VerbumStudio\Api\RestController;
+use VerbumStudio\Api\WorkChapterPreparationController;
 use VerbumStudio\Api\WorkDevelopmentController;
 use VerbumStudio\Api\WorkPlanningController;
 use VerbumStudio\Api\WorkProjectController;
@@ -17,6 +18,7 @@ use VerbumStudio\Integrations\Supabase\SupabaseClient;
 use VerbumStudio\Integrations\Supabase\SupabaseConfig;
 use VerbumStudio\Library\LibraryPostTypes;
 use VerbumStudio\Library\LibraryRepository;
+use VerbumStudio\Library\WorkChapterPreparationRepository;
 use VerbumStudio\Library\WorkDevelopmentRepository;
 use VerbumStudio\Library\WorkPlanningRepository;
 use VerbumStudio\Library\WorkProjectRepository;
@@ -43,6 +45,7 @@ final class Plugin
         $this->container->get(WorkProjectController::class)->register();
         $this->container->get(WorkPlanningController::class)->register();
         $this->container->get(WorkDevelopmentController::class)->register();
+        $this->container->get(WorkChapterPreparationController::class)->register();
         $this->container->get(FrontendAssets::class)->register();
 
         add_action('init', function (): void {
@@ -90,10 +93,12 @@ final class Plugin
         $this->container->set(WorkProjectRepository::class, static fn (): WorkProjectRepository => new WorkProjectRepository());
         $this->container->set(WorkPlanningRepository::class, static fn (): WorkPlanningRepository => new WorkPlanningRepository());
         $this->container->set(WorkDevelopmentRepository::class, static fn (): WorkDevelopmentRepository => new WorkDevelopmentRepository());
+        $this->container->set(WorkChapterPreparationRepository::class, static fn (): WorkChapterPreparationRepository => new WorkChapterPreparationRepository());
         $this->container->set(LibraryController::class, static fn (Container $container): LibraryController => new LibraryController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class)));
         $this->container->set(WorkProjectController::class, static fn (Container $container): WorkProjectController => new WorkProjectController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkProjectRepository::class)));
         $this->container->set(WorkPlanningController::class, static fn (Container $container): WorkPlanningController => new WorkPlanningController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkPlanningRepository::class)));
         $this->container->set(WorkDevelopmentController::class, static fn (Container $container): WorkDevelopmentController => new WorkDevelopmentController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkDevelopmentRepository::class)));
+        $this->container->set(WorkChapterPreparationController::class, static fn (Container $container): WorkChapterPreparationController => new WorkChapterPreparationController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkDevelopmentRepository::class), $container->get(WorkChapterPreparationRepository::class)));
         $this->container->set(FrontendAssets::class, static fn (): FrontendAssets => new FrontendAssets());
         $this->container->set(SupabaseConfig::class, static fn (Container $container): SupabaseConfig => new SupabaseConfig($container->get(Config::class)));
         $this->container->set(SupabaseClient::class, static fn (Container $container): SupabaseClient => new SupabaseClient($container->get(SupabaseConfig::class)));
