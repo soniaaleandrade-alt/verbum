@@ -22,7 +22,7 @@ function assert_same($expected, $actual, string $message = ''): void { if ($expe
 
 test('config exposes core defaults and production mode', function (): void {
     $config = new Config(['environment' => 'production']);
-    assert_same('1.5.0', $config->get('version'));
+    assert_same('1.6.0', $config->get('version'));
     assert_same('verbum/v1', $config->get('api_namespace'));
     assert_true($config->isProduction());
 });
@@ -52,7 +52,7 @@ test('health endpoint returns ok and version', function (): void {
     assert_same(200, $response->get_status());
     assert_same(true, $data['success']);
     assert_same('ok', $data['data']['status']);
-    assert_same('1.5.0', $data['data']['version']);
+    assert_same('1.6.0', $data['data']['version']);
 });
 
 test('me endpoint rejects visitors', function (): void {
@@ -75,7 +75,7 @@ test('shortcode avoids assets during JSON editor requests', function (): void {
     $verbum_test_json_request = false;
 });
 
-test('shortcode enqueues Planning Development and Preparation assets', function (): void {
+test('shortcode enqueues Planning Development Preparation and Research assets', function (): void {
     global $verbum_test_enqueued, $verbum_test_json_request;
     $verbum_test_enqueued = [];
     $verbum_test_json_request = false;
@@ -84,6 +84,7 @@ test('shortcode enqueues Planning Development and Preparation assets', function 
     assert_true(strpos((string) $serialized, 'planning-stage.css') !== false, 'Planning stylesheet was not enqueued');
     assert_true(strpos((string) $serialized, 'development-stage.css') !== false, 'Development stylesheet was not enqueued');
     assert_true(strpos((string) $serialized, 'chapter-preparation.css') !== false, 'Chapter preparation stylesheet was not enqueued');
+    assert_true(strpos((string) $serialized, 'chapter-research.css') !== false, 'Chapter research stylesheet was not enqueued');
 });
 
 test('plugin registers shortcode and rest hooks', function (): void {
@@ -94,17 +95,17 @@ test('plugin registers shortcode and rest hooks', function (): void {
     assert_true(isset($verbum_test_actions['rest_api_init']));
 });
 
-test('private storage types exist for projects books and chapters', function (): void {
+test('private storage types exist for projects books chapters and research', function (): void {
     global $verbum_test_post_types;
     $verbum_test_post_types = [];
     (new LibraryPostTypes())->register();
-    foreach ([LibraryPostTypes::PROJECT, LibraryPostTypes::BOOK, LibraryPostTypes::CHAPTER] as $type) {
+    foreach ([LibraryPostTypes::PROJECT, LibraryPostTypes::BOOK, LibraryPostTypes::CHAPTER, LibraryPostTypes::RESEARCH] as $type) {
         assert_true(isset($verbum_test_post_types[$type]), 'Missing post type: ' . $type);
         assert_same(false, $verbum_test_post_types[$type]['public']);
     }
 });
 
-test('Sprint 09 REST routes are registered', function (): void {
+test('Sprint 10 REST routes are registered', function (): void {
     global $verbum_test_actions, $verbum_test_routes;
     $verbum_test_actions = [];
     $verbum_test_routes = [];
@@ -118,6 +119,7 @@ test('Sprint 09 REST routes are registered', function (): void {
         'verbum/v1/books/(?P<id>\\d+)/planning-stage','verbum/v1/books/(?P<id>\\d+)/planning-stage/generate-chapters','verbum/v1/books/(?P<id>\\d+)/planning-stage/complete',
         'verbum/v1/books/(?P<id>\\d+)/development-stage','verbum/v1/books/(?P<id>\\d+)/development-stage/complete','verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)',
         'verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)/preparation','verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)/preparation/complete',
+        'verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)/research','verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)/research/sources','verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)/research/sources/(?P<source_id>\\d+)','verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)/research/complete',
         'verbum/v1/books/(?P<id>\\d+)/cover','verbum/v1/books/(?P<id>\\d+)/archive',
     ] as $route) assert_true(isset($verbum_test_routes[$route]), 'Missing REST route: ' . $route);
 });
