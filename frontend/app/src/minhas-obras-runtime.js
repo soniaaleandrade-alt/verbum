@@ -117,7 +117,7 @@
         '<p class="verbum-minhas-synopsis">' + esc(synopsis) + '</p>' +
         '<div class="verbum-minhas-imo"><span>IMO</span><strong>Ainda não calculado</strong><div><i></i></div></div>' +
         '<div class="verbum-minhas-progress"><div><span>Etapa ' + (stageIndex(book) + 1) + ' de ' + STAGES.length + '</span><strong>' + pct + '%</strong></div><div class="verbum-minhas-progress-track"><i style="width:' + pct + '%;background:' + color(book.color) + '"></i></div></div>' +
-        '<div class="verbum-minhas-meta"><span>▤ ' + num(book.plannedChapters) + ' cap.</span><span> T 0 pal.</span><span>▢ ' + esc(relativeDate(book.updatedAt)) + '</span></div>' +
+        '<div class="verbum-minhas-meta"><span>▤ ' + num(book.plannedChapters) + ' cap.</span><span>T 0 pal.</span><span>▢ ' + esc(relativeDate(book.updatedAt)) + '</span></div>' +
       '</div>' +
       '<div class="verbum-minhas-actions">' +
         (!archived ? '<button type="button" class="verbum-minhas-open" data-open-work="' + esc(book.id) + '">▣ Abrir Obra</button>' : '') +
@@ -153,8 +153,14 @@
   function polishLabels(root) {
     var state = root.__vs || {};
     root.querySelectorAll('[data-section="library"] span:last-child').forEach(function (node) { node.textContent = 'Minhas Obras'; });
+    root.querySelectorAll('[data-section="library"]').forEach(function (node) {
+      if ((node.textContent || '').trim() === 'Ir para Obras') node.textContent = 'Ir para Minhas Obras';
+    });
     var shortcut = root.querySelector('.verbum-dashboard-shortcut.is-library strong');
     if (shortcut) shortcut.textContent = 'Minhas Obras';
+    root.querySelectorAll('.verbum-dashboard-kicker').forEach(function (node) {
+      if ((node.textContent || '').trim() === 'LIVRO') node.textContent = 'OBRA';
+    });
     if (state.section === 'library') {
       var heading = root.querySelector('.verbum-header h1');
       if (heading) heading.textContent = 'Minhas Obras';
@@ -184,7 +190,18 @@
     var root = event.target.closest('[data-verbum-app]');
     if (!root) return;
     var local = ui(root);
-    if (event.target.matches('[data-minhas-search]')) { local.query = event.target.value || ''; renderLibrary(root); return; }
+    if (event.target.matches('[data-minhas-search]')) {
+      var cursor = event.target.selectionStart == null ? String(event.target.value || '').length : event.target.selectionStart;
+      local.query = event.target.value || '';
+      renderLibrary(root);
+      window.setTimeout(function () {
+        var input = root.querySelector('[data-minhas-search]');
+        if (!input) return;
+        input.focus();
+        if (input.setSelectionRange) input.setSelectionRange(cursor, cursor);
+      }, 0);
+      return;
+    }
     if (event.target.matches('[data-minhas-status]')) { local.status = event.target.value || 'active'; renderLibrary(root); return; }
     if (event.target.matches('[data-minhas-project]')) { local.project = event.target.value || 'all'; renderLibrary(root); return; }
     if (event.target.matches('[data-minhas-genre]')) { local.genre = event.target.value || 'all'; renderLibrary(root); return; }
