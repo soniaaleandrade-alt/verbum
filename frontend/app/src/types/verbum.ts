@@ -74,6 +74,28 @@ export type ChapterWritingInput = { introduction: string; sections: ChapterWriti
 export type ChapterWritingMutationResponse = { writing: ChapterWritingProgress; chapter: DevelopmentChapter; developmentStage: WorkDevelopmentProgress };
 export type ChapterWritingAssistantResponse = { suggestion: string; action: string };
 
+export type ChapterRevisionIssueType = 'content' | 'structure' | 'clarity' | 'grammar' | 'repetition' | 'source' | 'citation' | 'coherence' | 'style' | 'doctrine' | 'other';
+export type ChapterRevisionIssue = { id: string; type: ChapterRevisionIssueType; typeLabel: string; description: string; excerpt: string; status: 'pending' | 'resolved'; createdAt: string; resolvedAt: string };
+export type ChapterRevisionSource = { id: string; category: ResearchCategory; title: string; author: string; reference: string; excerpt: string; selectedForWriting: boolean; used: boolean; verified: boolean; dismissed: boolean };
+export type ChapterRevisionNote = { id: string; text: string; kind: 'note' | 'comment'; createdAt: string; resolved: boolean };
+export type ChapterRevisionFlags = { objective_checked?: boolean; central_question_answered?: boolean; thesis_developed?: boolean; structure_reviewed?: boolean; clarity_reviewed?: boolean; language_reviewed?: boolean; citations_checked?: boolean; ready_to_finish?: boolean };
+export type ChapterRevisionVersion = { id: string; savedAt: string; kind: string; wordCount: number };
+export type ChapterRevisionChecklistItem = StageChecklistItem & { automatic?: boolean };
+export type ChapterRevisionProgress = {
+  chapterId: string; title: string; writingCompleted: boolean; introduction: string; sections: ChapterWritingSection[]; conclusion: string; wordCount: number;
+  preparation: { objective: string; centralQuestion: string; thesis: string; mainMessage: string; guidingPhrase: string; structureItems: ChapterPreparationStructureItem[] };
+  writtenStructure: Array<{ id: string; title: string; order: number }>;
+  sources: ChapterRevisionSource[]; usedSources: ChapterRevisionSource[]; unusedSelectedSources: ChapterRevisionSource[]; verifiedSourceIds: string[]; dismissedSourceIds: string[];
+  notes: ChapterRevisionNote[]; comments: ChapterRevisionNote[]; resolvedNoteIds: string[]; resolvedCommentIds: string[];
+  issues: ChapterRevisionIssue[]; pendingIssueCount: number; issueTypes: Array<{ key: ChapterRevisionIssueType; label: string }>;
+  flags: ChapterRevisionFlags; checklist: ChapterRevisionChecklistItem[]; progress: number; completedCount: number; total: number; ready: boolean; completed: boolean; completedAt: string; lastSavedAt: string;
+  alteredAfterCompletion: boolean; alteredAfterCompletionAt: string; versions: ChapterRevisionVersion[];
+};
+export type ChapterRevisionInput = { introduction: string; sections: ChapterWritingSection[]; conclusion: string; flags: ChapterRevisionFlags; verified_source_ids: string[]; dismissed_source_ids: string[]; resolved_note_ids: string[]; resolved_comment_ids: string[]; save_mode: 'autosave' | 'manual' };
+export type ChapterRevisionIssueInput = { type?: ChapterRevisionIssueType; description?: string; excerpt?: string; status?: 'pending' | 'resolved' };
+export type ChapterRevisionMutationResponse = { revision: ChapterRevisionProgress; chapter: DevelopmentChapter; developmentStage: WorkDevelopmentProgress };
+export type ChapterRevisionAssistantResponse = { suggestion: string; action: string };
+
 export type WorkWorkspaceData = { book: VerbumBook; project: VerbumProject; currentStage: WorkStageKey; workflow: WorkWorkflowStep[]; identification: IdentificationProgress; metrics: WorkMetrics };
 export type LibraryData = { projects: VerbumProject[]; books: VerbumBook[] };
 export type CreateProjectInput = { name: string; description?: string };
