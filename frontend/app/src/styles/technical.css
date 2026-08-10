@@ -1,0 +1,9 @@
+[data-verbum-app]{--verbum-viewport-offset:0px;position:fixed!important;inset:var(--verbum-viewport-offset) 0 0!important;z-index:99990;width:100vw!important;height:calc(100vh - var(--verbum-viewport-offset))!important;max-width:none!important;max-height:none!important;margin:0!important;padding:0!important;overflow:auto!important;background:#f5f6f8}
+body.admin-bar [data-verbum-app]{--verbum-viewport-offset:32px}
+[data-verbum-app]>.verbum-app,[data-verbum-app] .verbum-shell{min-height:100%;height:auto}
+[data-verbum-app] .verbum-sidebar{height:calc(100vh - var(--verbum-viewport-offset));min-height:calc(100vh - var(--verbum-viewport-offset))}
+.verbum-workspace-footer.is-first-stage{justify-content:flex-end}
+.verbum-workspace-footer-spacer{display:block;min-width:1px}
+.verbum-form-helper{margin:14px 0 0;padding:11px 13px;border-radius:9px;background:#f7f8fa;color:#6f7681;font-size:11px;line-height:1.55}
+.verbum-status-chip{white-space:nowrap}
+@media(max-width:782px){body.admin-bar [data-verbum-app]{--verbum-viewport-offset:46px}}

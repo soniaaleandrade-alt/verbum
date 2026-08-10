@@ -8,9 +8,13 @@ type Props = {
 
 function relativeDate(value: string) {
   if (!value) return '—';
-  const date = new Date(value);
+  const normalized = /Z$|[+-]\d\d:\d\d$/.test(value) ? value : `${value}Z`;
+  const date = new Date(normalized);
+  if (Number.isNaN(date.getTime())) return '—';
   const today = new Date();
-  const diff = Math.floor((today.setHours(0,0,0,0) - new Date(date).setHours(0,0,0,0)) / 86400000);
+  const dateDay = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const todayDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const diff = Math.round((todayDay.getTime() - dateDay.getTime()) / 86400000);
   if (diff === 0) return 'hoje';
   if (diff === 1) return 'ontem';
   return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });

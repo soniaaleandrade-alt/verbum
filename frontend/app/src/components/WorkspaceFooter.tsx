@@ -6,6 +6,7 @@ type Props = {
   onBackToLibrary: () => void;
   previousDisabled?: boolean;
   previousLabel?: string;
+  hidePrevious?: boolean;
   saveState?: SaveState;
   saveDisabled?: boolean;
   continueDisabled?: boolean;
@@ -27,6 +28,7 @@ export function WorkspaceFooter({
   onBackToLibrary,
   previousDisabled,
   previousLabel,
+  hidePrevious = false,
   saveState = 'saved',
   saveDisabled = true,
   continueDisabled = true,
@@ -37,15 +39,19 @@ export function WorkspaceFooter({
   const isPreviousDisabled = previousDisabled ?? !canGoBack;
   const label = previousLabel ?? 'Etapa anterior';
   return (
-    <footer className="verbum-workspace-footer">
-      <button
-        type="button"
-        className="verbum-workspace-previous"
-        disabled={isPreviousDisabled}
-        onClick={canGoBack ? onPrevious : onBackToLibrary}
-      >
-        ‹ {label}
-      </button>
+    <footer className={`verbum-workspace-footer${hidePrevious ? ' is-first-stage' : ''}`}>
+      {hidePrevious ? (
+        <span className="verbum-workspace-footer-spacer" aria-hidden="true" />
+      ) : (
+        <button
+          type="button"
+          className="verbum-workspace-previous"
+          disabled={isPreviousDisabled}
+          onClick={canGoBack ? onPrevious : onBackToLibrary}
+        >
+          ‹ {label}
+        </button>
+      )}
       <div className="verbum-workspace-save-actions">
         <span className={`verbum-save-state is-${saveState}`}>{stateLabels[saveState]}</span>
         <button type="button" className="verbum-secondary-button" disabled={saveDisabled} onClick={onSave}>Salvar</button>
