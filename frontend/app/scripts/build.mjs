@@ -12,12 +12,12 @@ const js = `(function(){
   if(!current||!current.src){return;}
   var query='';
   try{query=new URL(current.src,document.baseURI).search||'';}catch(e){query='';}
-  ['static-runtime.js','workspace-mobile-runtime.js','identification-runtime.js','project-stage-runtime.js','technical-runtime.js','dashboard-official-runtime.js','sidebar-profile-runtime.js','minhas-obras-runtime.js'].forEach(function(file){
+  ['auth-profile-runtime.js','static-runtime.js','workspace-mobile-runtime.js','identification-runtime.js','project-stage-runtime.js','technical-runtime.js','dashboard-official-runtime.js','sidebar-profile-runtime.js','minhas-obras-runtime.js'].forEach(function(file){
     var source=current.src.replace(/build\\/verbum-app\\.js(?:\\?.*)?$/,'frontend/app/src/'+file);
     if(!source||source===current.src){return;}
     var script=document.createElement('script');
+    script.async=false;
     script.src=source+query;
-    script.defer=false;
     document.head.appendChild(script);
   });
 })();
@@ -33,9 +33,10 @@ const css = `@import url("../frontend/app/src/styles/verbum.css");
 @import url("../frontend/app/src/styles/dashboard-polish.css");
 @import url("../frontend/app/src/styles/sidebar-profile.css");
 @import url("../frontend/app/src/styles/minhas-obras.css");
+@import url("../frontend/app/src/styles/auth-profile.css");
 `;
 
 await mkdir(buildDir, { recursive: true });
 await writeFile(resolve(buildDir, 'verbum-app.js'), js);
 await writeFile(resolve(buildDir, 'verbum-app.css'), css);
-console.log('Built official dashboard, sidebar profile and Minhas Obras assets for Verbum Studio');
+console.log('Built Dashboard, Minhas Obras, autenticação e perfil assets for Verbum Studio');
