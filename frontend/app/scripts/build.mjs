@@ -30,6 +30,7 @@ const css = `@import url("../frontend/app/src/styles/verbum.css");
 @import url("../frontend/app/src/styles/project-stage.css");
 @import url("../frontend/app/src/styles/planning-stage.css");
 @import url("../frontend/app/src/styles/development-stage.css");
+@import url("../frontend/app/src/styles/chapter-workflow.css");
 @import url("../frontend/app/src/styles/chapter-preparation.css");
 @import url("../frontend/app/src/styles/chapter-research.css");
 @import url("../frontend/app/src/styles/technical.css");
