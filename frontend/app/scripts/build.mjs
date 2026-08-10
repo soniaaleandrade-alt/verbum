@@ -28,6 +28,7 @@ const css = `@import url("../frontend/app/src/styles/verbum.css");
 @import url("../frontend/app/src/styles/workspace.css");
 @import url("../frontend/app/src/styles/identification.css");
 @import url("../frontend/app/src/styles/project-stage.css");
+@import url("../frontend/app/src/styles/technical.css");
 `;
 
 await mkdir(buildDir, { recursive: true });
