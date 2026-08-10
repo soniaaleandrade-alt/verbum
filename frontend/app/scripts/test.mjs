@@ -10,8 +10,8 @@ const requiredFiles = [
   'src/components/ProjectDialog.tsx','src/components/BookDialog.tsx','src/components/BookCard.tsx',
   'src/components/WorkHeader.tsx','src/components/WorkWorkflow.tsx','src/components/WorkspaceFooter.tsx','src/components/IdentificationStage.tsx','src/components/ProjectStage.tsx',
   'src/pages/Dashboard.tsx','src/pages/LibraryPage.tsx','src/pages/WorkWorkspace.tsx','src/pages/VerbumApp.tsx','src/main.tsx',
-  'src/styles/verbum.css','src/styles/library.css','src/styles/workspace.css','src/styles/identification.css','src/styles/project-stage.css',
-  'src/static-runtime.js','src/workspace-mobile-runtime.js','src/identification-runtime.js','src/project-stage-runtime.js','src/vite-env.d.ts',
+  'src/styles/verbum.css','src/styles/library.css','src/styles/workspace.css','src/styles/identification.css','src/styles/project-stage.css','src/styles/technical.css',
+  'src/static-runtime.js','src/workspace-mobile-runtime.js','src/identification-runtime.js','src/project-stage-runtime.js','src/technical-runtime.js','src/vite-env.d.ts',
 ];
 for (const file of requiredFiles) {
   const contents = await readFile(resolve(root, file), 'utf8');
@@ -42,6 +42,24 @@ for (const expected of [
   if (!projectStage.includes(expected)) throw new Error(`ProjectStage missing: ${expected}`);
 }
 
+const bookDialog = await readFile(resolve(root, 'src/components/BookDialog.tsx'), 'utf8');
+for (const expected of ['Projeto *','Título *','Subtítulo','identificação editorial completa']) {
+  if (!bookDialog.includes(expected)) throw new Error(`Simplified BookDialog missing: ${expected}`);
+}
+for (const removed of ['Capítulos previstos','Meta de palavras','Coautor (opcional)','Série (opcional)']) {
+  if (bookDialog.includes(removed)) throw new Error(`BookDialog must not duplicate Identification field: ${removed}`);
+}
+
+const bookCard = await readFile(resolve(root, 'src/components/BookCard.tsx'), 'utf8');
+for (const expected of ['Situação:','stageLabels','Etapa atual']) {
+  if (!bookCard.includes(expected)) throw new Error(`BookCard missing workflow clarification: ${expected}`);
+}
+
+const footer = await readFile(resolve(root, 'src/components/WorkspaceFooter.tsx'), 'utf8');
+for (const expected of ['hidePrevious','is-first-stage','verbum-workspace-footer-spacer']) {
+  if (!footer.includes(expected)) throw new Error(`WorkspaceFooter missing first-stage behavior: ${expected}`);
+}
+
 const libraryService = await readFile(resolve(root, 'src/services/library-service.ts'), 'utf8');
 for (const expected of ['/workspace','/identification','/project-stage','/project-stage/complete','getWorkProject','saveWorkProject','completeWorkProject']) {
   if (!libraryService.includes(expected)) throw new Error(`Library service missing endpoint: ${expected}`);
@@ -52,17 +70,27 @@ for (const expected of ['.verbum-project-stage-layout','.verbum-project-card','.
   if (!projectCss.includes(expected)) throw new Error(`Projeto da Obra CSS missing: ${expected}`);
 }
 
+const technicalCss = await readFile(resolve(root, 'src/styles/technical.css'), 'utf8');
+for (const expected of ['[data-verbum-app]','position:fixed','body.admin-bar','is-first-stage','.verbum-form-helper']) {
+  if (!technicalCss.includes(expected)) throw new Error(`Technical CSS missing: ${expected}`);
+}
+
 const projectRuntime = await readFile(resolve(root, 'src/project-stage-runtime.js'), 'utf8');
 for (const expected of ['/project-stage','/project-stage/complete','MutationObserver','Progresso da Etapa','Adicionar objetivo','beforeunload']) {
   if (!projectRuntime.includes(expected)) throw new Error(`Projeto da Obra runtime missing: ${expected}`);
 }
 
+const technicalRuntime = await readFile(resolve(root, 'src/technical-runtime.js'), 'utf8');
+for (const expected of ['data-book-form','Situação:','hideIdentificationPrevious','ÚLTIMA EDIÇÃO','MutationObserver']) {
+  if (!technicalRuntime.includes(expected)) throw new Error(`Technical runtime missing: ${expected}`);
+}
+
 const buildJs = await readFile(resolve(repoRoot, 'build/verbum-app.js'), 'utf8');
 const buildCss = await readFile(resolve(repoRoot, 'build/verbum-app.css'), 'utf8');
-for (const expected of ['static-runtime.js','workspace-mobile-runtime.js','identification-runtime.js','project-stage-runtime.js']) {
+for (const expected of ['static-runtime.js','workspace-mobile-runtime.js','identification-runtime.js','project-stage-runtime.js','technical-runtime.js','source+query']) {
   if (!buildJs.includes(expected)) throw new Error(`Static JS build must load: ${expected}`);
 }
-for (const expected of ['verbum.css','library.css','workspace.css','identification.css','project-stage.css']) {
+for (const expected of ['verbum.css','library.css','workspace.css','identification.css','project-stage.css','technical.css']) {
   if (!buildCss.includes(expected)) throw new Error(`Static CSS build missing: ${expected}`);
 }
 
@@ -71,4 +99,4 @@ for (const file of requiredFiles) {
   const contents = await readFile(resolve(root, file), 'utf8');
   if (sensitivePattern.test(contents)) throw new Error(`Sensitive value pattern found in ${file}`);
 }
-console.log('Frontend Sprint 06 Projeto da Obra static checks passed');
+console.log('Frontend technical hardening checks passed');
