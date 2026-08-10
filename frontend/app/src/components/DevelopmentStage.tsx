@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { completeWorkDevelopment, getDevelopmentChapter, getWorkDevelopment } from '../services/library-service';
 import type { ChapterStageKey, DevelopmentChapter, WorkDevelopmentProgress, WorkStageKey, WorkWorkspaceData } from '../types/verbum';
 import { WorkspaceFooter } from './WorkspaceFooter';
@@ -22,6 +23,8 @@ const filters: Array<{ key: 'all' | ChapterStageKey | 'completed'; label: string
 const stageColors: Record<ChapterStageKey, string> = {
   preparation: '#0f7182', research: '#2d75b8', writing: '#bd7724', revision: '#7a3cc8',
 };
+
+type StageColorStyle = CSSProperties & { '--stage-color': string };
 
 function relativeDate(value: string) {
   if (!value) return '—';
@@ -91,28 +94,26 @@ export function DevelopmentStage({ workspace, onWorkspaceChange, onStageChange, 
   if (!data) return <section className="verbum-stage-content verbum-development-state is-error">{error || 'Desenvolvimento indisponível.'}</section>;
 
   if (chapter) {
-    return <>
-      <section className="verbum-stage-content verbum-chapter-workspace">
-        <button type="button" className="verbum-chapter-back" onClick={() => setChapter(null)}>‹ Desenvolvimento</button>
-        <header className="verbum-chapter-header">
-          <div><span>Capítulo {chapter.number}</span><h2>{chapter.title}</h2><p>{chapter.stageLabel} · {chapter.progress}% concluído</p></div>
-          <span className="verbum-chapter-save-state">Salvo</span>
-        </header>
-        <nav className="verbum-chapter-workflow">
-          {chapter.workflow.map((step) => <div key={step.key} className={`is-${step.status}`}><span>{step.status === 'completed' ? '✓' : step.status === 'locked' ? '⌑' : step.order}</span><strong>{step.label}</strong></div>)}
-        </nav>
-        <div className="verbum-chapter-stage-placeholder">
-          <span className="verbum-chapter-stage-icon">{chapter.stage === 'preparation' ? '◎' : chapter.stage === 'research' ? '⌕' : chapter.stage === 'writing' ? '✎' : '✓'}</span>
-          <h3>{chapter.stageLabel} do Capítulo</h3>
-          <p>O fluxo do capítulo está pronto. Os campos funcionais desta etapa serão implementados no sprint correspondente.</p>
-        </div>
-        <footer className="verbum-chapter-navigation">
-          <button type="button" disabled={!chapter.previousId} onClick={() => chapter.previousId && openChapter(chapter.previousId)}>‹ Capítulo anterior</button>
-          <span>{chapter.position} de {chapter.totalChapters}</span>
-          <button type="button" disabled={!chapter.nextId} onClick={() => chapter.nextId && openChapter(chapter.nextId)}>Próximo capítulo ›</button>
-        </footer>
-      </section>
-    </>;
+    return <section className="verbum-stage-content verbum-chapter-workspace">
+      <button type="button" className="verbum-chapter-back" onClick={() => setChapter(null)}>‹ Desenvolvimento</button>
+      <header className="verbum-chapter-header">
+        <div><span>Capítulo {chapter.number}</span><h2>{chapter.title}</h2><p>{chapter.stageLabel} · {chapter.progress}% concluído</p></div>
+        <span className="verbum-chapter-save-state">Salvo</span>
+      </header>
+      <nav className="verbum-chapter-workflow">
+        {chapter.workflow.map((step) => <div key={step.key} className={`is-${step.status}`}><span>{step.status === 'completed' ? '✓' : step.status === 'locked' ? '⌑' : step.order}</span><strong>{step.label}</strong></div>)}
+      </nav>
+      <div className="verbum-chapter-stage-placeholder">
+        <span className="verbum-chapter-stage-icon">{chapter.stage === 'preparation' ? '◎' : chapter.stage === 'research' ? '⌕' : chapter.stage === 'writing' ? '✎' : '✓'}</span>
+        <h3>{chapter.stageLabel} do Capítulo</h3>
+        <p>O fluxo do capítulo está pronto. Os campos funcionais desta etapa serão implementados no sprint correspondente.</p>
+      </div>
+      <footer className="verbum-chapter-navigation">
+        <button type="button" disabled={!chapter.previousId} onClick={() => chapter.previousId && openChapter(chapter.previousId)}>‹ Capítulo anterior</button>
+        <span>{chapter.position} de {chapter.totalChapters}</span>
+        <button type="button" disabled={!chapter.nextId} onClick={() => chapter.nextId && openChapter(chapter.nextId)}>Próximo capítulo ›</button>
+      </footer>
+    </section>;
   }
 
   const summary = data.summary;
@@ -138,7 +139,7 @@ export function DevelopmentStage({ workspace, onWorkspaceChange, onStageChange, 
       {data.chapters.length === 0 ? <div className="verbum-development-empty"><h3>Nenhum capítulo foi gerado ainda.</h3><p>Volte ao Planejamento da Obra, adicione capítulos ao índice provisório e gere a estrutura.</p><button type="button" onClick={() => onStageChange('planning')}>Voltar ao Planejamento</button></div> : visible.length === 0 ? <div className="verbum-development-empty"><h3>Nenhum capítulo encontrado.</h3><p>Ajuste a pesquisa ou os filtros para visualizar outros capítulos.</p></div> : <div className="verbum-chapter-list">
         {visible.map((item) => <article className="verbum-chapter-card" key={item.id}>
           <div className="verbum-chapter-card-order">{String(item.number).padStart(2, '0')}</div>
-          <div className="verbum-chapter-card-main"><div className="verbum-chapter-card-top"><span className="verbum-chapter-stage-badge" style={{ '--stage-color': stageColors[item.stage] } as React.CSSProperties}>{item.completed ? 'Concluído' : item.stageLabel}</span><span>{item.progress}% concluído</span></div><h3>{item.title}</h3><div className="verbum-chapter-progress"><span style={{ width: `${item.progress}%` }} /></div><div className="verbum-chapter-card-meta"><span>{item.wordCount.toLocaleString('pt-BR')} palavras</span><span>Última edição: {relativeDate(item.lastEdited)}</span></div></div>
+          <div className="verbum-chapter-card-main"><div className="verbum-chapter-card-top"><span className="verbum-chapter-stage-badge" style={{ '--stage-color': stageColors[item.stage] } as StageColorStyle}>{item.completed ? 'Concluído' : item.stageLabel}</span><span>{item.progress}% concluído</span></div><h3>{item.title}</h3><div className="verbum-chapter-progress"><span style={{ width: `${item.progress}%` }} /></div><div className="verbum-chapter-card-meta"><span>{item.wordCount.toLocaleString('pt-BR')} palavras</span><span>Última edição: {relativeDate(item.lastEdited)}</span></div></div>
           <button type="button" className="verbum-chapter-open" onClick={() => openChapter(item.id)}>Abrir capítulo ›</button>
         </article>)}
       </div>}
