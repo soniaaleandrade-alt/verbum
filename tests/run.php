@@ -22,7 +22,7 @@ function assert_same($expected, $actual, string $message = ''): void { if ($expe
 
 test('config exposes core defaults and production mode', function (): void {
     $config = new Config(['environment' => 'production']);
-    assert_same('1.1.0', $config->get('version'));
+    assert_same('1.1.1', $config->get('version'));
     assert_same('verbum/v1', $config->get('api_namespace'));
     assert_true($config->isProduction());
 });
@@ -51,7 +51,7 @@ test('health endpoint returns ok and version', function (): void {
     assert_same(200, $response->get_status());
     assert_same(true, $data['success']);
     assert_same('ok', $data['data']['status']);
-    assert_same('1.1.0', $data['data']['version']);
+    assert_same('1.1.1', $data['data']['version']);
 });
 
 test('me endpoint rejects visitors', function (): void {
