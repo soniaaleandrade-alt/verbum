@@ -43,6 +43,7 @@ jobs:
           node --check frontend/app/src/static-runtime.js
           node --check frontend/app/src/workspace-mobile-runtime.js
           node --check frontend/app/src/identification-runtime.js
+          node --check frontend/app/src/project-stage-runtime.js
 
       - name: PHP tests
         run: composer test

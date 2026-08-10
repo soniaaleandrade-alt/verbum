@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { IdentificationStage } from '../components/IdentificationStage';
+import { ProjectStage } from '../components/ProjectStage';
 import { WorkWorkflow } from '../components/WorkWorkflow';
 import { WorkspaceFooter } from '../components/WorkspaceFooter';
 import type { WorkStageKey, WorkWorkspaceData } from '../types/verbum';
@@ -50,11 +51,8 @@ export function WorkWorkspace({ workspace, selectedStage, onStageChange, onBackT
   }
 
   function previous() {
-    if (selectedAccessibleIndex > 0) {
-      guarded(() => onStageChange(accessibleSteps[selectedAccessibleIndex - 1].key));
-    } else {
-      guarded(onBackToLibrary);
-    }
+    if (selectedAccessibleIndex > 0) guarded(() => onStageChange(accessibleSteps[selectedAccessibleIndex - 1].key));
+    else guarded(onBackToLibrary);
   }
 
   return (
@@ -62,14 +60,9 @@ export function WorkWorkspace({ workspace, selectedStage, onStageChange, onBackT
       <div className="verbum-work-breadcrumb">Obras <span>›</span> {workspace.book.title || 'Obra sem título'} <span>›</span> {selected.label}</div>
       <WorkWorkflow steps={workspace.workflow} selectedStage={selected.key} onSelect={(stage) => guarded(() => onStageChange(stage))} />
       {selected.key === 'identification' ? (
-        <IdentificationStage
-          workspace={workspace}
-          onWorkspaceChange={onWorkspaceChange}
-          onStageChange={onStageChange}
-          onBackToLibrary={() => guarded(onBackToLibrary)}
-          onDirtyChange={setDirty}
-          onPersisted={onPersisted}
-        />
+        <IdentificationStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={onStageChange} onBackToLibrary={() => guarded(onBackToLibrary)} onDirtyChange={setDirty} onPersisted={onPersisted} />
+      ) : selected.key === 'project' ? (
+        <ProjectStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={(stage) => guarded(() => onStageChange(stage))} onDirtyChange={setDirty} onPersisted={onPersisted} />
       ) : (
         <>
           <section className="verbum-stage-content">
@@ -77,11 +70,7 @@ export function WorkWorkspace({ workspace, selectedStage, onStageChange, onBackT
               <span className="verbum-eyebrow">Etapa {selected.order} de {workspace.workflow.length}</span>
               <h2>{selected.label}</h2>
               <p>{stageDescriptions[selected.key]}</p>
-              {selected.key === workspace.currentStage ? (
-                <div className="verbum-stage-notice is-current">Esta é a etapa atual da obra. O conteúdo funcional desta etapa será implementado no Sprint correspondente.</div>
-              ) : (
-                <div className="verbum-stage-notice">Você está consultando uma etapa anterior já liberada no fluxo editorial.</div>
-              )}
+              {selected.key === workspace.currentStage ? <div className="verbum-stage-notice is-current">Esta é a etapa atual da obra. O conteúdo funcional desta etapa será implementado no Sprint correspondente.</div> : <div className="verbum-stage-notice">Você está consultando uma etapa anterior já liberada no fluxo editorial.</div>}
             </div>
           </section>
           <WorkspaceFooter canGoBack={selectedAccessibleIndex > 0} onPrevious={previous} onBackToLibrary={() => guarded(onBackToLibrary)} />

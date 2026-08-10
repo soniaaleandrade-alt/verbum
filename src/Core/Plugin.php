@@ -7,12 +7,14 @@ namespace VerbumStudio\Core;
 use VerbumStudio\Api\LibraryController;
 use VerbumStudio\Api\ResponseFactory;
 use VerbumStudio\Api\RestController;
+use VerbumStudio\Api\WorkProjectController;
 use VerbumStudio\Auth\Capabilities;
 use VerbumStudio\Integrations\Elementor\ElementorIntegration;
 use VerbumStudio\Integrations\Supabase\SupabaseClient;
 use VerbumStudio\Integrations\Supabase\SupabaseConfig;
 use VerbumStudio\Library\LibraryPostTypes;
 use VerbumStudio\Library\LibraryRepository;
+use VerbumStudio\Library\WorkProjectRepository;
 use VerbumStudio\Services\FrontendAssets;
 use VerbumStudio\Support\Logger;
 
@@ -33,6 +35,7 @@ final class Plugin
     {
         $this->container->get(RestController::class)->register();
         $this->container->get(LibraryController::class)->register();
+        $this->container->get(WorkProjectController::class)->register();
         $this->container->get(FrontendAssets::class)->register();
 
         add_action('init', function (): void {
@@ -68,11 +71,19 @@ final class Plugin
         ));
         $this->container->set(LibraryPostTypes::class, static fn (): LibraryPostTypes => new LibraryPostTypes());
         $this->container->set(LibraryRepository::class, static fn (): LibraryRepository => new LibraryRepository());
+        $this->container->set(WorkProjectRepository::class, static fn (): WorkProjectRepository => new WorkProjectRepository());
         $this->container->set(LibraryController::class, static fn (Container $container): LibraryController => new LibraryController(
             $container->get(Config::class),
             $container->get(ResponseFactory::class),
             $container->get(Capabilities::class),
             $container->get(LibraryRepository::class)
+        ));
+        $this->container->set(WorkProjectController::class, static fn (Container $container): WorkProjectController => new WorkProjectController(
+            $container->get(Config::class),
+            $container->get(ResponseFactory::class),
+            $container->get(Capabilities::class),
+            $container->get(LibraryRepository::class),
+            $container->get(WorkProjectRepository::class)
         ));
         $this->container->set(FrontendAssets::class, static fn (): FrontendAssets => new FrontendAssets());
         $this->container->set(SupabaseConfig::class, static fn (Container $container): SupabaseConfig => new SupabaseConfig($container->get(Config::class)));

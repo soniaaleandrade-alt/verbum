@@ -111,7 +111,7 @@ test('private storage types exist for projects and books', function (): void {
     assert_same(false, $verbum_test_post_types[LibraryPostTypes::BOOK]['public']);
 });
 
-test('Banco de Obras, workspace and Identification REST routes are registered', function (): void {
+test('Banco de Obras, workspace, Identification and Projeto da Obra REST routes are registered', function (): void {
     global $verbum_test_actions, $verbum_test_routes;
     $verbum_test_actions = [];
     $verbum_test_routes = [];
@@ -128,6 +128,8 @@ test('Banco de Obras, workspace and Identification REST routes are registered', 
         'verbum/v1/books/(?P<id>\\d+)/workspace',
         'verbum/v1/books/(?P<id>\\d+)/identification',
         'verbum/v1/books/(?P<id>\\d+)/identification/complete',
+        'verbum/v1/books/(?P<id>\\d+)/project-stage',
+        'verbum/v1/books/(?P<id>\\d+)/project-stage/complete',
         'verbum/v1/books/(?P<id>\\d+)/cover',
         'verbum/v1/books/(?P<id>\\d+)/archive',
     ] as $route) assert_true(isset($verbum_test_routes[$route]), 'Missing REST route: ' . $route);
