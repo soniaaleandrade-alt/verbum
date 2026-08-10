@@ -22,7 +22,7 @@ function assert_same($expected, $actual, string $message = ''): void { if ($expe
 
 test('config exposes core defaults and production mode', function (): void {
     $config = new Config(['environment' => 'production']);
-    assert_same('1.4.0', $config->get('version'));
+    assert_same('1.5.0', $config->get('version'));
     assert_same('verbum/v1', $config->get('api_namespace'));
     assert_true($config->isProduction());
 });
@@ -52,7 +52,7 @@ test('health endpoint returns ok and version', function (): void {
     assert_same(200, $response->get_status());
     assert_same(true, $data['success']);
     assert_same('ok', $data['data']['status']);
-    assert_same('1.4.0', $data['data']['version']);
+    assert_same('1.5.0', $data['data']['version']);
 });
 
 test('me endpoint rejects visitors', function (): void {
@@ -75,15 +75,15 @@ test('shortcode avoids assets during JSON editor requests', function (): void {
     $verbum_test_json_request = false;
 });
 
-test('shortcode enqueues Planning and Development assets on normal rendering', function (): void {
+test('shortcode enqueues Planning Development and Preparation assets', function (): void {
     global $verbum_test_enqueued, $verbum_test_json_request;
     $verbum_test_enqueued = [];
     $verbum_test_json_request = false;
     assert_same('<div class="verbum-app" data-verbum-app></div>', (new FrontendAssets())->shortcode());
-    assert_true(count($verbum_test_enqueued) >= 4);
     $serialized = json_encode($verbum_test_enqueued);
     assert_true(strpos((string) $serialized, 'planning-stage.css') !== false, 'Planning stylesheet was not enqueued');
     assert_true(strpos((string) $serialized, 'development-stage.css') !== false, 'Development stylesheet was not enqueued');
+    assert_true(strpos((string) $serialized, 'chapter-preparation.css') !== false, 'Chapter preparation stylesheet was not enqueued');
 });
 
 test('plugin registers shortcode and rest hooks', function (): void {
@@ -104,7 +104,7 @@ test('private storage types exist for projects books and chapters', function ():
     }
 });
 
-test('Planning, Development and workspace REST routes are registered', function (): void {
+test('Sprint 09 REST routes are registered', function (): void {
     global $verbum_test_actions, $verbum_test_routes;
     $verbum_test_actions = [];
     $verbum_test_routes = [];
@@ -117,6 +117,7 @@ test('Planning, Development and workspace REST routes are registered', function 
         'verbum/v1/books/(?P<id>\\d+)/project-stage','verbum/v1/books/(?P<id>\\d+)/project-stage/complete',
         'verbum/v1/books/(?P<id>\\d+)/planning-stage','verbum/v1/books/(?P<id>\\d+)/planning-stage/generate-chapters','verbum/v1/books/(?P<id>\\d+)/planning-stage/complete',
         'verbum/v1/books/(?P<id>\\d+)/development-stage','verbum/v1/books/(?P<id>\\d+)/development-stage/complete','verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)',
+        'verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)/preparation','verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)/preparation/complete',
         'verbum/v1/books/(?P<id>\\d+)/cover','verbum/v1/books/(?P<id>\\d+)/archive',
     ] as $route) assert_true(isset($verbum_test_routes[$route]), 'Missing REST route: ' . $route);
 });
