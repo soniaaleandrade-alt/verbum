@@ -3,7 +3,7 @@ export type ApiError = { success: false; error: { code: string; message: string 
 export type ApiResponse<T> = ApiSuccess<T> | ApiError;
 
 export type Health = { status: string; version: string };
-export type CurrentUser = { id: string; name: string; email: string };
+export type CurrentUser = { id: string; name: string; email: string; avatarUrl?: string };
 
 export type ProjectStatus = 'active' | 'archived';
 export type BookStatus = 'active' | 'archived';
@@ -23,6 +23,14 @@ export type WorkProjectObjective = { id: string; text: string; order: number };
 export type WorkProjectValues = { generalObjective: string; specificObjectives: WorkProjectObjective[]; purpose: string; audience: string; benefits: string; transformation: string; centralMessage: string; differentials: string; valueProposition: string; keyword: string; motivation: string; verse: string; guidingPhrase: string };
 export type WorkProjectProgress = { progress: number; completedCount: number; total: number; ready: boolean; completed: boolean; checklist: StageChecklistItem[]; values: WorkProjectValues };
 export type WorkProjectMutationResponse = { projectStage: WorkProjectProgress; workspace: WorkWorkspaceData };
+
+export type PlanningStructureType = 'part' | 'chapter' | 'subchapter';
+export type PlanningStructureItem = { id: string; type: PlanningStructureType; title: string; parentId?: string; order: number };
+export type WorkPlanningValues = { centralQuestion: string; mainThesis: string; overview: string; methodology: string; presentationForm: string; approach: string; generalStructure: string; editorialNotes: string; writingStrategy: string; initialSchedule: string; targetChapters: number; targetWords: number; targetPages: number; structureItems: PlanningStructureItem[] };
+export type WorkPlanningCounts = { parts: number; chapters: number; subchapters: number };
+export type WorkPlanningProgress = { progress: number; completedCount: number; total: number; ready: boolean; completed: boolean; checklist: StageChecklistItem[]; values: WorkPlanningValues; counts: WorkPlanningCounts; generatedChapterIds: string[]; chaptersGenerated: boolean };
+export type WorkPlanningInput = { central_question: string; main_thesis: string; overview: string; methodology: string; presentation_form: string; approach: string; general_structure: string; editorial_notes: string; writing_strategy: string; initial_schedule: string; target_chapters: number; target_words: number; target_pages: number; structure_items: Array<{ id?: string; type: PlanningStructureType; title: string; parentId?: string; order: number }> };
+export type WorkPlanningMutationResponse = { planningStage: WorkPlanningProgress; workspace: WorkWorkspaceData };
 
 export type WorkWorkspaceData = { book: VerbumBook; project: VerbumProject; currentStage: WorkStageKey; workflow: WorkWorkflowStep[]; identification: IdentificationProgress; metrics: WorkMetrics };
 export type LibraryData = { projects: VerbumProject[]; books: VerbumBook[] };
