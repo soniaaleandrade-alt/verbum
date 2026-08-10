@@ -22,7 +22,7 @@ function assert_same($expected, $actual, string $message = ''): void { if ($expe
 
 test('config exposes core defaults and production mode', function (): void {
     $config = new Config(['environment' => 'production']);
-    assert_same('1.3.0', $config->get('version'));
+    assert_same('1.3.1', $config->get('version'));
     assert_same('verbum/v1', $config->get('api_namespace'));
     assert_true($config->isProduction());
 });
@@ -52,7 +52,7 @@ test('health endpoint returns ok and version', function (): void {
     assert_same(200, $response->get_status());
     assert_same(true, $data['success']);
     assert_same('ok', $data['data']['status']);
-    assert_same('1.3.0', $data['data']['version']);
+    assert_same('1.3.1', $data['data']['version']);
 });
 
 test('me endpoint rejects visitors', function (): void {
@@ -75,12 +75,14 @@ test('shortcode avoids assets during JSON editor requests', function (): void {
     $verbum_test_json_request = false;
 });
 
-test('shortcode enqueues application assets on normal rendering', function (): void {
+test('shortcode enqueues application and Planning assets on normal rendering', function (): void {
     global $verbum_test_enqueued, $verbum_test_json_request;
     $verbum_test_enqueued = [];
     $verbum_test_json_request = false;
     assert_same('<div class="verbum-app" data-verbum-app></div>', (new FrontendAssets())->shortcode());
     assert_true(count($verbum_test_enqueued) >= 4);
+    $serialized = json_encode($verbum_test_enqueued);
+    assert_true(strpos((string) $serialized, 'planning-stage.css') !== false, 'Planning stylesheet was not enqueued');
 });
 
 test('plugin registers shortcode and rest hooks', function (): void {
