@@ -1,6 +1,6 @@
 # Sprint 09 — Preparação do Capítulo
 
-**Versão:** 1.5.0  
+**Versão:** 1.5.0
 **Etapa interna:** 1 de 4 — Preparação → Pesquisa → Redação → Revisão
 
 ## Objetivo
