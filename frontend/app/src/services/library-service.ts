@@ -7,6 +7,10 @@ import type {
   ChapterResearchProgress,
   ChapterResearchSourceInput,
   ChapterResearchStateInput,
+  ChapterWritingAssistantResponse,
+  ChapterWritingInput,
+  ChapterWritingMutationResponse,
+  ChapterWritingProgress,
   CreateBookInput,
   CreateProjectInput,
   DevelopmentChapter,
@@ -48,6 +52,10 @@ export const createChapterResearchSource = (id: string, chapterId: string, input
 export const updateChapterResearchSource = (id: string, chapterId: string, sourceId: string, input: Partial<ChapterResearchSourceInput>) => apiPatch<ChapterResearchMutationResponse>(`/books/${id}/chapters/${chapterId}/research/sources/${sourceId}`, input);
 export const deleteChapterResearchSource = (id: string, chapterId: string, sourceId: string) => apiDelete<ChapterResearchMutationResponse>(`/books/${id}/chapters/${chapterId}/research/sources/${sourceId}`);
 export const completeChapterResearch = (id: string, chapterId: string) => apiPost<ChapterResearchMutationResponse>(`/books/${id}/chapters/${chapterId}/research/complete`);
+export const getChapterWriting = (id: string, chapterId: string) => apiGet<ChapterWritingProgress>(`/books/${id}/chapters/${chapterId}/writing`);
+export const saveChapterWriting = (id: string, chapterId: string, input: ChapterWritingInput) => apiPatch<ChapterWritingMutationResponse>(`/books/${id}/chapters/${chapterId}/writing`, input);
+export const completeChapterWriting = (id: string, chapterId: string) => apiPost<ChapterWritingMutationResponse>(`/books/${id}/chapters/${chapterId}/writing/complete`);
+export const assistChapterWriting = (id: string, chapterId: string, action: string, text: string) => apiPost<ChapterWritingAssistantResponse>(`/books/${id}/chapters/${chapterId}/writing/assist`, { action, text });
 export const uploadBookCover = (id: string, file: File) => {
   const body = new FormData();
   body.append('cover', file);

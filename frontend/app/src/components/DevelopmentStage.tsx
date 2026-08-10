@@ -4,6 +4,7 @@ import { completeWorkDevelopment, getDevelopmentChapter, getWorkDevelopment } fr
 import type { ChapterStageKey, DevelopmentChapter, WorkDevelopmentProgress, WorkStageKey, WorkWorkspaceData } from '../types/verbum';
 import { ChapterPreparationStage } from './ChapterPreparationStage';
 import { ChapterResearchStage } from './ChapterResearchStage';
+import { ChapterWritingStage } from './ChapterWritingStage';
 import { WorkspaceFooter } from './WorkspaceFooter';
 
 type Props = {
@@ -92,7 +93,8 @@ export function DevelopmentStage({ workspace, onWorkspaceChange, onStageChange, 
       <nav className="verbum-chapter-workflow">{chapter.workflow.map((step) => <button type="button" key={step.key} disabled={step.status === 'locked'} className={`is-${step.status}${activeStage === step.key ? ' is-selected' : ''}`} onClick={() => step.status !== 'locked' && setChapterViewStage(step.key)}><span>{step.status === 'completed' ? '✓' : step.status === 'locked' ? '⌑' : step.order}</span><strong>{step.label}</strong></button>)}</nav>
       {activeStage === 'preparation' ? <ChapterPreparationStage bookId={workspace.book.id} chapter={chapter} onChapterChange={applyChapter} onDevelopmentChange={setData} />
         : activeStage === 'research' ? <ChapterResearchStage bookId={workspace.book.id} chapter={chapter} onChapterChange={applyChapter} onDevelopmentChange={setData} />
-          : <div className="verbum-chapter-stage-placeholder"><span className="verbum-chapter-stage-icon">{activeStage === 'writing' ? '✎' : '✓'}</span><h3>{activeWorkflow?.label ?? chapter.stageLabel} do Capítulo</h3><p>Esta etapa será implementada no sprint correspondente. Preparação e Pesquisa permanecem acessíveis no fluxo acima.</p></div>}
+          : activeStage === 'writing' ? <ChapterWritingStage bookId={workspace.book.id} chapter={chapter} chapters={data.chapters} onOpenChapter={openChapter} onChapterChange={applyChapter} onDevelopmentChange={setData} />
+            : <div className="verbum-chapter-stage-placeholder"><span className="verbum-chapter-stage-icon">✓</span><h3>{activeWorkflow?.label ?? chapter.stageLabel} do Capítulo</h3><p>Esta etapa será implementada no sprint correspondente. Preparação, Pesquisa e Redação permanecem acessíveis no fluxo acima.</p></div>}
       <footer className="verbum-chapter-navigation"><button type="button" disabled={!chapter.previousId} onClick={() => chapter.previousId && openChapter(chapter.previousId)}>‹ Capítulo anterior</button><span>{chapter.position} de {chapter.totalChapters}</span><button type="button" disabled={!chapter.nextId} onClick={() => chapter.nextId && openChapter(chapter.nextId)}>Próximo capítulo ›</button></footer>
     </section>;
   }
