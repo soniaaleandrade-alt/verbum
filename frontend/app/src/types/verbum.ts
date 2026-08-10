@@ -40,6 +40,13 @@ export type DevelopmentOutlineItem = { type: 'part' | 'chapter' | 'subchapter'; 
 export type WorkDevelopmentProgress = { summary: DevelopmentSummary; chapters: DevelopmentChapter[]; outline: DevelopmentOutlineItem[]; ready: boolean; completed: boolean };
 export type WorkDevelopmentMutationResponse = { developmentStage: WorkDevelopmentProgress; workspace: WorkWorkspaceData };
 
+export type ChapterPreparationStructureItem = { id: string; text: string; order: number };
+export type ChapterPreparationSourceOption = { key: string; label: string };
+export type ChapterPreparationValues = { subtitle: string; objective: string; centralQuestion: string; purpose: string; thesis: string; mainMessage: string; guidingPhrase: string; keywords: string[]; structureItems: ChapterPreparationStructureItem[]; sourceCategories: string[]; spiritualIntention: string; virtue: string; writingPrayer: string; notes: string };
+export type ChapterPreparationProgress = { chapterId: string; title: string; progress: number; completedCount: number; total: number; ready: boolean; completed: boolean; checklist: StageChecklistItem[]; values: ChapterPreparationValues; sourceOptions: ChapterPreparationSourceOption[]; completedAt: string };
+export type ChapterPreparationInput = { subtitle: string; objective: string; central_question: string; purpose: string; thesis: string; main_message: string; guiding_phrase: string; keywords: string[]; structure_items: Array<{ id?: string; text: string; order: number }>; source_categories: string[]; spiritual_intention: string; virtue: string; writing_prayer: string; notes: string };
+export type ChapterPreparationMutationResponse = { preparation: ChapterPreparationProgress; chapter: DevelopmentChapter; developmentStage: WorkDevelopmentProgress };
+
 export type WorkWorkspaceData = { book: VerbumBook; project: VerbumProject; currentStage: WorkStageKey; workflow: WorkWorkflowStep[]; identification: IdentificationProgress; metrics: WorkMetrics };
 export type LibraryData = { projects: VerbumProject[]; books: VerbumBook[] };
 export type CreateProjectInput = { name: string; description?: string };
