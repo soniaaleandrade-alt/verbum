@@ -32,6 +32,7 @@ import '../styles/workspace.css';
 import '../styles/identification.css';
 import '../styles/project-stage.css';
 import '../styles/technical.css';
+import '../styles/dashboard-official.css';
 
 const fallbackUser: CurrentUser = { id: '0', name: 'Você', email: '' };
 const emptyLibrary: LibraryData = { projects: [], books: [] };
@@ -177,7 +178,13 @@ export function VerbumApp() {
 
   return (
     <div className="verbum-app">
-      <AppShell user={user} activeSection={activeSection} onNavigate={navigateGlobal} customHeader={workspaceHeader}>
+      <AppShell
+        user={user}
+        activeSection={activeSection}
+        onNavigate={navigateGlobal}
+        customHeader={workspaceHeader}
+        hideHeader={!workspaceBookId && activeSection === 'dashboard'}
+      >
         {workspaceBookId ? (
           workspaceLoading ? <section className="verbum-workspace-state">Carregando a obra...</section> :
           workspaceError || !workspace ? <section className="verbum-workspace-state is-error"><h2>Não foi possível carregar esta obra</h2><p>{workspaceError || 'Obra não encontrada.'}</p><button type="button" className="verbum-primary-button" onClick={() => loadWorkspace(workspaceBookId, requestedStage)}>Tentar novamente</button><button type="button" className="verbum-secondary-button" onClick={closeWorkspace}>Voltar para Obras</button></section> :
@@ -190,7 +197,7 @@ export function VerbumApp() {
             onPersisted={refreshLibrary}
           />
         ) : activeSection === 'dashboard' ? (
-          <Dashboard userName={user.name} library={library} onOpenLibrary={() => setActiveSection('library')} />
+          <Dashboard userName={user.name} library={library} onOpenLibrary={() => setActiveSection('library')} onOpenBook={openBook} />
         ) : (
           <LibraryPage data={library} loading={libraryLoading} error={libraryError} onReload={refreshLibrary} onOpenBook={openBook} onCreateProject={createProjectAndRefresh} onUpdateProject={updateProjectAndRefresh} onArchiveProject={archiveProjectAndRefresh} onCreateBook={createBookAndRefresh} onUpdateBook={updateBookAndRefresh} onArchiveBook={archiveBookAndRefresh} />
         )}
