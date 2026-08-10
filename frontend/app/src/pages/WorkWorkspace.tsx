@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { DevelopmentStage } from '../components/DevelopmentStage';
 import { IdentificationStage } from '../components/IdentificationStage';
 import { PlanningStage } from '../components/PlanningStage';
 import { ProjectStage } from '../components/ProjectStage';
@@ -66,6 +67,8 @@ export function WorkWorkspace({ workspace, selectedStage, onStageChange, onBackT
         <ProjectStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={(stage) => guarded(() => onStageChange(stage))} onDirtyChange={setDirty} onPersisted={onPersisted} />
       ) : selected.key === 'planning' ? (
         <PlanningStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={(stage) => guarded(() => onStageChange(stage))} onDirtyChange={setDirty} onPersisted={onPersisted} />
+      ) : selected.key === 'development' ? (
+        <DevelopmentStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={(stage) => guarded(() => onStageChange(stage))} onPersisted={onPersisted} />
       ) : (
         <>
           <section className="verbum-stage-content">
