@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Verbum Studio
  * Description: Core foundation for the Verbum Studio writing operating system.
- * Version: 1.2.2
+ * Version: 1.3.0
  * Author: Verbum Studio
  * Requires PHP: 7.4
  */
@@ -20,7 +20,7 @@ if (version_compare(PHP_VERSION, '7.4', '<')) {
     return;
 }
 
-define('VERBUM_STUDIO_VERSION', '1.2.2');
+define('VERBUM_STUDIO_VERSION', '1.3.0');
 define('VERBUM_STUDIO_FILE', __FILE__);
 define('VERBUM_STUDIO_PATH', plugin_dir_path(__FILE__));
 define('VERBUM_STUDIO_URL', plugin_dir_url(__FILE__));
@@ -32,14 +32,10 @@ if (file_exists($autoload)) {
 } else {
     spl_autoload_register(static function (string $class): void {
         $prefix = 'VerbumStudio\\';
-        if (strncmp($class, $prefix, strlen($prefix)) !== 0) {
-            return;
-        }
+        if (strncmp($class, $prefix, strlen($prefix)) !== 0) return;
         $relative = str_replace('\\', '/', substr($class, strlen($prefix)));
         $file = VERBUM_STUDIO_PATH . 'src/' . $relative . '.php';
-        if (is_readable($file)) {
-            require_once $file;
-        }
+        if (is_readable($file)) require_once $file;
     });
 }
 
