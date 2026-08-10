@@ -150,23 +150,29 @@
     polishLabels(root);
   }
 
+  function setTextIfChanged(node, value) {
+    if (node && (node.textContent || '') !== value) node.textContent = value;
+  }
+
   function polishLabels(root) {
     var state = root.__vs || {};
-    root.querySelectorAll('[data-section="library"] span:last-child').forEach(function (node) { node.textContent = 'Minhas Obras'; });
+    root.querySelectorAll('[data-section="library"] span:last-child').forEach(function (node) {
+      setTextIfChanged(node, 'Minhas Obras');
+    });
     root.querySelectorAll('[data-section="library"]').forEach(function (node) {
       if ((node.textContent || '').trim() === 'Ir para Obras') node.textContent = 'Ir para Minhas Obras';
     });
     var shortcut = root.querySelector('.verbum-dashboard-shortcut.is-library strong');
-    if (shortcut) shortcut.textContent = 'Minhas Obras';
+    setTextIfChanged(shortcut, 'Minhas Obras');
     root.querySelectorAll('.verbum-dashboard-kicker').forEach(function (node) {
       if ((node.textContent || '').trim() === 'LIVRO') node.textContent = 'OBRA';
     });
     if (state.section === 'library') {
       var heading = root.querySelector('.verbum-header h1');
-      if (heading) heading.textContent = 'Minhas Obras';
+      setTextIfChanged(heading, 'Minhas Obras');
     }
     var back = root.querySelector('.verbum-work-back');
-    if (back && /Obras/.test(back.textContent || '')) back.textContent = '‹ Minhas Obras';
+    if (back && (back.textContent || '').trim() === '‹ Obras') back.textContent = '‹ Minhas Obras';
     var breadcrumb = root.querySelector('.verbum-work-breadcrumb');
     if (breadcrumb && /^Obras\s/.test(breadcrumb.textContent || '')) breadcrumb.innerHTML = breadcrumb.innerHTML.replace(/^Obras/, 'Minhas Obras');
   }
