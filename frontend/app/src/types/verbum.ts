@@ -47,6 +47,17 @@ export type ChapterPreparationProgress = { chapterId: string; title: string; pro
 export type ChapterPreparationInput = { subtitle: string; objective: string; central_question: string; purpose: string; thesis: string; main_message: string; guiding_phrase: string; keywords: string[]; structure_items: Array<{ id?: string; text: string; order: number }>; source_categories: string[]; spiritual_intention: string; virtue: string; writing_prayer: string; notes: string };
 export type ChapterPreparationMutationResponse = { preparation: ChapterPreparationProgress; chapter: DevelopmentChapter; developmentStage: WorkDevelopmentProgress };
 
+export type ResearchCategory = 'scripture' | 'catechism' | 'magisterium' | 'saints' | 'church_fathers' | 'books' | 'articles' | 'historical_documents' | 'other';
+export type ChapterResearchCategoryOption = { key: ResearchCategory; label: string; selectedInPreparation: boolean; reviewed: boolean; count: number };
+export type ChapterResearchIdea = { id: string; title: string; description: string; tags: string[]; structureItemId: string };
+export type ChapterResearchSource = { id: string; category: ResearchCategory; categoryLabel: string; title: string; author: string; reference: string; excerpt: string; notes: string; application: string; tags: string[]; url: string; structureItemId: string; highlighted: boolean; selectedForWriting: boolean; status: 'research' | 'selected' | 'used'; details: Record<string, string>; createdAt: string; updatedAt: string };
+export type ChapterResearchDirection = { objective: string; centralQuestion: string; thesis: string; keywords: string[]; sourceCategories: ResearchCategory[]; structureItems: ChapterPreparationStructureItem[] };
+export type ChapterResearchCounts = { total: number; selectedForWriting: number; highlighted: number; scripture: number; catechism: number; magisterium: number; saints: number; church_fathers: number; books: number; articles: number; historical_documents: number; other: number };
+export type ChapterResearchProgress = { chapterId: string; title: string; preparationCompleted: boolean; preparation: ChapterResearchDirection; sources: ChapterResearchSource[]; ideas: ChapterResearchIdea[]; categoryOptions: ChapterResearchCategoryOption[]; reviewedCategories: ResearchCategory[]; directionReviewed: boolean; counts: ChapterResearchCounts; progress: number; completedCount: number; total: number; checklist: StageChecklistItem[]; ready: boolean; completed: boolean; completedAt: string };
+export type ChapterResearchSourceInput = { category: ResearchCategory; title: string; author: string; reference: string; excerpt: string; notes: string; application: string; tags: string[]; url: string; structure_item_id: string; highlighted: boolean; selected_for_writing: boolean; details: Record<string, string> };
+export type ChapterResearchStateInput = { direction_reviewed: boolean; reviewed_categories: ResearchCategory[]; ideas: ChapterResearchIdea[] };
+export type ChapterResearchMutationResponse = { research: ChapterResearchProgress; chapter: DevelopmentChapter; developmentStage: WorkDevelopmentProgress; source?: ChapterResearchSource };
+
 export type WorkWorkspaceData = { book: VerbumBook; project: VerbumProject; currentStage: WorkStageKey; workflow: WorkWorkflowStep[]; identification: IdentificationProgress; metrics: WorkMetrics };
 export type LibraryData = { projects: VerbumProject[]; books: VerbumBook[] };
 export type CreateProjectInput = { name: string; description?: string };

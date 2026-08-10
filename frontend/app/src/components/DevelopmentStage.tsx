@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 import { completeWorkDevelopment, getDevelopmentChapter, getWorkDevelopment } from '../services/library-service';
 import type { ChapterStageKey, DevelopmentChapter, WorkDevelopmentProgress, WorkStageKey, WorkWorkspaceData } from '../types/verbum';
 import { ChapterPreparationStage } from './ChapterPreparationStage';
+import { ChapterResearchStage } from './ChapterResearchStage';
 import { WorkspaceFooter } from './WorkspaceFooter';
 
 type Props = {
@@ -34,6 +35,7 @@ export function DevelopmentStage({ workspace, onWorkspaceChange, onStageChange, 
   const [filter, setFilter] = useState<'all' | ChapterStageKey | 'completed'>('all');
   const [sort, setSort] = useState<'order' | 'updated' | 'title' | 'progress'>('order');
   const [chapter, setChapter] = useState<DevelopmentChapter | null>(null);
+  const [chapterViewStage, setChapterViewStage] = useState<ChapterStageKey | null>(null);
 
   useEffect(() => {
     let active = true; setLoading(true);
@@ -60,8 +62,16 @@ export function DevelopmentStage({ workspace, onWorkspaceChange, onStageChange, 
   }, [data, query, filter, sort]);
 
   async function openChapter(id: string) {
-    setError(''); try { setChapter(await getDevelopmentChapter(workspace.book.id, id)); }
+    setError('');
+    try { const next = await getDevelopmentChapter(workspace.book.id, id); setChapter(next); setChapterViewStage(next.stage); }
     catch (cause) { setError(cause instanceof Error ? cause.message : 'Não foi possível abrir o capítulo.'); }
+  }
+
+  function applyChapter(next: DevelopmentChapter) {
+    setChapter((current) => {
+      if (current && current.stage !== next.stage) setChapterViewStage(next.stage);
+      return next;
+    });
   }
 
   async function finish() {
@@ -74,11 +84,15 @@ export function DevelopmentStage({ workspace, onWorkspaceChange, onStageChange, 
   if (!data) return <section className="verbum-stage-content verbum-development-state is-error">{error || 'Desenvolvimento indisponível.'}</section>;
 
   if (chapter) {
+    const activeStage = chapterViewStage ?? chapter.stage;
+    const activeWorkflow = chapter.workflow.find((step) => step.key === activeStage);
     return <section className="verbum-stage-content verbum-chapter-workspace">
-      <button type="button" className="verbum-chapter-back" onClick={() => setChapter(null)}>‹ Desenvolvimento</button>
+      <button type="button" className="verbum-chapter-back" onClick={() => { setChapter(null); setChapterViewStage(null); }}>‹ Desenvolvimento</button>
       <header className="verbum-chapter-header"><div><span>Capítulo {chapter.number}</span><h2>{chapter.title}</h2><p>{chapter.stageLabel} · {chapter.progress}% concluído</p></div><span className="verbum-chapter-save-state">Salvo</span></header>
-      <nav className="verbum-chapter-workflow">{chapter.workflow.map((step) => <div key={step.key} className={`is-${step.status}`}><span>{step.status === 'completed' ? '✓' : step.status === 'locked' ? '⌑' : step.order}</span><strong>{step.label}</strong></div>)}</nav>
-      {chapter.stage === 'preparation' ? <ChapterPreparationStage bookId={workspace.book.id} chapter={chapter} onChapterChange={setChapter} onDevelopmentChange={setData} /> : <div className="verbum-chapter-stage-placeholder"><span className="verbum-chapter-stage-icon">{chapter.stage === 'research' ? '⌕' : chapter.stage === 'writing' ? '✎' : '✓'}</span><h3>{chapter.stageLabel} do Capítulo</h3><p>Esta etapa será implementada no sprint correspondente. A Preparação já foi concluída e permanece registrada no capítulo.</p></div>}
+      <nav className="verbum-chapter-workflow">{chapter.workflow.map((step) => <button type="button" key={step.key} disabled={step.status === 'locked'} className={`is-${step.status}${activeStage === step.key ? ' is-selected' : ''}`} onClick={() => step.status !== 'locked' && setChapterViewStage(step.key)}><span>{step.status === 'completed' ? '✓' : step.status === 'locked' ? '⌑' : step.order}</span><strong>{step.label}</strong></button>)}</nav>
+      {activeStage === 'preparation' ? <ChapterPreparationStage bookId={workspace.book.id} chapter={chapter} onChapterChange={applyChapter} onDevelopmentChange={setData} />
+        : activeStage === 'research' ? <ChapterResearchStage bookId={workspace.book.id} chapter={chapter} onChapterChange={applyChapter} onDevelopmentChange={setData} />
+          : <div className="verbum-chapter-stage-placeholder"><span className="verbum-chapter-stage-icon">{activeStage === 'writing' ? '✎' : '✓'}</span><h3>{activeWorkflow?.label ?? chapter.stageLabel} do Capítulo</h3><p>Esta etapa será implementada no sprint correspondente. Preparação e Pesquisa permanecem acessíveis no fluxo acima.</p></div>}
       <footer className="verbum-chapter-navigation"><button type="button" disabled={!chapter.previousId} onClick={() => chapter.previousId && openChapter(chapter.previousId)}>‹ Capítulo anterior</button><span>{chapter.position} de {chapter.totalChapters}</span><button type="button" disabled={!chapter.nextId} onClick={() => chapter.nextId && openChapter(chapter.nextId)}>Próximo capítulo ›</button></footer>
     </section>;
   }
