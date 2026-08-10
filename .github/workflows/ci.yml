@@ -44,6 +44,12 @@ jobs:
           node --check frontend/app/src/workspace-mobile-runtime.js
           node --check frontend/app/src/identification-runtime.js
           node --check frontend/app/src/project-stage-runtime.js
+          node --check frontend/app/src/planning-stage-runtime.js
+          node --check frontend/app/src/development-stage-runtime.js
+          node --check frontend/app/src/chapter-workflow-runtime.js
+          node --check frontend/app/src/chapter-preparation-runtime.js
+          node --check frontend/app/src/chapter-research-runtime.js
+          node --check frontend/app/src/chapter-writing-runtime.js
           node --check frontend/app/src/technical-runtime.js
           node --check frontend/app/src/dashboard-official-runtime.js
 
