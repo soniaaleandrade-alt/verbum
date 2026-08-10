@@ -63,11 +63,15 @@ final class RestController
             $lastName = sanitize_text_field((string) $user->last_name);
             $fullName = trim($firstName . ' ' . $lastName);
             $displayName = $fullName !== '' ? $fullName : sanitize_text_field($user->display_name);
+            $avatarId = (int) get_user_meta((int) $user->ID, '_verbum_avatar_id', true);
+            $avatarUrl = $avatarId > 0 ? wp_get_attachment_image_url($avatarId, 'thumbnail') : '';
 
             return $this->responses->success([
                 'id' => (string) $user->ID,
                 'name' => $displayName,
                 'email' => sanitize_email($user->user_email),
+                'avatarUrl' => $avatarUrl ? esc_url_raw($avatarUrl) : '',
+                'emailVerified' => (string) get_user_meta((int) $user->ID, '_verbum_email_verified', true) === '1',
             ]);
         } catch (\Throwable $exception) {
             return $this->responses->error($exception);
