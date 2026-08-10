@@ -59,8 +59,8 @@ final class RestController
             }
 
             $user = wp_get_current_user();
-            $firstName = sanitize_text_field((string) get_user_meta($user->ID, 'first_name', true));
-            $lastName = sanitize_text_field((string) get_user_meta($user->ID, 'last_name', true));
+            $firstName = sanitize_text_field((string) $user->first_name);
+            $lastName = sanitize_text_field((string) $user->last_name);
             $fullName = trim($firstName . ' ' . $lastName);
             $displayName = $fullName !== '' ? $fullName : sanitize_text_field($user->display_name);
 
