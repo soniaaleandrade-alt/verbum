@@ -45,6 +45,7 @@ jobs:
           node --check frontend/app/src/identification-runtime.js
           node --check frontend/app/src/project-stage-runtime.js
           node --check frontend/app/src/technical-runtime.js
+          node --check frontend/app/src/dashboard-official-runtime.js
 
       - name: PHP tests
         run: composer test
