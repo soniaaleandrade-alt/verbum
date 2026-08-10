@@ -9,6 +9,7 @@ final class Capabilities
     public const ACCESS = 'verbum_access';
     public const MANAGE = 'verbum_manage';
     public const MANAGE_SETTINGS = 'verbum_manage_settings';
+    public const WRITER_ROLE = 'verbum_writer';
 
     /** @return string[] */
     public function all(): array
@@ -28,6 +29,20 @@ final class Capabilities
         $editor = get_role('editor');
         if ($editor) {
             $editor->add_cap(self::ACCESS);
+        }
+
+        $writer = get_role(self::WRITER_ROLE);
+        if (! $writer && function_exists('add_role')) {
+            $writer = add_role(self::WRITER_ROLE, 'Verbum Studio — Escritor', [
+                'read' => true,
+                self::ACCESS => true,
+            ]);
+        }
+        if ($writer) {
+            $writer->add_cap('read');
+            $writer->add_cap(self::ACCESS);
+            $writer->remove_cap(self::MANAGE);
+            $writer->remove_cap(self::MANAGE_SETTINGS);
         }
     }
 
