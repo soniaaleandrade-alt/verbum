@@ -31,4 +31,4 @@ export type CreateBookInput = { project_id: number; title: string; subtitle?: st
 export type IdentificationInput = { title: string; subtitle: string; workflow_status: string; genre: string; language: string; audience: string; synopsis: string; keywords: string[]; color: string };
 export type WorkProjectInput = { general_objective: string; purpose: string; audience: string; benefits: string; transformation: string; central_message: string; differentials: string; value_proposition: string; keyword: string; motivation: string; verse: string; guiding_phrase: string; specific_objectives: Array<{ id?: string; text: string; order: number }> };
 
-declare global { interface Window { VerbumStudioConfig?: { apiRoot: string; nonce: string; version: string } } }
+declare global { interface Window { VerbumStudioConfig?: { apiRoot: string; nonce: string; version: string; logoutUrl?: string } } }

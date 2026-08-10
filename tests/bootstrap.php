@@ -90,6 +90,9 @@ function sanitize_text_field($value): string { return trim(strip_tags((string) $
 function sanitize_textarea_field($value): string { return trim(strip_tags((string) $value)); }
 function wp_json_encode($data): string { return json_encode($data); }
 function rest_url($path = ''): string { return 'https://example.test/wp-json/' . ltrim((string) $path, '/'); }
+function home_url($path = ''): string { return 'https://example.test/' . ltrim((string) $path, '/'); }
+function wp_logout_url($redirect = ''): string { return 'https://example.test/wp-login.php?action=logout&_wpnonce=test' . ($redirect !== '' ? '&redirect_to=' . rawurlencode((string) $redirect) : ''); }
+function get_bloginfo($show = ''): string { return $show === 'charset' ? 'UTF-8' : ''; }
 function wp_create_nonce($action): string { return 'nonce-' . (string) $action; }
 function wp_enqueue_style($handle, $src, $deps = [], $ver = null): void { global $verbum_test_enqueued; $verbum_test_enqueued[] = ['style', $handle, $src]; }
 function wp_enqueue_script($handle, $src, $deps = [], $ver = null, $in_footer = false): void { global $verbum_test_enqueued; $verbum_test_enqueued[] = ['script', $handle, $src]; }
