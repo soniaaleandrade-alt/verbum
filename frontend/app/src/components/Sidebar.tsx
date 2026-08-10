@@ -14,7 +14,7 @@ const groups: NavGroup[] = [
   { label: 'Principal', items: [
     { label: 'Painel', section: 'dashboard' },
     { label: 'Mesa de Trabalho' },
-    { label: 'Obras', section: 'library' },
+    { label: 'Minhas Obras', section: 'library' },
   ] },
   { label: 'Escrita', items: [
     { label: 'Base de Conhecimento' },

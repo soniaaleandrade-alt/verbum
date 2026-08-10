@@ -16,6 +16,7 @@ final class FrontendAssets
         'verbum-studio-dashboard-official' => 'frontend/app/src/styles/dashboard-official.css',
         'verbum-studio-dashboard-polish' => 'frontend/app/src/styles/dashboard-polish.css',
         'verbum-studio-sidebar-profile' => 'frontend/app/src/styles/sidebar-profile.css',
+        'verbum-studio-minhas-obras' => 'frontend/app/src/styles/minhas-obras.css',
     ];
 
     private const SCRIPT_FILES = [
@@ -27,6 +28,7 @@ final class FrontendAssets
         'frontend/app/src/technical-runtime.js',
         'frontend/app/src/dashboard-official-runtime.js',
         'frontend/app/src/sidebar-profile-runtime.js',
+        'frontend/app/src/minhas-obras-runtime.js',
     ];
 
     public function register(): void

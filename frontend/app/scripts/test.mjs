@@ -10,8 +10,8 @@ const requiredFiles = [
   'src/components/ProjectDialog.tsx','src/components/BookDialog.tsx','src/components/BookCard.tsx',
   'src/components/WorkHeader.tsx','src/components/WorkWorkflow.tsx','src/components/WorkspaceFooter.tsx','src/components/IdentificationStage.tsx','src/components/ProjectStage.tsx',
   'src/pages/Dashboard.tsx','src/pages/LibraryPage.tsx','src/pages/WorkWorkspace.tsx','src/pages/VerbumApp.tsx','src/main.tsx',
-  'src/styles/verbum.css','src/styles/library.css','src/styles/workspace.css','src/styles/identification.css','src/styles/project-stage.css','src/styles/technical.css','src/styles/dashboard-official.css',
-  'src/static-runtime.js','src/workspace-mobile-runtime.js','src/identification-runtime.js','src/project-stage-runtime.js','src/technical-runtime.js','src/dashboard-official-runtime.js','src/vite-env.d.ts',
+  'src/styles/verbum.css','src/styles/library.css','src/styles/workspace.css','src/styles/identification.css','src/styles/project-stage.css','src/styles/technical.css','src/styles/dashboard-official.css','src/styles/minhas-obras.css',
+  'src/static-runtime.js','src/workspace-mobile-runtime.js','src/identification-runtime.js','src/project-stage-runtime.js','src/technical-runtime.js','src/dashboard-official-runtime.js','src/sidebar-profile-runtime.js','src/minhas-obras-runtime.js','src/vite-env.d.ts',
 ];
 for (const file of requiredFiles) {
   const contents = await readFile(resolve(root, file), 'utf8');
@@ -28,8 +28,11 @@ for (const expected of ['hideHeader','has-hidden-header','!hideHeader']) {
   if (!shell.includes(expected)) throw new Error(`AppShell missing dashboard header behavior: ${expected}`);
 }
 
+const sidebar = await readFile(resolve(root, 'src/components/Sidebar.tsx'), 'utf8');
+if (!sidebar.includes('Minhas Obras')) throw new Error('Sidebar must use the official Minhas Obras label');
+
 const dashboard = await readFile(resolve(root, 'src/pages/Dashboard.tsx'), 'utf8');
-for (const expected of ['VERBUM STUDIO','Do primeiro pensamento à publicação.','Biblioteca','Estatísticas','Últimas Obras','Próxima Ação','Índice de Maturidade da Obra','Radar de Maturidade','Progresso Geral','Acesso Rápido','Tendência','Projeto da Obra','structuralProgress','IMO será calculado']) {
+for (const expected of ['VERBUM STUDIO','Do primeiro pensamento à publicação.','Estatísticas','Últimas Obras','Próxima Ação','Índice de Maturidade da Obra','Radar de Maturidade','Progresso Geral','Acesso Rápido','Tendência','Projeto da Obra','structuralProgress','IMO será calculado']) {
   if (!dashboard.includes(expected)) throw new Error(`Official Dashboard missing: ${expected}`);
 }
 if (dashboard.includes("activeBooks.length ? '01'")) throw new Error('Official Dashboard must not hardcode Identificação as current stage');
@@ -91,6 +94,11 @@ for (const expected of ['.verbum-dashboard-hero','.verbum-dashboard-shortcuts','
   if (!dashboardCss.includes(expected)) throw new Error(`Official Dashboard CSS missing: ${expected}`);
 }
 
+const minhasCss = await readFile(resolve(root, 'src/styles/minhas-obras.css'), 'utf8');
+for (const expected of ['.verbum-minhas-heading','.verbum-minhas-stages','.verbum-minhas-results','.verbum-minhas-card','.verbum-minhas-cover','.verbum-minhas-progress','.verbum-minhas-filter-panel','@media']) {
+  if (!minhasCss.includes(expected)) throw new Error(`Minhas Obras CSS missing: ${expected}`);
+}
+
 const projectRuntime = await readFile(resolve(root, 'src/project-stage-runtime.js'), 'utf8');
 for (const expected of ['/project-stage','/project-stage/complete','MutationObserver','Progresso da Etapa','Adicionar objetivo','beforeunload']) {
   if (!projectRuntime.includes(expected)) throw new Error(`Projeto da Obra runtime missing: ${expected}`);
@@ -106,12 +114,17 @@ for (const expected of ['VERBUM STUDIO','Próxima Ação','Projeto da Obra','Rad
   if (!dashboardRuntime.includes(expected)) throw new Error(`Official Dashboard runtime missing: ${expected}`);
 }
 
+const minhasRuntime = await readFile(resolve(root, 'src/minhas-obras-runtime.js'), 'utf8');
+for (const expected of ['Minhas Obras','Pesquisar obras','data-minhas-stage','data-minhas-status','data-minhas-sort','data-minhas-view','Ainda não calculado','Abrir Obra','MutationObserver']) {
+  if (!minhasRuntime.includes(expected)) throw new Error(`Minhas Obras runtime missing: ${expected}`);
+}
+
 const buildJs = await readFile(resolve(repoRoot, 'build/verbum-app.js'), 'utf8');
 const buildCss = await readFile(resolve(repoRoot, 'build/verbum-app.css'), 'utf8');
-for (const expected of ['static-runtime.js','workspace-mobile-runtime.js','identification-runtime.js','project-stage-runtime.js','technical-runtime.js','dashboard-official-runtime.js','source+query']) {
+for (const expected of ['static-runtime.js','workspace-mobile-runtime.js','identification-runtime.js','project-stage-runtime.js','technical-runtime.js','dashboard-official-runtime.js','sidebar-profile-runtime.js','minhas-obras-runtime.js','source+query']) {
   if (!buildJs.includes(expected)) throw new Error(`Static JS build must load: ${expected}`);
 }
-for (const expected of ['verbum.css','library.css','workspace.css','identification.css','project-stage.css','technical.css','dashboard-official.css']) {
+for (const expected of ['verbum.css','library.css','workspace.css','identification.css','project-stage.css','technical.css','dashboard-official.css','minhas-obras.css']) {
   if (!buildCss.includes(expected)) throw new Error(`Static CSS build missing: ${expected}`);
 }
 
@@ -120,4 +133,4 @@ for (const file of requiredFiles) {
   const contents = await readFile(resolve(root, file), 'utf8');
   if (sensitivePattern.test(contents)) throw new Error(`Sensitive value pattern found in ${file}`);
 }
-console.log('Frontend official dashboard checks passed');
+console.log('Frontend Dashboard + Minhas Obras checks passed');
