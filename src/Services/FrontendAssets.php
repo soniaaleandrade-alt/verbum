@@ -17,10 +17,12 @@ final class FrontendAssets
         'verbum-studio-dashboard-polish' => 'frontend/app/src/styles/dashboard-polish.css',
         'verbum-studio-sidebar-profile' => 'frontend/app/src/styles/sidebar-profile.css',
         'verbum-studio-minhas-obras' => 'frontend/app/src/styles/minhas-obras.css',
+        'verbum-studio-auth-profile' => 'frontend/app/src/styles/auth-profile.css',
     ];
 
     private const SCRIPT_FILES = [
         'build/verbum-app.js',
+        'frontend/app/src/auth-profile-runtime.js',
         'frontend/app/src/static-runtime.js',
         'frontend/app/src/workspace-mobile-runtime.js',
         'frontend/app/src/identification-runtime.js',
@@ -65,6 +67,8 @@ final class FrontendAssets
             'nonce' => wp_create_nonce('wp_rest'),
             'version' => VERBUM_STUDIO_VERSION,
             'logoutUrl' => esc_url_raw($logoutUrl),
+            'appUrl' => esc_url_raw(home_url('/')),
+            'authenticated' => is_user_logged_in(),
         ]);
     }
 

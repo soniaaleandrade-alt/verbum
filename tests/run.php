@@ -22,7 +22,7 @@ function assert_same($expected, $actual, string $message = ''): void { if ($expe
 
 test('config exposes core defaults and production mode', function (): void {
     $config = new Config(['environment' => 'production']);
-    assert_same('1.1.1', $config->get('version'));
+    assert_same('1.2.0', $config->get('version'));
     assert_same('verbum/v1', $config->get('api_namespace'));
     assert_true($config->isProduction());
 });
@@ -34,8 +34,9 @@ test('logger redacts sensitive data recursively', function (): void {
     assert_same('ok', $redacted['safe']);
 });
 
-test('capabilities include core permissions', function (): void {
+test('capabilities include core permissions and writer role', function (): void {
     assert_same([Capabilities::ACCESS, Capabilities::MANAGE, Capabilities::MANAGE_SETTINGS], (new Capabilities())->all());
+    assert_same('verbum_writer', Capabilities::WRITER_ROLE);
 });
 
 test('authentication error maps to unauthorized', function (): void {
@@ -51,7 +52,7 @@ test('health endpoint returns ok and version', function (): void {
     assert_same(200, $response->get_status());
     assert_same(true, $data['success']);
     assert_same('ok', $data['data']['status']);
-    assert_same('1.1.1', $data['data']['version']);
+    assert_same('1.2.0', $data['data']['version']);
 });
 
 test('me endpoint rejects visitors', function (): void {
@@ -65,15 +66,17 @@ test('me endpoint rejects visitors', function (): void {
     assert_same('unauthorized', $data['error']['code']);
 });
 
-test('me endpoint returns the account full name for authorized users', function (): void {
-    global $verbum_test_logged_in, $verbum_test_caps;
+test('me endpoint returns the account full name and profile flags for authorized users', function (): void {
+    global $verbum_test_logged_in, $verbum_test_caps, $verbum_test_user_meta;
     $verbum_test_logged_in = true;
     $verbum_test_caps = [Capabilities::ACCESS];
+    $verbum_test_user_meta[7]['_verbum_email_verified'] = '1';
     $controller = new RestController(new Config(), new ResponseFactory(new Config()), new Capabilities());
     $data = $controller->me()->get_data();
     assert_same(true, $data['success']);
     assert_same('7', $data['data']['id']);
     assert_same('Sonia Andrade', $data['data']['name']);
+    assert_same(true, $data['data']['emailVerified']);
 });
 
 test('shortcode avoids assets during JSON editor requests', function (): void {
@@ -85,12 +88,14 @@ test('shortcode avoids assets during JSON editor requests', function (): void {
     $verbum_test_json_request = false;
 });
 
-test('shortcode enqueues assets on normal frontend rendering', function (): void {
+test('shortcode enqueues authentication and application assets on normal rendering', function (): void {
     global $verbum_test_enqueued, $verbum_test_json_request;
     $verbum_test_enqueued = [];
     $verbum_test_json_request = false;
     assert_same('<div class="verbum-app" data-verbum-app></div>', (new FrontendAssets())->shortcode());
-    assert_true(count($verbum_test_enqueued) >= 3);
+    assert_true(count($verbum_test_enqueued) >= 4);
+    $serialized = json_encode($verbum_test_enqueued);
+    assert_true(strpos($serialized, 'auth-profile.css') !== false, 'Auth/profile stylesheet was not enqueued');
 });
 
 test('plugin registers shortcode and rest hooks', function (): void {
@@ -111,7 +116,7 @@ test('private storage types exist for projects and books', function (): void {
     assert_same(false, $verbum_test_post_types[LibraryPostTypes::BOOK]['public']);
 });
 
-test('Minhas Obras, workspace, Identification and Projeto da Obra REST routes are registered', function (): void {
+test('authentication profile Minhas Obras and workspace REST routes are registered', function (): void {
     global $verbum_test_actions, $verbum_test_routes;
     $verbum_test_actions = [];
     $verbum_test_routes = [];
@@ -119,6 +124,15 @@ test('Minhas Obras, workspace, Identification and Projeto da Obra REST routes ar
     $plugin->register();
     foreach ($verbum_test_actions['rest_api_init'] ?? [] as $callback) $callback();
     foreach ([
+        'verbum/v1/auth/login',
+        'verbum/v1/auth/register',
+        'verbum/v1/auth/logout',
+        'verbum/v1/auth/forgot-password',
+        'verbum/v1/auth/reset-password',
+        'verbum/v1/auth/verify-email',
+        'verbum/v1/auth/resend-verification',
+        'verbum/v1/profile',
+        'verbum/v1/profile/avatar',
         'verbum/v1/library',
         'verbum/v1/projects',
         'verbum/v1/projects/(?P<id>\\d+)',
