@@ -4,6 +4,7 @@ import { EditorialDeskStage } from '../components/EditorialDeskStage';
 import { GeneralReviewStage } from '../components/GeneralReviewStage';
 import { IdentificationStage } from '../components/IdentificationStage';
 import { LayoutStage } from '../components/LayoutStage';
+import { LegalStage } from '../components/LegalStage';
 import { PlanningStage } from '../components/PlanningStage';
 import { ProjectStage } from '../components/ProjectStage';
 import { WorkAuditStage } from '../components/WorkAuditStage';
@@ -72,6 +73,8 @@ export function WorkWorkspace({ workspace, selectedStage, onStageChange, onBackT
         <EditorialDeskStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={(stage) => guarded(() => onStageChange(stage))} onPersisted={onPersisted} />
       ) : selected.key === 'layout' ? (
         <LayoutStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={(stage) => guarded(() => onStageChange(stage))} onPersisted={onPersisted} />
+      ) : selected.key === 'legal' ? (
+        <LegalStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={(stage) => guarded(() => onStageChange(stage))} onPersisted={onPersisted} />
       ) : (
         <>
           <section className="verbum-stage-content"><div className="verbum-stage-placeholder"><span className="verbum-eyebrow">Etapa {selected.order} de {workspace.workflow.length}</span><h2>{selected.label}</h2><p>{stageDescriptions[selected.key]}</p>{selected.key === workspace.currentStage ? <div className="verbum-stage-notice is-current">Esta é a etapa atual da obra. O conteúdo funcional desta etapa será implementado no Sprint correspondente.</div> : <div className="verbum-stage-notice">Você está consultando uma etapa anterior já liberada no fluxo editorial.</div>}</div></section>

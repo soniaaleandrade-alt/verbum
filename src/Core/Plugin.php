@@ -17,6 +17,7 @@ use VerbumStudio\Api\WorkDevelopmentController;
 use VerbumStudio\Api\WorkEditorialDeskController;
 use VerbumStudio\Api\WorkGeneralReviewController;
 use VerbumStudio\Api\WorkLayoutController;
+use VerbumStudio\Api\WorkLegalController;
 use VerbumStudio\Api\WorkPlanningController;
 use VerbumStudio\Api\WorkProjectController;
 use VerbumStudio\Api\WorkVersionsController;
@@ -35,6 +36,7 @@ use VerbumStudio\Library\WorkDevelopmentRepository;
 use VerbumStudio\Library\WorkEditorialDeskRepository;
 use VerbumStudio\Library\WorkGeneralReviewRepository;
 use VerbumStudio\Library\WorkLayoutRepository;
+use VerbumStudio\Library\WorkLegalRepository;
 use VerbumStudio\Library\WorkPlanningRepository;
 use VerbumStudio\Library\WorkProjectRepository;
 use VerbumStudio\Library\WorkVersionsRepository;
@@ -55,22 +57,13 @@ final class Plugin
 
     public function register(): void
     {
-        $this->container->get(RestController::class)->register();
-        $this->container->get(AuthController::class)->register();
-        $this->container->get(LibraryController::class)->register();
-        $this->container->get(WorkProjectController::class)->register();
-        $this->container->get(WorkPlanningController::class)->register();
-        $this->container->get(WorkDevelopmentController::class)->register();
-        $this->container->get(WorkChapterPreparationController::class)->register();
-        $this->container->get(WorkChapterResearchController::class)->register();
-        $this->container->get(WorkChapterWritingController::class)->register();
-        $this->container->get(WorkChapterRevisionController::class)->register();
-        $this->container->get(WorkGeneralReviewController::class)->register();
-        $this->container->get(WorkVersionsController::class)->register();
-        $this->container->get(WorkAuditController::class)->register();
-        $this->container->get(WorkEditorialDeskController::class)->register();
-        $this->container->get(WorkLayoutController::class)->register();
-        $this->container->get(FrontendAssets::class)->register();
+        foreach ([
+            RestController::class, AuthController::class, LibraryController::class, WorkProjectController::class,
+            WorkPlanningController::class, WorkDevelopmentController::class, WorkChapterPreparationController::class,
+            WorkChapterResearchController::class, WorkChapterWritingController::class, WorkChapterRevisionController::class,
+            WorkGeneralReviewController::class, WorkVersionsController::class, WorkAuditController::class,
+            WorkEditorialDeskController::class, WorkLayoutController::class, WorkLegalController::class, FrontendAssets::class,
+        ] as $service) $this->container->get($service)->register();
 
         add_action('init', function (): void {
             $this->container->get(LibraryPostTypes::class)->register();
@@ -80,10 +73,7 @@ final class Plugin
         add_action('admin_init', function (): void {
             $capabilities = $this->container->get(Capabilities::class);
             $doingAjax = function_exists('wp_doing_ajax') && wp_doing_ajax();
-            if ($capabilities->currentUserCanAccess() && ! $capabilities->currentUserIsAdmin() && ! $doingAjax) {
-                wp_safe_redirect(home_url('/'));
-                exit;
-            }
+            if ($capabilities->currentUserCanAccess() && ! $capabilities->currentUserIsAdmin() && ! $doingAjax) { wp_safe_redirect(home_url('/')); exit; }
         });
 
         add_filter('show_admin_bar', function ($show) {
@@ -106,9 +96,9 @@ final class Plugin
         $this->container->set(Config::class, $this->config);
         $this->container->set(Logger::class, static fn (): Logger => new Logger());
         $this->container->set(Capabilities::class, static fn (): Capabilities => new Capabilities());
-        $this->container->set(ResponseFactory::class, static fn (Container $container): ResponseFactory => new ResponseFactory($container->get(Config::class)));
-        $this->container->set(RestController::class, static fn (Container $container): RestController => new RestController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class)));
-        $this->container->set(AuthController::class, static fn (Container $container): AuthController => new AuthController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class)));
+        $this->container->set(ResponseFactory::class, static fn (Container $c): ResponseFactory => new ResponseFactory($c->get(Config::class)));
+        $this->container->set(RestController::class, static fn (Container $c): RestController => new RestController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class)));
+        $this->container->set(AuthController::class, static fn (Container $c): AuthController => new AuthController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class)));
         $this->container->set(LibraryPostTypes::class, static fn (): LibraryPostTypes => new LibraryPostTypes());
         $this->container->set(LibraryRepository::class, static fn (): LibraryRepository => new LibraryRepository());
         $this->container->set(WorkProjectRepository::class, static fn (): WorkProjectRepository => new WorkProjectRepository());
@@ -123,22 +113,25 @@ final class Plugin
         $this->container->set(WorkAuditRepository::class, static fn (): WorkAuditRepository => new WorkAuditRepository());
         $this->container->set(WorkEditorialDeskRepository::class, static fn (): WorkEditorialDeskRepository => new WorkEditorialDeskRepository());
         $this->container->set(WorkLayoutRepository::class, static fn (): WorkLayoutRepository => new WorkLayoutRepository());
-        $this->container->set(LibraryController::class, static fn (Container $container): LibraryController => new LibraryController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class)));
-        $this->container->set(WorkProjectController::class, static fn (Container $container): WorkProjectController => new WorkProjectController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkProjectRepository::class)));
-        $this->container->set(WorkPlanningController::class, static fn (Container $container): WorkPlanningController => new WorkPlanningController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkPlanningRepository::class)));
-        $this->container->set(WorkDevelopmentController::class, static fn (Container $container): WorkDevelopmentController => new WorkDevelopmentController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkDevelopmentRepository::class)));
-        $this->container->set(WorkChapterPreparationController::class, static fn (Container $container): WorkChapterPreparationController => new WorkChapterPreparationController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkDevelopmentRepository::class), $container->get(WorkChapterPreparationRepository::class)));
-        $this->container->set(WorkChapterResearchController::class, static fn (Container $container): WorkChapterResearchController => new WorkChapterResearchController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkDevelopmentRepository::class), $container->get(WorkChapterResearchRepository::class)));
-        $this->container->set(WorkChapterWritingController::class, static fn (Container $container): WorkChapterWritingController => new WorkChapterWritingController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkDevelopmentRepository::class), $container->get(WorkChapterWritingRepository::class)));
-        $this->container->set(WorkChapterRevisionController::class, static fn (Container $container): WorkChapterRevisionController => new WorkChapterRevisionController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkDevelopmentRepository::class), $container->get(WorkChapterRevisionRepository::class)));
-        $this->container->set(WorkGeneralReviewController::class, static fn (Container $container): WorkGeneralReviewController => new WorkGeneralReviewController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkGeneralReviewRepository::class)));
-        $this->container->set(WorkVersionsController::class, static fn (Container $container): WorkVersionsController => new WorkVersionsController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkVersionsRepository::class)));
-        $this->container->set(WorkAuditController::class, static fn (Container $container): WorkAuditController => new WorkAuditController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkAuditRepository::class)));
-        $this->container->set(WorkEditorialDeskController::class, static fn (Container $container): WorkEditorialDeskController => new WorkEditorialDeskController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkEditorialDeskRepository::class)));
-        $this->container->set(WorkLayoutController::class, static fn (Container $container): WorkLayoutController => new WorkLayoutController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkLayoutRepository::class)));
+        $this->container->set(WorkLegalRepository::class, static fn (): WorkLegalRepository => new WorkLegalRepository());
+
+        $this->container->set(LibraryController::class, static fn (Container $c): LibraryController => new LibraryController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class)));
+        $this->container->set(WorkProjectController::class, static fn (Container $c): WorkProjectController => new WorkProjectController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkProjectRepository::class)));
+        $this->container->set(WorkPlanningController::class, static fn (Container $c): WorkPlanningController => new WorkPlanningController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkPlanningRepository::class)));
+        $this->container->set(WorkDevelopmentController::class, static fn (Container $c): WorkDevelopmentController => new WorkDevelopmentController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkDevelopmentRepository::class)));
+        $this->container->set(WorkChapterPreparationController::class, static fn (Container $c): WorkChapterPreparationController => new WorkChapterPreparationController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkDevelopmentRepository::class), $c->get(WorkChapterPreparationRepository::class)));
+        $this->container->set(WorkChapterResearchController::class, static fn (Container $c): WorkChapterResearchController => new WorkChapterResearchController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkDevelopmentRepository::class), $c->get(WorkChapterResearchRepository::class)));
+        $this->container->set(WorkChapterWritingController::class, static fn (Container $c): WorkChapterWritingController => new WorkChapterWritingController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkDevelopmentRepository::class), $c->get(WorkChapterWritingRepository::class)));
+        $this->container->set(WorkChapterRevisionController::class, static fn (Container $c): WorkChapterRevisionController => new WorkChapterRevisionController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkDevelopmentRepository::class), $c->get(WorkChapterRevisionRepository::class)));
+        $this->container->set(WorkGeneralReviewController::class, static fn (Container $c): WorkGeneralReviewController => new WorkGeneralReviewController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkGeneralReviewRepository::class)));
+        $this->container->set(WorkVersionsController::class, static fn (Container $c): WorkVersionsController => new WorkVersionsController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkVersionsRepository::class)));
+        $this->container->set(WorkAuditController::class, static fn (Container $c): WorkAuditController => new WorkAuditController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkAuditRepository::class)));
+        $this->container->set(WorkEditorialDeskController::class, static fn (Container $c): WorkEditorialDeskController => new WorkEditorialDeskController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkEditorialDeskRepository::class)));
+        $this->container->set(WorkLayoutController::class, static fn (Container $c): WorkLayoutController => new WorkLayoutController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkLayoutRepository::class)));
+        $this->container->set(WorkLegalController::class, static fn (Container $c): WorkLegalController => new WorkLegalController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkLegalRepository::class)));
         $this->container->set(FrontendAssets::class, static fn (): FrontendAssets => new FrontendAssets());
-        $this->container->set(SupabaseConfig::class, static fn (Container $container): SupabaseConfig => new SupabaseConfig($container->get(Config::class)));
-        $this->container->set(SupabaseClient::class, static fn (Container $container): SupabaseClient => new SupabaseClient($container->get(SupabaseConfig::class)));
+        $this->container->set(SupabaseConfig::class, static fn (Container $c): SupabaseConfig => new SupabaseConfig($c->get(Config::class)));
+        $this->container->set(SupabaseClient::class, static fn (Container $c): SupabaseClient => new SupabaseClient($c->get(SupabaseConfig::class)));
         $this->container->set(ElementorIntegration::class, static fn (): ElementorIntegration => new ElementorIntegration());
     }
 }
