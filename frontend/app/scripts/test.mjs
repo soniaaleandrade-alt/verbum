@@ -18,6 +18,14 @@ function requireAll(contents, expected, label) { for (const item of expected) if
 const workspace = await readFile(resolve(root, 'src/pages/WorkWorkspace.tsx'), 'utf8');
 requireAll(workspace, ['IdentificationStage','ProjectStage','PlanningStage','DevelopmentStage','GeneralReviewStage','WorkVersionsStage','WorkAuditStage','EditorialDeskStage','LayoutStage','LegalStage','PublicationStage','WorkWorkflow','WorkspaceFooter','beforeunload'], 'WorkWorkspace');
 
+const planning = await readFile(resolve(root, 'src/components/PlanningStage.tsx'), 'utf8');
+requireAll(planning, ['getWorkDevelopment','generatedChapterIds.length','Prévia somente leitura','Conclua o Planejamento para editar os capítulos'], 'PlanningStage HOM-005/HOM-006');
+const planningRuntime = await readFile(resolve(root, 'src/planning-stage-runtime.js'), 'utf8');
+requireAll(planningRuntime, ['function updateHeader','generatedChapterIds','/development-stage','verbum-planning-preview','Prévia somente leitura','Conclua o Planejamento para editar os capítulos'], 'Planning runtime HOM-005/HOM-006');
+if (planningRuntime.includes("data-view-chapters]').onclick=function(){nav('development')")) throw new Error('Planning preview must not navigate to locked Development');
+const planningCss = await readFile(resolve(root, 'src/styles/planning-stage.css'), 'utf8');
+requireAll(planningCss, ['.verbum-planning-preview','.verbum-planning-preview-list','.verbum-planning-preview-note'], 'Planning preview CSS');
+
 const development = await readFile(resolve(root, 'src/components/DevelopmentStage.tsx'), 'utf8');
 requireAll(development, ['Desenvolvimento da Obra','ChapterPreparationStage','ChapterResearchStage','ChapterWritingStage','ChapterRevisionStage','Preparação','Pesquisa','Redação','Revisão','Abrir capítulo'], 'DevelopmentStage');
 
@@ -66,4 +74,4 @@ const buildJs = await readFile(resolve(repoRoot, 'build/verbum-app.js'), 'utf8')
 const buildCss = await readFile(resolve(repoRoot, 'build/verbum-app.css'), 'utf8'); requireAll(buildCss, ['layout-stage.css','legal-stage.css','publication-stage.css','profile-polish.css'], 'Static CSS build');
 const sensitivePattern = /(SUPABASE_SERVICE|SERVICE_KEY|OPENAI_API_KEY|sk-[A-Za-z0-9_-]{10,})/;
 for (const file of requiredFiles) { const contents = await readFile(resolve(root, file), 'utf8'); if (sensitivePattern.test(contents)) throw new Error(`Sensitive value pattern found in ${file}`); }
-console.log('Frontend Sprint 19 Publicação da Obra checks passed');
+console.log('Frontend homologation checks passed for Verbum Studio 2.5.2');

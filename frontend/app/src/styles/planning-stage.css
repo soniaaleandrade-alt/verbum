@@ -281,6 +281,39 @@
   font-size:12px!important;
 }
 
+.verbum-outline-view:disabled{opacity:.45!important;cursor:not-allowed!important}
+
+.verbum-planning-preview{
+  margin-top:14px!important;
+  padding:14px!important;
+  border:1px solid #d7e2df!important;
+  border-radius:11px!important;
+  background:#f8fbfa!important;
+}
+
+.verbum-planning-preview-head{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  margin-bottom:10px!important;
+}
+
+.verbum-planning-preview-head>div{display:grid!important;gap:2px!important}
+.verbum-planning-preview-head strong{color:#15213a!important;font-family:Georgia,"Times New Roman",serif!important;font-size:14px!important}
+.verbum-planning-preview-head span{color:#77808e!important;font-size:10.5px!important}
+.verbum-planning-preview-head button{padding:6px 9px!important;border:1px solid #d9dde4!important;border-radius:7px!important;background:#fff!important;color:#495366!important;cursor:pointer!important;font-size:10.5px!important}
+
+.verbum-planning-preview-list{display:grid!important;gap:7px!important}
+.verbum-planning-preview-list article{display:grid!important;grid-template-columns:34px minmax(0,1fr)!important;gap:9px!important;align-items:center!important;padding:9px 10px!important;border:1px solid #e2e7e4!important;border-radius:8px!important;background:#fff!important}
+.verbum-planning-preview-list article>span{display:grid!important;place-items:center!important;width:30px!important;height:30px!important;border-radius:7px!important;background:#eef5f3!important;color:#126d7d!important;font-size:10.5px!important;font-weight:700!important}
+.verbum-planning-preview-list article>div{display:grid!important;gap:2px!important;min-width:0!important}
+.verbum-planning-preview-list article strong{overflow:hidden!important;color:#18223b!important;font-size:11.5px!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+.verbum-planning-preview-list article small{color:#7a828d!important;font-size:10px!important}
+.verbum-planning-preview-state{margin:8px 0!important;color:#687386!important;font-size:11.5px!important}
+.verbum-planning-preview-state.is-error{color:#a82439!important}
+.verbum-planning-preview-note{margin:10px 0 0!important;padding-top:9px!important;border-top:1px solid #e2e7e4!important;color:#66746f!important;font-size:10.5px!important;line-height:1.45!important}
+
 .verbum-planning-state{
   display:grid!important;
   place-items:center!important;
@@ -414,4 +447,5 @@
   .verbum-planning-heading h2{font-size:25px}
   .verbum-planning-card{padding:18px!important}
   .verbum-generation-counts{grid-template-columns:1fr!important}
+  .verbum-planning-preview-head{align-items:flex-start!important}
 }
