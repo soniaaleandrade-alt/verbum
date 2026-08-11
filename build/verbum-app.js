@@ -11,7 +11,7 @@
     identification:['identification-runtime.js'],
     project:['project-stage-runtime.js'],
     planning:['planning-stage-runtime.js'],
-    development:['development-stage-runtime.js','chapter-workflow-runtime.js','chapter-preparation-runtime.js','chapter-research-runtime.js','chapter-writing-runtime.js','writing-hom010-hotfix.js','writing-hom011-hotfix.js','chapter-revision-runtime.js'],
+    development:['development-stage-runtime.js','chapter-workflow-runtime.js','chapter-preparation-runtime.js','chapter-research-runtime.js','chapter-writing-runtime.js','writing-hom010-hotfix.js','writing-hom011-hotfix.js','revision-hom012-hotfix.js','chapter-revision-runtime.js'],
     general_review:['general-review-runtime.js'],
     versions:['work-versions-runtime.js'],
     audit:['work-audit-runtime.js'],
