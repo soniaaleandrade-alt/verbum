@@ -12,13 +12,73 @@ const js = `(function(){
   if(!current||!current.src){return;}
   var query='';
   try{query=new URL(current.src,document.baseURI).search||'';}catch(e){query='';}
-  ['auth-profile-runtime.js','static-runtime.js','workspace-mobile-runtime.js','identification-runtime.js','project-stage-runtime.js','planning-stage-runtime.js','development-stage-runtime.js','chapter-workflow-runtime.js','chapter-preparation-runtime.js','chapter-research-runtime.js','chapter-writing-runtime.js','chapter-revision-runtime.js','general-review-runtime.js','work-versions-runtime.js','work-audit-runtime.js','editorial-desk-runtime.js','layout-stage-runtime.js','legal-stage-runtime.js','publication-stage-runtime.js','technical-runtime.js','dashboard-official-runtime.js','sidebar-profile-runtime.js','minhas-obras-runtime.js','profile-polish-runtime.js'].forEach(function(file){
-    var source=current.src.replace(/build\\/verbum-app\\.js(?:\\?.*)?$/,'frontend/app/src/'+file);
-    if(!source||source===current.src){return;}
-    var script=document.createElement('script');
-    script.async=false;
-    script.src=source+query;
-    document.head.appendChild(script);
+  var loadedScripts={};
+  var loadedStyles={};
+  var core=['auth-profile-runtime.js','static-runtime.js'];
+  var enhancements=['workspace-mobile-runtime.js','technical-runtime.js','dashboard-official-runtime.js','sidebar-profile-runtime.js','minhas-obras-runtime.js','profile-polish-runtime.js'];
+  var stageScripts={
+    identification:['identification-runtime.js'],
+    project:['project-stage-runtime.js'],
+    planning:['planning-stage-runtime.js'],
+    development:['development-stage-runtime.js','chapter-workflow-runtime.js','chapter-preparation-runtime.js','chapter-research-runtime.js','chapter-writing-runtime.js','chapter-revision-runtime.js'],
+    general_review:['general-review-runtime.js'],
+    versions:['work-versions-runtime.js'],
+    audit:['work-audit-runtime.js'],
+    editorial_desk:['editorial-desk-runtime.js'],
+    layout:['layout-stage-runtime.js'],
+    legal:['legal-stage-runtime.js'],
+    publication:['publication-stage-runtime.js']
+  };
+  var stageStyles={
+    identification:['identification.css'],
+    project:['project-stage.css'],
+    planning:['planning-stage.css'],
+    development:['development-stage.css','chapter-workflow.css','chapter-preparation.css','chapter-research.css','chapter-writing.css','chapter-revision.css'],
+    general_review:['general-review.css'],
+    versions:['work-versions.css'],
+    audit:['work-audit.css'],
+    editorial_desk:['editorial-desk.css'],
+    layout:['layout-stage.css'],
+    legal:['legal-stage.css'],
+    publication:['publication-stage.css']
+  };
+  function source(file){return current.src.replace(/build\\/verbum-app\\.js(?:\\?.*)?$/,'frontend/app/src/'+file);}
+  function styleSource(file){return current.src.replace(/build\\/verbum-app\\.js(?:\\?.*)?$/,'frontend/app/src/styles/'+file);}
+  function loadScript(file){
+    if(loadedScripts[file]){return loadedScripts[file];}
+    loadedScripts[file]=new Promise(function(resolve){
+      var existing=document.querySelector('script[data-verbum-runtime="'+file+'"]');
+      if(existing){resolve();return;}
+      var url=source(file);if(!url||url===current.src){resolve();return;}
+      var script=document.createElement('script');script.async=false;script.dataset.verbumRuntime=file;script.src=url+query;script.onload=resolve;script.onerror=resolve;document.head.appendChild(script);
+    });
+    return loadedScripts[file];
+  }
+  function loadStyle(file){
+    if(loadedStyles[file]){return;}
+    loadedStyles[file]=true;
+    if(document.querySelector('link[data-verbum-style="'+file+'"]')){return;}
+    var link=document.createElement('link');link.rel='stylesheet';link.dataset.verbumStyle=file;link.href=styleSource(file)+query;document.head.appendChild(link);
+  }
+  function route(){
+    var params=new URLSearchParams(location.search);
+    return {book:params.get('verbum_work'),stage:params.get('verbum_stage')||''};
+  }
+  function ensureRouteAssets(){
+    var r=route();if(!r.book){return;}
+    loadStyle('workspace.css');
+    (stageStyles[r.stage]||[]).forEach(loadStyle);
+    (stageScripts[r.stage]||[]).forEach(loadScript);
+  }
+  function notify(){window.dispatchEvent(new Event('verbum:routechange'));}
+  var push=history.pushState,replace=history.replaceState;
+  history.pushState=function(){var result=push.apply(this,arguments);notify();return result;};
+  history.replaceState=function(){var result=replace.apply(this,arguments);notify();return result;};
+  window.addEventListener('popstate',ensureRouteAssets);
+  window.addEventListener('verbum:routechange',ensureRouteAssets);
+  loadScript(core[0]).then(function(){return loadScript(core[1]);}).then(function(){
+    ensureRouteAssets();
+    enhancements.forEach(loadScript);
   });
 })();
 `;
@@ -54,4 +114,4 @@ const css = `@import url("../frontend/app/src/styles/verbum.css");
 await mkdir(buildDir, { recursive: true });
 await writeFile(resolve(buildDir, 'verbum-app.js'), js);
 await writeFile(resolve(buildDir, 'verbum-app.css'), css);
-console.log('Built Verbum Studio assets through Sprint 19 Publicação da Obra');
+console.log('Built Verbum Studio assets with lazy stage loading');
