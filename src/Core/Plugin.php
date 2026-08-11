@@ -20,6 +20,7 @@ use VerbumStudio\Api\WorkLayoutController;
 use VerbumStudio\Api\WorkLegalController;
 use VerbumStudio\Api\WorkPlanningController;
 use VerbumStudio\Api\WorkProjectController;
+use VerbumStudio\Api\WorkPublicationController;
 use VerbumStudio\Api\WorkVersionsController;
 use VerbumStudio\Auth\Capabilities;
 use VerbumStudio\Integrations\Elementor\ElementorIntegration;
@@ -39,6 +40,7 @@ use VerbumStudio\Library\WorkLayoutRepository;
 use VerbumStudio\Library\WorkLegalRepository;
 use VerbumStudio\Library\WorkPlanningRepository;
 use VerbumStudio\Library\WorkProjectRepository;
+use VerbumStudio\Library\WorkPublicationRepository;
 use VerbumStudio\Library\WorkVersionsRepository;
 use VerbumStudio\Services\FrontendAssets;
 use VerbumStudio\Support\Logger;
@@ -62,7 +64,8 @@ final class Plugin
             WorkPlanningController::class, WorkDevelopmentController::class, WorkChapterPreparationController::class,
             WorkChapterResearchController::class, WorkChapterWritingController::class, WorkChapterRevisionController::class,
             WorkGeneralReviewController::class, WorkVersionsController::class, WorkAuditController::class,
-            WorkEditorialDeskController::class, WorkLayoutController::class, WorkLegalController::class, FrontendAssets::class,
+            WorkEditorialDeskController::class, WorkLayoutController::class, WorkLegalController::class,
+            WorkPublicationController::class, FrontendAssets::class,
         ] as $service) $this->container->get($service)->register();
 
         add_action('init', function (): void {
@@ -114,6 +117,7 @@ final class Plugin
         $this->container->set(WorkEditorialDeskRepository::class, static fn (): WorkEditorialDeskRepository => new WorkEditorialDeskRepository());
         $this->container->set(WorkLayoutRepository::class, static fn (): WorkLayoutRepository => new WorkLayoutRepository());
         $this->container->set(WorkLegalRepository::class, static fn (): WorkLegalRepository => new WorkLegalRepository());
+        $this->container->set(WorkPublicationRepository::class, static fn (): WorkPublicationRepository => new WorkPublicationRepository());
 
         $this->container->set(LibraryController::class, static fn (Container $c): LibraryController => new LibraryController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class)));
         $this->container->set(WorkProjectController::class, static fn (Container $c): WorkProjectController => new WorkProjectController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkProjectRepository::class)));
@@ -129,6 +133,7 @@ final class Plugin
         $this->container->set(WorkEditorialDeskController::class, static fn (Container $c): WorkEditorialDeskController => new WorkEditorialDeskController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkEditorialDeskRepository::class)));
         $this->container->set(WorkLayoutController::class, static fn (Container $c): WorkLayoutController => new WorkLayoutController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkLayoutRepository::class)));
         $this->container->set(WorkLegalController::class, static fn (Container $c): WorkLegalController => new WorkLegalController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkLegalRepository::class)));
+        $this->container->set(WorkPublicationController::class, static fn (Container $c): WorkPublicationController => new WorkPublicationController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkPublicationRepository::class)));
         $this->container->set(FrontendAssets::class, static fn (): FrontendAssets => new FrontendAssets());
         $this->container->set(SupabaseConfig::class, static fn (Container $c): SupabaseConfig => new SupabaseConfig($c->get(Config::class)));
         $this->container->set(SupabaseClient::class, static fn (Container $c): SupabaseClient => new SupabaseClient($c->get(SupabaseConfig::class)));
