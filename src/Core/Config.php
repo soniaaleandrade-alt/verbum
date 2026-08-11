@@ -11,13 +11,11 @@ final class Config
     public function __construct(array $overrides = [])
     {
         $environment = $this->env('VERBUM_ENV', defined('WP_ENVIRONMENT_TYPE') ? (string) WP_ENVIRONMENT_TYPE : 'production');
-        if (! in_array($environment, ['development', 'staging', 'production'], true)) {
-            $environment = 'production';
-        }
+        if (! in_array($environment, ['development', 'staging', 'production'], true)) $environment = 'production';
         $this->values = array_merge([
             'environment' => $environment,
             'debug' => $environment !== 'production' && defined('WP_DEBUG') && WP_DEBUG,
-            'version' => defined('VERBUM_STUDIO_VERSION') ? VERBUM_STUDIO_VERSION : '2.3.0',
+            'version' => defined('VERBUM_STUDIO_VERSION') ? VERBUM_STUDIO_VERSION : '2.4.0',
             'api_namespace' => 'verbum/v1',
             'supabase_url' => $this->env('VERBUM_SUPABASE_URL', ''),
             'supabase_anon_key' => $this->env('VERBUM_SUPABASE_ANON_KEY', ''),
