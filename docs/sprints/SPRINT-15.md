@@ -1,7 +1,7 @@
 # Sprint 15 — Auditoria da Obra
 
-**Versão:** 2.1.0  
-**Etapa da obra:** 7 de 11  
+**Versão:** 2.1.0
+**Etapa da obra:** 7 de 11
 **Fluxo:** Revisão Geral ✓ → Controle de Versões ✓ → Auditoria → Mesa Editorial
 
 ## Objetivo
