@@ -52,6 +52,7 @@ jobs:
           node --check frontend/app/src/chapter-writing-runtime.js
           node --check frontend/app/src/chapter-revision-runtime.js
           node --check frontend/app/src/general-review-runtime.js
+          node --check frontend/app/src/work-versions-runtime.js
           node --check frontend/app/src/technical-runtime.js
           node --check frontend/app/src/dashboard-official-runtime.js
 

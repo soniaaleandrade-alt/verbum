@@ -16,6 +16,7 @@ use VerbumStudio\Api\WorkDevelopmentController;
 use VerbumStudio\Api\WorkGeneralReviewController;
 use VerbumStudio\Api\WorkPlanningController;
 use VerbumStudio\Api\WorkProjectController;
+use VerbumStudio\Api\WorkVersionsController;
 use VerbumStudio\Auth\Capabilities;
 use VerbumStudio\Integrations\Elementor\ElementorIntegration;
 use VerbumStudio\Integrations\Supabase\SupabaseClient;
@@ -30,6 +31,7 @@ use VerbumStudio\Library\WorkDevelopmentRepository;
 use VerbumStudio\Library\WorkGeneralReviewRepository;
 use VerbumStudio\Library\WorkPlanningRepository;
 use VerbumStudio\Library\WorkProjectRepository;
+use VerbumStudio\Library\WorkVersionsRepository;
 use VerbumStudio\Services\FrontendAssets;
 use VerbumStudio\Support\Logger;
 
@@ -58,6 +60,7 @@ final class Plugin
         $this->container->get(WorkChapterWritingController::class)->register();
         $this->container->get(WorkChapterRevisionController::class)->register();
         $this->container->get(WorkGeneralReviewController::class)->register();
+        $this->container->get(WorkVersionsController::class)->register();
         $this->container->get(FrontendAssets::class)->register();
 
         add_action('init', function (): void {
@@ -110,6 +113,7 @@ final class Plugin
         $this->container->set(WorkChapterWritingRepository::class, static fn (): WorkChapterWritingRepository => new WorkChapterWritingRepository());
         $this->container->set(WorkChapterRevisionRepository::class, static fn (): WorkChapterRevisionRepository => new WorkChapterRevisionRepository());
         $this->container->set(WorkGeneralReviewRepository::class, static fn (): WorkGeneralReviewRepository => new WorkGeneralReviewRepository());
+        $this->container->set(WorkVersionsRepository::class, static fn (): WorkVersionsRepository => new WorkVersionsRepository());
         $this->container->set(LibraryController::class, static fn (Container $container): LibraryController => new LibraryController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class)));
         $this->container->set(WorkProjectController::class, static fn (Container $container): WorkProjectController => new WorkProjectController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkProjectRepository::class)));
         $this->container->set(WorkPlanningController::class, static fn (Container $container): WorkPlanningController => new WorkPlanningController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkPlanningRepository::class)));
@@ -119,6 +123,7 @@ final class Plugin
         $this->container->set(WorkChapterWritingController::class, static fn (Container $container): WorkChapterWritingController => new WorkChapterWritingController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkDevelopmentRepository::class), $container->get(WorkChapterWritingRepository::class)));
         $this->container->set(WorkChapterRevisionController::class, static fn (Container $container): WorkChapterRevisionController => new WorkChapterRevisionController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkDevelopmentRepository::class), $container->get(WorkChapterRevisionRepository::class)));
         $this->container->set(WorkGeneralReviewController::class, static fn (Container $container): WorkGeneralReviewController => new WorkGeneralReviewController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkGeneralReviewRepository::class)));
+        $this->container->set(WorkVersionsController::class, static fn (Container $container): WorkVersionsController => new WorkVersionsController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkVersionsRepository::class)));
         $this->container->set(FrontendAssets::class, static fn (): FrontendAssets => new FrontendAssets());
         $this->container->set(SupabaseConfig::class, static fn (Container $container): SupabaseConfig => new SupabaseConfig($container->get(Config::class)));
         $this->container->set(SupabaseClient::class, static fn (Container $container): SupabaseClient => new SupabaseClient($container->get(SupabaseConfig::class)));

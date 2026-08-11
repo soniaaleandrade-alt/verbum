@@ -4,6 +4,7 @@ import { GeneralReviewStage } from '../components/GeneralReviewStage';
 import { IdentificationStage } from '../components/IdentificationStage';
 import { PlanningStage } from '../components/PlanningStage';
 import { ProjectStage } from '../components/ProjectStage';
+import { WorkVersionsStage } from '../components/WorkVersionsStage';
 import { WorkWorkflow } from '../components/WorkWorkflow';
 import { WorkspaceFooter } from '../components/WorkspaceFooter';
 import type { WorkStageKey, WorkWorkspaceData } from '../types/verbum';
@@ -72,6 +73,8 @@ export function WorkWorkspace({ workspace, selectedStage, onStageChange, onBackT
         <DevelopmentStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={(stage) => guarded(() => onStageChange(stage))} onPersisted={onPersisted} />
       ) : selected.key === 'general_review' ? (
         <GeneralReviewStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={(stage) => guarded(() => onStageChange(stage))} onPersisted={onPersisted} />
+      ) : selected.key === 'versions' ? (
+        <WorkVersionsStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={(stage) => guarded(() => onStageChange(stage))} onPersisted={onPersisted} />
       ) : (
         <>
           <section className="verbum-stage-content">

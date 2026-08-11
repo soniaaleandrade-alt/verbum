@@ -17,7 +17,7 @@ final class Config
         $this->values = array_merge([
             'environment' => $environment,
             'debug' => $environment !== 'production' && defined('WP_DEBUG') && WP_DEBUG,
-            'version' => defined('VERBUM_STUDIO_VERSION') ? VERBUM_STUDIO_VERSION : '1.9.0',
+            'version' => defined('VERBUM_STUDIO_VERSION') ? VERBUM_STUDIO_VERSION : '2.0.0',
             'api_namespace' => 'verbum/v1',
             'supabase_url' => $this->env('VERBUM_SUPABASE_URL', ''),
             'supabase_anon_key' => $this->env('VERBUM_SUPABASE_ANON_KEY', ''),
