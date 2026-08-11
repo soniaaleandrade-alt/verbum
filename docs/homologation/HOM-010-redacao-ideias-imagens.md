@@ -1,7 +1,7 @@
 # HOM-010 — Ideias e imagens na Redação
 
-**Versão alvo:** 2.5.4  
-**Etapa:** Desenvolvimento > Redação do Capítulo  
+**Versão alvo:** 2.5.4
+**Etapa:** Desenvolvimento > Redação do Capítulo
 **Classificação:** Hotfix funcional / UX
 
 ## Encontrado
