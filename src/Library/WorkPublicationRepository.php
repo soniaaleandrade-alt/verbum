@@ -52,9 +52,9 @@ final class WorkPublicationRepository
 
         $state = is_array($round['state'] ?? null) ? $round['state'] : $this->initialState($bookId, $legal);
         $flags = $this->normalizeFlags(is_array($round['flags'] ?? null) ? $round['flags'] : []);
-        $channels = is_array($round['channels'] ?? null) ? array_values(array_filter($round['channels'], 'is_array')) : [];
-        $tasks = is_array($round['tasks'] ?? null) ? array_values(array_filter($round['tasks'], 'is_array')) : [];
-        $history = is_array($round['history'] ?? null) ? array_values(array_filter($round['history'], 'is_array')) : [];
+        $channels = $this->collection($round, 'channels');
+        $tasks = $this->collection($round, 'tasks');
+        $history = $this->collection($round, 'history');
         $finalConfirmation = (bool) ($round['finalConfirmation'] ?? false);
         $completed = (string) ($round['status'] ?? '') === 'published';
         $baselineValid = $this->baselineValid($bookId, $legal);
@@ -62,12 +62,11 @@ final class WorkPublicationRepository
         $requiredChannels = array_values(array_filter($channels, static fn (array $item): bool => (bool) ($item['required'] ?? false)));
         $resolvedRequired = count(array_filter($requiredChannels, static fn (array $item): bool => in_array((string) ($item['status'] ?? ''), ['published', 'not_applicable'], true)));
         $publishedChannels = array_values(array_filter($channels, static fn (array $item): bool => (string) ($item['status'] ?? '') === 'published'));
+        $packageReady = trim((string) ($state['package']['finalFileUrl'] ?? '')) !== '' && trim((string) ($state['package']['coverUrl'] ?? '')) !== '';
         $metadataReady = $this->metadataReady($state);
         $pricingReady = $this->pricingReady($state);
-        $packageReady = trim((string) ($state['package']['finalFileUrl'] ?? '')) !== '' && trim((string) ($state['package']['coverUrl'] ?? '')) !== '';
-        $launchReady = trim((string) ($state['launch']['actualDate'] ?? '')) !== '';
         $channelsReady = count($requiredChannels) > 0 && $resolvedRequired === count($requiredChannels) && count($publishedChannels) > 0;
-        $consistency = $this->consistencyWarnings($state, $legal);
+        $launchReady = trim((string) ($state['launch']['actualDate'] ?? '')) !== '';
 
         $checklist = [];
         foreach (self::MANUAL_FLAGS as $key => $label) $checklist[] = ['key' => $key, 'label' => $label, 'completed' => (bool) ($flags[$key] ?? false), 'automatic' => false];
@@ -89,33 +88,17 @@ final class WorkPublicationRepository
             'legal' => $this->legalSummary($legal),
             'round' => $this->roundSummary($round),
             'rounds' => array_map(fn (array $item): array => $this->roundSummary($item), array_reverse($rounds)),
-            'state' => $state,
-            'channels' => $channels,
-            'tasks' => $tasks,
-            'history' => array_reverse($history),
-            'records' => $this->records($bookId),
-            'updates' => $this->updates($bookId),
-            'flags' => $flags,
-            'finalConfirmation' => $finalConfirmation,
-            'channelTypes' => $this->options(self::CHANNEL_TYPES),
-            'channelStatuses' => $this->options(self::CHANNEL_STATUSES),
-            'taskPhases' => $this->options(self::TASK_PHASES),
-            'taskStatuses' => $this->options(self::TASK_STATUSES),
-            'updateTypes' => $this->options(self::UPDATE_TYPES),
-            'requiredChannelCount' => count($requiredChannels),
-            'resolvedRequiredCount' => $resolvedRequired,
-            'publishedChannelCount' => count($publishedChannels),
-            'formatCount' => count((array) ($state['identity']['publicationFormats'] ?? [])),
-            'baselineValid' => $baselineValid,
-            'consistencyWarnings' => $consistency,
-            'checklist' => $checklist,
-            'progress' => (int) round(($completedCount / max(1, count($checklist))) * 100),
-            'completedCount' => $completedCount,
-            'total' => count($checklist),
-            'ready' => $ready,
-            'completed' => $completed,
-            'publishedAt' => (string) ($round['publishedAt'] ?? ''),
-            'editionHash' => (string) ($round['editionHash'] ?? ''),
+            'state' => $state, 'channels' => $channels, 'tasks' => $tasks, 'history' => array_reverse($history),
+            'records' => $this->records($bookId), 'updates' => $this->updates($bookId),
+            'flags' => $flags, 'finalConfirmation' => $finalConfirmation,
+            'channelTypes' => $this->options(self::CHANNEL_TYPES), 'channelStatuses' => $this->options(self::CHANNEL_STATUSES),
+            'taskPhases' => $this->options(self::TASK_PHASES), 'taskStatuses' => $this->options(self::TASK_STATUSES), 'updateTypes' => $this->options(self::UPDATE_TYPES),
+            'requiredChannelCount' => count($requiredChannels), 'resolvedRequiredCount' => $resolvedRequired, 'publishedChannelCount' => count($publishedChannels),
+            'formatCount' => count((array) ($state['identity']['publicationFormats'] ?? [])), 'baselineValid' => $baselineValid,
+            'consistencyWarnings' => $this->consistencyWarnings($state, $legal),
+            'checklist' => $checklist, 'progress' => (int) round(($completedCount / max(1, count($checklist))) * 100),
+            'completedCount' => $completedCount, 'total' => count($checklist), 'ready' => $ready, 'completed' => $completed,
+            'publishedAt' => (string) ($round['publishedAt'] ?? ''), 'editionHash' => (string) ($round['editionHash'] ?? ''),
         ];
     }
 
@@ -137,16 +120,13 @@ final class WorkPublicationRepository
     /** @param array<string,mixed> $payload @return array<string,mixed> */
     public function createChannel(int $userId, int $bookId, array $payload): array
     {
-        $data = $this->data($userId, $bookId); $name = trim(sanitize_text_field((string) ($payload['name'] ?? '')));
-        if ($name === '') throw new ValidationError('Informe o nome do canal de publicação.');
-        $type = sanitize_key((string) ($payload['type'] ?? 'other')); if (! isset(self::CHANNEL_TYPES[$type])) $type = 'other';
-        $status = sanitize_key((string) ($payload['status'] ?? 'not_started')); if (! isset(self::CHANNEL_STATUSES[$status])) $status = 'not_started';
-        $rounds = $this->rounds($bookId);
+        $name = trim(sanitize_text_field((string) ($payload['name'] ?? ''))); if ($name === '') throw new ValidationError('Informe o nome do canal de publicação.');
+        $data = $this->data($userId, $bookId); $rounds = $this->rounds($bookId);
         foreach ($rounds as &$round) {
             if ((string) ($round['id'] ?? '') !== (string) $data['round']['id']) continue; $this->assertMutable($round);
-            $items = is_array($round['channels'] ?? null) ? $round['channels'] : [];
-            $item = $this->normalizeChannel(array_merge($payload, ['id' => 'pub-channel-' . substr(md5($name . '|' . microtime(true)), 0, 14), 'name' => $name, 'type' => $type, 'status' => $status, 'createdAt' => gmdate('c')]));
-            $items[] = $item; $round['channels'] = $items; $round['updatedAt'] = gmdate('c'); $this->appendHistory($round, 'Canal adicionado', $name); break;
+            $items = $this->collection($round, 'channels');
+            $items[] = $this->normalizeChannel(array_merge($payload, ['id' => 'pub-channel-' . substr(md5($name . '|' . microtime(true)), 0, 14), 'name' => $name, 'createdAt' => gmdate('c')]));
+            $round['channels'] = $items; $round['updatedAt'] = gmdate('c'); $this->appendHistory($round, 'Canal adicionado', $name); break;
         }
         unset($round); $this->storeRounds($bookId, $rounds); return $this->data($userId, $bookId);
     }
@@ -164,13 +144,13 @@ final class WorkPublicationRepository
     public function createTask(int $userId, int $bookId, array $payload): array
     {
         $description = trim(sanitize_text_field((string) ($payload['description'] ?? ''))); if ($description === '') throw new ValidationError('Informe a tarefa de lançamento.');
+        $phase = sanitize_key((string) ($payload['phase'] ?? 'prelaunch')); if (! isset(self::TASK_PHASES[$phase])) $phase = 'prelaunch';
         $data = $this->data($userId, $bookId); $rounds = $this->rounds($bookId);
         foreach ($rounds as &$round) {
             if ((string) ($round['id'] ?? '') !== (string) $data['round']['id']) continue; $this->assertMutable($round);
-            $items = is_array($round['tasks'] ?? null) ? $round['tasks'] : [];
-            $phase = sanitize_key((string) ($payload['phase'] ?? 'prelaunch')); if (! isset(self::TASK_PHASES[$phase])) $phase = 'prelaunch';
+            $items = $this->collection($round, 'tasks');
             $items[] = ['id' => 'pub-task-' . substr(md5($description . '|' . microtime(true)), 0, 14), 'description' => $description, 'phase' => $phase, 'phaseLabel' => self::TASK_PHASES[$phase], 'status' => 'pending', 'statusLabel' => self::TASK_STATUSES['pending'], 'createdAt' => gmdate('c'), 'updatedAt' => gmdate('c')];
-            $round['tasks'] = $items; $round['updatedAt'] = gmdate('c'); break;
+            $round['tasks'] = $items; $round['updatedAt'] = gmdate('c'); $this->appendHistory($round, 'Tarefa de lançamento adicionada', $description); break;
         }
         unset($round); $this->storeRounds($bookId, $rounds); return $this->data($userId, $bookId);
     }
@@ -194,7 +174,8 @@ final class WorkPublicationRepository
         $data = $this->data($userId, $bookId); if (! $data['completed']) throw new ValidationError('As atualizações pós-publicação só podem ser registradas depois da publicação concluída.');
         $description = trim(sanitize_textarea_field((string) ($payload['description'] ?? ''))); if ($description === '') throw new ValidationError('Descreva a atualização pós-publicação.');
         $type = sanitize_key((string) ($payload['type'] ?? 'other')); if (! isset(self::UPDATE_TYPES[$type])) $type = 'other';
-        $updates = $this->updates($bookId); $updates[] = ['id' => 'pub-update-' . substr(md5($description . '|' . microtime(true)), 0, 14), 'type' => $type, 'typeLabel' => self::UPDATE_TYPES[$type], 'description' => $description, 'version' => trim(sanitize_text_field((string) ($payload['version'] ?? ''))), 'fileUrl' => esc_url_raw((string) ($payload['file_url'] ?? '')), 'publishedAt' => trim(sanitize_text_field((string) ($payload['published_at'] ?? ''))), 'createdAt' => gmdate('c')];
+        $updates = $this->updates($bookId);
+        $updates[] = ['id' => 'pub-update-' . substr(md5($description . '|' . microtime(true)), 0, 14), 'type' => $type, 'typeLabel' => self::UPDATE_TYPES[$type], 'description' => $description, 'version' => trim(sanitize_text_field((string) ($payload['version'] ?? ''))), 'fileUrl' => esc_url_raw((string) ($payload['file_url'] ?? '')), 'publishedAt' => trim(sanitize_text_field((string) ($payload['published_at'] ?? ''))), 'createdAt' => gmdate('c')];
         update_post_meta($bookId, '_verbum_publication_updates', $updates); return $this->data($userId, $bookId);
     }
 
@@ -218,7 +199,8 @@ final class WorkPublicationRepository
             $round['status'] = 'published'; $round['publishedAt'] = (string) $data['state']['launch']['actualDate']; $round['completedAt'] = gmdate('c'); $round['publicationSnapshot'] = $snapshot; $round['editionHash'] = $editionHash;
             foreach ($data['channels'] as $channel) {
                 if (! is_array($channel) || (string) ($channel['status'] ?? '') !== 'published') continue;
-                $records[] = ['id' => 'publication-record-' . substr(md5((string) ($channel['id'] ?? '') . '|' . $editionHash), 0, 14), 'channelId' => (string) ($channel['id'] ?? ''), 'channel' => (string) ($channel['name'] ?? ''), 'type' => (string) ($channel['type'] ?? ''), 'format' => (string) ($channel['format'] ?? ''), 'identifier' => (string) ($channel['externalId'] ?? ''), 'url' => (string) ($channel['url'] ?? ''), 'fileUrl' => (string) (($channel['fileUrl'] ?? '') ?: ($data['state']['package']['finalFileUrl'] ?? '')), 'fileReferenceHash' => hash('sha256', (string) (($channel['fileUrl'] ?? '') ?: ($data['state']['package']['finalFileUrl'] ?? ''))), 'editionHash' => $editionHash, 'publishedAt' => (string) (($channel['publishedAt'] ?? '') ?: $data['state']['launch']['actualDate']), 'price' => (string) ($channel['price'] ?? ''), 'currency' => (string) ($channel['currency'] ?? ''), 'createdAt' => gmdate('c')];
+                $reference = (string) (($channel['fileUrl'] ?? '') ?: ($data['state']['package']['finalFileUrl'] ?? ''));
+                $records[] = ['id' => 'publication-record-' . substr(md5((string) ($channel['id'] ?? '') . '|' . $editionHash), 0, 14), 'channelId' => (string) ($channel['id'] ?? ''), 'channel' => (string) ($channel['name'] ?? ''), 'type' => (string) ($channel['type'] ?? ''), 'format' => (string) ($channel['format'] ?? ''), 'identifier' => (string) ($channel['externalId'] ?? ''), 'url' => (string) ($channel['url'] ?? ''), 'fileUrl' => $reference, 'fileReferenceHash' => hash('sha256', $reference), 'editionHash' => $editionHash, 'publishedAt' => (string) (($channel['publishedAt'] ?? '') ?: $data['state']['launch']['actualDate']), 'price' => (string) ($channel['price'] ?? ''), 'currency' => (string) ($channel['currency'] ?? ''), 'createdAt' => gmdate('c')];
             }
             $this->appendHistory($round, 'Publicação concluída', 'Edição publicada e congelada com hash ' . substr($editionHash, 0, 12) . '.'); break;
         }
@@ -255,15 +237,18 @@ final class WorkPublicationRepository
     /** @param array<string,mixed> $legal */
     private function baselineValid(int $bookId, array $legal): bool
     {
-        return (string) get_post_meta($bookId, '_verbum_legal_snapshot_hash', true) === (string) $legal['snapshotHash'] && (string) get_post_meta($bookId, '_verbum_legal_approved_version_id', true) === (string) $legal['versionId'] && (string) get_post_meta($bookId, '_verbum_legal_approved_hash', true) === (string) $legal['versionHash'];
+        return (string) get_post_meta($bookId, '_verbum_legal_snapshot_hash', true) === (string) $legal['snapshotHash']
+            && (string) get_post_meta($bookId, '_verbum_legal_approved_version_id', true) === (string) $legal['versionId']
+            && (string) get_post_meta($bookId, '_verbum_legal_approved_hash', true) === (string) $legal['versionHash'];
     }
 
     /** @param array<string,mixed> $legal @return array<string,mixed> */
     private function initialState(int $bookId, array $legal): array
     {
-        $snapshot = is_array($legal['snapshot'] ?? null) ? $legal['snapshot'] : []; $legalState = is_array($snapshot['state'] ?? null) ? $snapshot['state'] : []; $identity = is_array($legalState['identity'] ?? null) ? $legalState['identity'] : []; $finalFiles = is_array($legalState['finalFiles'] ?? null) ? $legalState['finalFiles'] : []; $isbn = is_array($legalState['isbn'] ?? null) ? $legalState['isbn'] : [];
+        $snapshot = is_array($legal['snapshot'] ?? null) ? $legal['snapshot'] : []; $legalState = is_array($snapshot['state'] ?? null) ? $snapshot['state'] : [];
+        $identity = is_array($legalState['identity'] ?? null) ? $legalState['identity'] : []; $finalFiles = is_array($legalState['finalFiles'] ?? null) ? $legalState['finalFiles'] : []; $isbn = is_array($legalState['isbn'] ?? null) ? $legalState['isbn'] : [];
         $keywords = get_post_meta($bookId, '_verbum_keywords', true); $keywords = is_array($keywords) ? array_values(array_map('strval', $keywords)) : [];
-        $formats = is_array($identity['publicationFormats'] ?? null) ? array_values(array_map('strval', $identity['publicationFormats'])) : ['printed'];
+        $formats = is_array($identity['publicationFormats'] ?? null) ? array_values(array_filter(array_map('strval', $identity['publicationFormats']))) : []; if ($formats === []) $formats = ['printed'];
         $pricing = []; foreach ($formats as $format) $pricing[$format] = ['label' => $format === 'digital' ? 'Digital' : 'Impresso', 'price' => '', 'currency' => 'BRL', 'unitCost' => '', 'channelFeePercent' => '', 'promotionalPrice' => '', 'promotionStart' => '', 'promotionEnd' => ''];
         return [
             'identity' => $identity,
@@ -287,15 +272,22 @@ final class WorkPublicationRepository
     private function pricingReady(array $state): bool
     {
         $pricing = is_array($state['pricing'] ?? null) ? $state['pricing'] : []; if ($pricing === []) return false;
-        foreach ($pricing as $item) { if (! is_array($item)) return false; $price = (string) ($item['price'] ?? ''); if ($price === '' || ! is_numeric(str_replace(',', '.', $price)) || (float) str_replace(',', '.', $price) < 0 || trim((string) ($item['currency'] ?? '')) === '') return false; }
+        foreach ($pricing as $item) {
+            if (! is_array($item)) return false; $price = str_replace(',', '.', (string) ($item['price'] ?? ''));
+            if ($price === '' || ! is_numeric($price) || (float) $price < 0 || trim((string) ($item['currency'] ?? '')) === '') return false;
+        }
         return true;
     }
 
     /** @param array<string,mixed> $state @param array<string,mixed> $legal @return array<int,string> */
     private function consistencyWarnings(array $state, array $legal): array
     {
-        $warnings = []; $snapshot = is_array($legal['snapshot'] ?? null) ? $legal['snapshot'] : []; $legalState = is_array($snapshot['state'] ?? null) ? $snapshot['state'] : []; $identity = is_array($legalState['identity'] ?? null) ? $legalState['identity'] : []; $metadata = is_array($state['metadata'] ?? null) ? $state['metadata'] : [];
-        foreach ([['title','Título'],['author','Autor'],['edition','Edição']] as $pair) if (trim((string) ($metadata[$pair[0]] ?? '')) !== '' && trim((string) ($identity[$pair[0]] ?? '')) !== '' && trim((string) $metadata[$pair[0]]) !== trim((string) $identity[$pair[0]])) $warnings[] = $pair[1] . ' comercial difere da identificação legal da edição.';
+        $warnings = []; $snapshot = is_array($legal['snapshot'] ?? null) ? $legal['snapshot'] : []; $legalState = is_array($snapshot['state'] ?? null) ? $snapshot['state'] : [];
+        $identity = is_array($legalState['identity'] ?? null) ? $legalState['identity'] : []; $metadata = is_array($state['metadata'] ?? null) ? $state['metadata'] : [];
+        foreach ([['title','Título'],['author','Autor'],['edition','Edição']] as $pair) {
+            $commercial = trim((string) ($metadata[$pair[0]] ?? '')); $legalValue = trim((string) ($identity[$pair[0]] ?? ''));
+            if ($commercial !== '' && $legalValue !== '' && $commercial !== $legalValue) $warnings[] = $pair[1] . ' comercial difere da identificação legal da edição.';
+        }
         $selected = (string) ($legalState['finalFiles']['selectedFileUrl'] ?? ''); if ($selected !== '' && (string) ($state['package']['finalFileUrl'] ?? '') !== $selected) $warnings[] = 'O arquivo do pacote de publicação difere do arquivo final selecionado nos Trâmites Legais.';
         return $warnings;
     }
@@ -303,15 +295,28 @@ final class WorkPublicationRepository
     /** @param array<string,mixed> $payload @return array<string,mixed> */
     private function normalizeChannel(array $payload): array
     {
-        $type = sanitize_key((string) ($payload['type'] ?? 'other')); if (! isset(self::CHANNEL_TYPES[$type])) $type = 'other'; $status = sanitize_key((string) ($payload['status'] ?? 'not_started')); if (! isset(self::CHANNEL_STATUSES[$status])) $status = 'not_started';
-        return ['id' => (string) ($payload['id'] ?? ''), 'name' => trim(sanitize_text_field((string) ($payload['name'] ?? ''))), 'type' => $type, 'typeLabel' => self::CHANNEL_TYPES[$type], 'format' => trim(sanitize_text_field((string) ($payload['format'] ?? 'printed'))), 'required' => (bool) ($payload['required'] ?? false), 'status' => $status, 'statusLabel' => self::CHANNEL_STATUSES[$status], 'url' => esc_url_raw((string) ($payload['url'] ?? '')), 'externalId' => trim(sanitize_text_field((string) ($payload['external_id'] ?? $payload['externalId'] ?? ''))), 'fileUrl' => esc_url_raw((string) ($payload['file_url'] ?? $payload['fileUrl'] ?? '')), 'submittedAt' => trim(sanitize_text_field((string) ($payload['submitted_at'] ?? $payload['submittedAt'] ?? ''))), 'approvedAt' => trim(sanitize_text_field((string) ($payload['approved_at'] ?? $payload['approvedAt'] ?? ''))), 'publishedAt' => trim(sanitize_text_field((string) ($payload['published_at'] ?? $payload['publishedAt'] ?? ''))), 'price' => trim(sanitize_text_field((string) ($payload['price'] ?? ''))), 'currency' => trim(sanitize_text_field((string) ($payload['currency'] ?? 'BRL'))), 'notes' => trim(sanitize_textarea_field((string) ($payload['notes'] ?? ''))), 'createdAt' => (string) ($payload['createdAt'] ?? gmdate('c')), 'updatedAt' => gmdate('c')];
+        $type = sanitize_key((string) ($payload['type'] ?? 'other')); if (! isset(self::CHANNEL_TYPES[$type])) $type = 'other';
+        $status = sanitize_key((string) ($payload['status'] ?? 'not_started')); if (! isset(self::CHANNEL_STATUSES[$status])) $status = 'not_started';
+        return [
+            'id' => (string) ($payload['id'] ?? ''), 'name' => trim(sanitize_text_field((string) ($payload['name'] ?? ''))), 'type' => $type, 'typeLabel' => self::CHANNEL_TYPES[$type],
+            'format' => trim(sanitize_text_field((string) ($payload['format'] ?? 'printed'))), 'required' => (bool) ($payload['required'] ?? false), 'status' => $status, 'statusLabel' => self::CHANNEL_STATUSES[$status],
+            'url' => esc_url_raw((string) ($payload['url'] ?? '')), 'externalId' => trim(sanitize_text_field((string) ($payload['external_id'] ?? $payload['externalId'] ?? ''))),
+            'fileUrl' => esc_url_raw((string) ($payload['file_url'] ?? $payload['fileUrl'] ?? '')), 'submittedAt' => trim(sanitize_text_field((string) ($payload['submitted_at'] ?? $payload['submittedAt'] ?? ''))),
+            'approvedAt' => trim(sanitize_text_field((string) ($payload['approved_at'] ?? $payload['approvedAt'] ?? ''))), 'publishedAt' => trim(sanitize_text_field((string) ($payload['published_at'] ?? $payload['publishedAt'] ?? ''))),
+            'price' => trim(sanitize_text_field((string) ($payload['price'] ?? ''))), 'currency' => trim(sanitize_text_field((string) ($payload['currency'] ?? 'BRL'))), 'notes' => trim(sanitize_textarea_field((string) ($payload['notes'] ?? ''))),
+            'createdAt' => (string) ($payload['createdAt'] ?? gmdate('c')), 'updatedAt' => gmdate('c'),
+        ];
     }
 
     /** @param callable(array<string,mixed>):array<string,mixed> $mutator @return array<string,mixed> */
     private function updateRoundItem(int $userId, int $bookId, string $collection, string $id, callable $mutator, string $event): array
     {
         $data = $this->data($userId, $bookId); $rounds = $this->rounds($bookId); $found = false;
-        foreach ($rounds as &$round) { if ((string) ($round['id'] ?? '') !== (string) $data['round']['id']) continue; $this->assertMutable($round); $items = is_array($round[$collection] ?? null) ? $round[$collection] : []; foreach ($items as &$item) { if (! is_array($item) || (string) ($item['id'] ?? '') !== $id) continue; $item = $mutator($item); $found = true; break; } unset($item); $round[$collection] = $items; if ($found) { $round['updatedAt'] = gmdate('c'); $this->appendHistory($round, $event, $id); } break; }
+        foreach ($rounds as &$round) {
+            if ((string) ($round['id'] ?? '') !== (string) $data['round']['id']) continue; $this->assertMutable($round); $items = $this->collection($round, $collection);
+            foreach ($items as &$item) { if ((string) ($item['id'] ?? '') !== $id) continue; $item = $mutator($item); $found = true; break; }
+            unset($item); $round[$collection] = $items; if ($found) { $round['updatedAt'] = gmdate('c'); $this->appendHistory($round, $event, $id); } break;
+        }
         unset($round); if (! $found) throw new NotFoundError('Registro de Publicação não encontrado.'); $this->storeRounds($bookId, $rounds); return $this->data($userId, $bookId);
     }
 
@@ -319,7 +324,11 @@ final class WorkPublicationRepository
     private function deleteRoundItem(int $userId, int $bookId, string $collection, string $id, string $event): array
     {
         $data = $this->data($userId, $bookId); $rounds = $this->rounds($bookId); $deleted = false;
-        foreach ($rounds as &$round) { if ((string) ($round['id'] ?? '') !== (string) $data['round']['id']) continue; $this->assertMutable($round); $items = is_array($round[$collection] ?? null) ? $round[$collection] : []; $next = array_values(array_filter($items, static fn (array $item): bool => (string) ($item['id'] ?? '') !== $id)); $deleted = count($next) !== count($items); $round[$collection] = $next; if ($deleted) $this->appendHistory($round, $event, $id); break; }
+        foreach ($rounds as &$round) {
+            if ((string) ($round['id'] ?? '') !== (string) $data['round']['id']) continue; $this->assertMutable($round); $items = $this->collection($round, $collection);
+            $next = array_values(array_filter($items, static fn (array $item): bool => (string) ($item['id'] ?? '') !== $id)); $deleted = count($next) !== count($items); $round[$collection] = $next;
+            if ($deleted) { $round['updatedAt'] = gmdate('c'); $this->appendHistory($round, $event, $id); } break;
+        }
         unset($round); if (! $deleted) throw new NotFoundError('Registro de Publicação não encontrado.'); $this->storeRounds($bookId, $rounds); return $this->data($userId, $bookId);
     }
 
@@ -335,11 +344,25 @@ final class WorkPublicationRepository
     /** @param array<int,array<string,mixed>> $rounds */ private function storeRounds(int $bookId, array $rounds): void { update_post_meta($bookId, '_verbum_publication_rounds', array_values($rounds)); }
     /** @return array<int,array<string,mixed>> */ private function records(int $bookId): array { $items = get_post_meta($bookId, '_verbum_publication_records', true); return is_array($items) ? array_values(array_filter($items, 'is_array')) : []; }
     /** @return array<int,array<string,mixed>> */ private function updates(int $bookId): array { $items = get_post_meta($bookId, '_verbum_publication_updates', true); return is_array($items) ? array_values(array_filter($items, 'is_array')) : []; }
+    /** @return array<int,array<string,mixed>> */ private function collection(array $round, string $key): array { $items = is_array($round[$key] ?? null) ? $round[$key] : []; return array_values(array_filter($items, 'is_array')); }
     /** @param array<string,mixed> $round */ private function assertMutable(array $round): void { if ((string) ($round['status'] ?? '') === 'published') throw new ValidationError('A edição publicada está congelada. Registre alterações posteriores no histórico de atualização.'); }
-    /** @param array<string,mixed> $round */ private function appendHistory(array &$round, string $event, string $detail): void { $history = is_array($round['history'] ?? null) ? $round['history'] : []; $history[] = ['id' => 'pub-history-' . substr(md5($event . '|' . microtime(true)), 0, 12), 'event' => $event, 'detail' => $detail, 'createdAt' => gmdate('c')]; $round['history'] = array_slice($history, -80); }
+    /** @param array<string,mixed> $round */ private function appendHistory(array &$round, string $event, string $detail): void { $history = $this->collection($round, 'history'); $history[] = ['id' => 'pub-history-' . substr(md5($event . '|' . microtime(true)), 0, 12), 'event' => $event, 'detail' => $detail, 'createdAt' => gmdate('c')]; $round['history'] = array_slice($history, -80); }
     /** @return array<string,bool> */ private function normalizeFlags(array $flags): array { $clean = []; foreach (self::MANUAL_FLAGS as $key => $_) $clean[$key] = (bool) ($flags[$key] ?? false); return $clean; }
     /** @return array<int,array{key:string,label:string}> */ private function options(array $items): array { $out = []; foreach ($items as $key => $label) $out[] = ['key' => $key, 'label' => $label]; return $out; }
     /** @return array<string,mixed> */ private function roundSummary(array $round): array { return ['id' => (string) ($round['id'] ?? ''), 'number' => (int) ($round['number'] ?? 0), 'status' => (string) ($round['status'] ?? ''), 'startedAt' => (string) ($round['startedAt'] ?? ''), 'updatedAt' => (string) ($round['updatedAt'] ?? ''), 'completedAt' => (string) ($round['completedAt'] ?? ''), 'publishedAt' => (string) ($round['publishedAt'] ?? ''), 'editionHash' => (string) ($round['editionHash'] ?? '')]; }
     /** @param array<string,mixed> $legal @return array<string,mixed> */ private function legalSummary(array $legal): array { $s = is_array($legal['snapshot'] ?? null) ? $legal['snapshot'] : []; return ['snapshotHash' => (string) $legal['snapshotHash'], 'version' => $s['version'] ?? [], 'layout' => $s['layout'] ?? [], 'identity' => $s['state']['identity'] ?? [], 'finalFiles' => $s['state']['finalFiles'] ?? [], 'isbn' => $s['state']['isbn'] ?? [], 'completedAt' => (string) ($legal['completedAt'] ?? '')]; }
-    /** @return array<string,mixed> */ private function sanitizeArray(array $value): array { $clean = []; foreach ($value as $key => $item) { $safeKey = is_int($key) ? $key : sanitize_key((string) $key); if (is_array($item)) $clean[$safeKey] = $this->sanitizeArray($item); elseif (is_bool($item) || is_int($item) || is_float($item)) $clean[$safeKey] = $item; else { $raw = (string) $item; $clean[$safeKey] = filter_var($raw, FILTER_VALIDATE_URL) ? esc_url_raw($raw) : sanitize_textarea_field($raw); } } return $clean; }
+
+    /** @return array<string,mixed> */
+    private function sanitizeArray(array $value): array
+    {
+        $clean = [];
+        foreach ($value as $key => $item) {
+            $safeKey = is_int($key) ? $key : (preg_replace('/[^A-Za-z0-9_-]/', '', (string) $key) ?? '');
+            if ($safeKey === '') continue;
+            if (is_array($item)) $clean[$safeKey] = $this->sanitizeArray($item);
+            elseif (is_bool($item) || is_int($item) || is_float($item)) $clean[$safeKey] = $item;
+            else { $raw = (string) $item; $clean[$safeKey] = filter_var($raw, FILTER_VALIDATE_URL) ? esc_url_raw($raw) : sanitize_textarea_field($raw); }
+        }
+        return $clean;
+    }
 }
