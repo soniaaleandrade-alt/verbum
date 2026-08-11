@@ -16,6 +16,7 @@ final class FrontendAssets
         'verbum-studio-minhas-obras' => 'frontend/app/src/styles/minhas-obras.css',
         'verbum-studio-auth-profile' => 'frontend/app/src/styles/auth-profile.css',
         'verbum-studio-profile-polish' => 'frontend/app/src/styles/profile-polish.css',
+        'verbum-studio-research-layout-hotfix' => 'frontend/app/src/styles/chapter-research-layout-hotfix.css',
     ];
 
     private const LAZY_STYLE_FILES = [

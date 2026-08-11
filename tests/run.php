@@ -22,7 +22,7 @@ function assert_same($expected, $actual, string $message = ''): void { if ($expe
 
 test('config exposes core defaults and production mode', function (): void {
     $config = new Config(['environment' => 'production']);
-    assert_same('2.5.2', $config->get('version'));
+    assert_same('2.5.3', $config->get('version'));
     assert_same('verbum/v1', $config->get('api_namespace'));
     assert_true($config->isProduction());
 });
@@ -37,7 +37,7 @@ test('authentication error maps to unauthorized', function (): void { $error = n
 
 test('health endpoint returns ok and version', function (): void {
     $controller = new RestController(new Config(), new ResponseFactory(new Config()), new Capabilities()); $response = $controller->health(); $data = $response->get_data();
-    assert_same(200, $response->get_status()); assert_same(true, $data['success']); assert_same('ok', $data['data']['status']); assert_same('2.5.2', $data['data']['version']);
+    assert_same(200, $response->get_status()); assert_same(true, $data['success']); assert_same('ok', $data['data']['status']); assert_same('2.5.3', $data['data']['version']);
 });
 
 test('me endpoint rejects visitors', function (): void {
@@ -69,7 +69,7 @@ test('private storage types exist for projects books chapters and research', fun
 
 test('Sprint 19 REST routes are registered', function (): void {
     global $verbum_test_actions, $verbum_test_routes; $verbum_test_actions = []; $verbum_test_routes = []; $plugin = new Plugin(new Container(), new Config()); $plugin->register(); foreach ($verbum_test_actions['rest_api_init'] ?? [] as $callback) $callback();
-    foreach ([
+    foreach([
         'verbum/v1/auth/login','verbum/v1/profile','verbum/v1/library','verbum/v1/projects','verbum/v1/books',
         'verbum/v1/books/(?P<id>\\d+)/workspace','verbum/v1/books/(?P<id>\\d+)/identification','verbum/v1/books/(?P<id>\\d+)/identification/complete',
         'verbum/v1/books/(?P<id>\\d+)/project-stage','verbum/v1/books/(?P<id>\\d+)/project-stage/complete',
