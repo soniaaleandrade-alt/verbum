@@ -35,11 +35,13 @@ final class Capabilities
         if (! $writer && function_exists('add_role')) {
             $writer = add_role(self::WRITER_ROLE, 'Verbum Studio — Escritor', [
                 'read' => true,
+                'upload_files' => true,
                 self::ACCESS => true,
             ]);
         }
         if ($writer) {
             $writer->add_cap('read');
+            $writer->add_cap('upload_files');
             $writer->add_cap(self::ACCESS);
             $writer->remove_cap(self::MANAGE);
             $writer->remove_cap(self::MANAGE_SETTINGS);
