@@ -60,24 +60,10 @@ final class WorkAuditRepository
             $this->storeRounds($bookId, $rounds);
         }
 
-        $automatic = $this->automaticFindings($round);
-        $manual = is_array($round['manualFindings'] ?? null) ? $round['manualFindings'] : [];
-        $decisions = is_array($round['decisions'] ?? null) ? $round['decisions'] : [];
-        $findings = [];
-        foreach (array_merge($automatic, $manual) as $finding) {
-            if (! is_array($finding)) continue;
-            $id = (string) ($finding['id'] ?? '');
-            if ($id !== '' && isset($decisions[$id]) && is_array($decisions[$id])) {
-                $decision = $decisions[$id];
-                $finding['status'] = $decision['status'] ?? $finding['status'];
-                $finding['justification'] = $decision['justification'] ?? '';
-                $finding['resolvedAt'] = $decision['resolvedAt'] ?? '';
-            }
-            $findings[] = $finding;
-        }
-
+        $findings = $this->mergedFindings($round);
         $summary = $this->summary($findings);
-        $integrityValid = $this->snapshotHash((array) $version['snapshot']) === (string) $version['hash'];
+        $snapshot = is_array($round['snapshot'] ?? null) ? $round['snapshot'] : [];
+        $integrityValid = $snapshot !== [] && $this->snapshotHash($snapshot) === (string) ($round['versionHash'] ?? '');
         $flags = $this->normalizeFlags(is_array($round['flags'] ?? null) ? $round['flags'] : []);
         $report = is_array($round['report'] ?? null) ? $round['report'] : [];
         $reportGenerated = $report !== [];
@@ -85,36 +71,35 @@ final class WorkAuditRepository
         $completed = ($round['status'] ?? '') === 'approved';
         $blocking = $summary['openCritical'] + $summary['openPending'];
 
-        $checklist = [
-            ['key' => 'integrity', 'label' => 'Integridade do snapshot conferida', 'completed' => $integrityValid, 'automatic' => true],
-        ];
+        $checklist = [['key' => 'integrity', 'label' => 'Integridade do snapshot conferida', 'completed' => $integrityValid, 'automatic' => true]];
         foreach (self::MANUAL_FLAGS as $key => $label) {
-            $complete = (bool) ($flags[$key] ?? false);
-            if ($key === 'report_checked') $complete = $complete && $reportGenerated;
-            $checklist[] = ['key' => $key, 'label' => $label, 'completed' => $complete, 'automatic' => false];
+            $checked = (bool) ($flags[$key] ?? false);
+            if ($key === 'report_checked') $checked = $checked && $reportGenerated;
+            $checklist[] = ['key' => $key, 'label' => $label, 'completed' => $checked, 'automatic' => false];
         }
         $checklist[] = ['key' => 'no_blockers', 'label' => 'Nenhuma pendência obrigatória aberta', 'completed' => $blocking === 0, 'automatic' => true];
         $checklist[] = ['key' => 'completed', 'label' => 'Auditoria concluída', 'completed' => $completed, 'automatic' => true];
         $completedCount = count(array_filter($checklist, static fn (array $item): bool => (bool) $item['completed']));
         $manualReady = count(array_filter(array_keys(self::MANUAL_FLAGS), static fn (string $key): bool => (bool) ($flags[$key] ?? false))) === count(self::MANUAL_FLAGS);
-        $ready = $integrityValid && $blocking === 0 && $manualReady && $reportGenerated && $finalConfirmation && ! $completed;
-
+        $ready = ! $completed && $integrityValid && $blocking === 0 && $manualReady && $reportGenerated && $finalConfirmation;
         $currentHash = $this->currentWorkHash($userId, $bookId);
-        $workChanged = $currentHash !== (string) $version['hash'];
 
         return [
             'bookId' => (string) $bookId,
-            'title' => (string) (($version['snapshot']['metadata']['title'] ?? '') ?: get_the_title($bookId)),
+            'title' => (string) (($snapshot['metadata']['title'] ?? '') ?: get_the_title($bookId)),
             'round' => $this->roundSummary($round),
             'rounds' => array_map(fn (array $item): array => $this->roundSummary($item), array_reverse($rounds)),
             'version' => $this->versionSummary($version),
-            'workChangedAfterBaseline' => $workChanged,
+            'workChangedAfterBaseline' => $currentHash !== (string) ($version['hash'] ?? ''),
             'currentWorkHash' => $currentHash,
             'categories' => $this->options(self::CATEGORIES),
             'severities' => $this->options(self::SEVERITIES),
             'statuses' => $this->options(self::STATUSES),
             'findings' => $findings,
             'summary' => $summary,
+            'sources' => is_array($round['sources'] ?? null) ? $round['sources'] : [],
+            'terminology' => is_array($round['terminology'] ?? null) ? $round['terminology'] : [],
+            'elements' => $this->elements($snapshot),
             'flags' => $flags,
             'finalConfirmation' => $finalConfirmation,
             'reportGenerated' => $reportGenerated,
@@ -136,11 +121,10 @@ final class WorkAuditRepository
     public function saveState(int $userId, int $bookId, array $fields): array
     {
         $data = $this->data($userId, $bookId);
-        $roundId = (string) $data['round']['id'];
         $rounds = $this->rounds($bookId);
         foreach ($rounds as &$round) {
-            if ((string) ($round['id'] ?? '') !== $roundId) continue;
-            if (($round['status'] ?? '') === 'approved') throw new ValidationError('Esta rodada de Auditoria está aprovada e não pode mais ser alterada.');
+            if ((string) ($round['id'] ?? '') !== (string) $data['round']['id']) continue;
+            $this->assertRoundMutable($round);
             if (array_key_exists('flags', $fields)) $round['flags'] = $this->normalizeFlags(is_array($fields['flags']) ? $fields['flags'] : []);
             if (array_key_exists('final_confirmation', $fields)) $round['finalConfirmation'] = (bool) $fields['final_confirmation'];
             $round['updatedAt'] = gmdate('c');
@@ -157,7 +141,6 @@ final class WorkAuditRepository
     public function createFinding(int $userId, int $bookId, array $fields): array
     {
         $data = $this->data($userId, $bookId);
-        $roundId = (string) $data['round']['id'];
         $description = trim(sanitize_textarea_field((string) ($fields['description'] ?? '')));
         if ($description === '') throw new ValidationError('Descreva o achado da Auditoria.');
         $category = sanitize_key((string) ($fields['category'] ?? 'editorial'));
@@ -165,10 +148,11 @@ final class WorkAuditRepository
         $severity = sanitize_key((string) ($fields['severity'] ?? 'warning'));
         if (! isset(self::SEVERITIES[$severity])) $severity = 'warning';
         $chapterId = (string) (int) ($fields['chapter_id'] ?? 0);
+        $chapterTitle = $this->chapterTitleFromData($data, $chapterId);
         $rounds = $this->rounds($bookId);
         foreach ($rounds as &$round) {
-            if ((string) ($round['id'] ?? '') !== $roundId) continue;
-            if (($round['status'] ?? '') === 'approved') throw new ValidationError('Esta rodada de Auditoria está aprovada e não pode mais ser alterada.');
+            if ((string) ($round['id'] ?? '') !== (string) $data['round']['id']) continue;
+            $this->assertRoundMutable($round);
             $items = is_array($round['manualFindings'] ?? null) ? $round['manualFindings'] : [];
             $items[] = $this->finding(
                 'audit-manual-' . substr(md5($description . '|' . microtime(true)), 0, 14),
@@ -177,7 +161,7 @@ final class WorkAuditRepository
                 $description,
                 trim(sanitize_textarea_field((string) ($fields['recommendation'] ?? ''))),
                 $chapterId === '0' ? '' : $chapterId,
-                trim(sanitize_text_field((string) ($fields['chapter_title'] ?? ''))),
+                $chapterTitle,
                 'manual'
             );
             $round['manualFindings'] = $items;
@@ -195,18 +179,17 @@ final class WorkAuditRepository
     public function updateFinding(int $userId, int $bookId, string $findingId, array $fields): array
     {
         $data = $this->data($userId, $bookId);
-        $roundId = (string) $data['round']['id'];
+        $exists = false;
+        foreach ((array) $data['findings'] as $finding) if ((string) ($finding['id'] ?? '') === $findingId) { $exists = true; break; }
+        if (! $exists) throw new NotFoundError('Achado da Auditoria não encontrado.');
         $status = sanitize_key((string) ($fields['status'] ?? 'reviewing'));
         if (! isset(self::STATUSES[$status])) $status = 'reviewing';
         $justification = trim(sanitize_textarea_field((string) ($fields['justification'] ?? '')));
         if ($status === 'ignored' && $justification === '') throw new ValidationError('Informe a justificativa para ignorar este achado.');
-        $exists = false;
-        foreach ((array) $data['findings'] as $finding) if ((string) ($finding['id'] ?? '') === $findingId) { $exists = true; break; }
-        if (! $exists) throw new NotFoundError('Achado da Auditoria não encontrado.');
         $rounds = $this->rounds($bookId);
         foreach ($rounds as &$round) {
-            if ((string) ($round['id'] ?? '') !== $roundId) continue;
-            if (($round['status'] ?? '') === 'approved') throw new ValidationError('Esta rodada de Auditoria está aprovada e não pode mais ser alterada.');
+            if ((string) ($round['id'] ?? '') !== (string) $data['round']['id']) continue;
+            $this->assertRoundMutable($round);
             $decisions = is_array($round['decisions'] ?? null) ? $round['decisions'] : [];
             $decisions[$findingId] = [
                 'status' => $status,
@@ -226,12 +209,11 @@ final class WorkAuditRepository
     public function deleteFinding(int $userId, int $bookId, string $findingId): array
     {
         $data = $this->data($userId, $bookId);
-        $roundId = (string) $data['round']['id'];
         $rounds = $this->rounds($bookId);
         $deleted = false;
         foreach ($rounds as &$round) {
-            if ((string) ($round['id'] ?? '') !== $roundId) continue;
-            if (($round['status'] ?? '') === 'approved') throw new ValidationError('Esta rodada de Auditoria está aprovada e não pode mais ser alterada.');
+            if ((string) ($round['id'] ?? '') !== (string) $data['round']['id']) continue;
+            $this->assertRoundMutable($round);
             $items = is_array($round['manualFindings'] ?? null) ? $round['manualFindings'] : [];
             $next = array_values(array_filter($items, static fn (array $item): bool => (string) ($item['id'] ?? '') !== $findingId));
             $deleted = count($next) !== count($items);
@@ -249,7 +231,6 @@ final class WorkAuditRepository
     public function generateReport(int $userId, int $bookId): array
     {
         $data = $this->data($userId, $bookId);
-        $roundId = (string) $data['round']['id'];
         $report = [
             'generatedAt' => gmdate('c'),
             'workTitle' => (string) $data['title'],
@@ -262,19 +243,19 @@ final class WorkAuditRepository
             'resultLabel' => (string) $data['resultLabel'],
             'findings' => array_map(static function (array $finding): array {
                 return [
-                    'category' => $finding['categoryLabel'],
-                    'severity' => $finding['severityLabel'],
-                    'description' => $finding['description'],
-                    'status' => $finding['statusLabel'],
-                    'chapterTitle' => $finding['chapterTitle'],
-                    'justification' => $finding['justification'] ?? '',
+                    'category' => (string) $finding['categoryLabel'],
+                    'severity' => (string) $finding['severityLabel'],
+                    'description' => (string) $finding['description'],
+                    'status' => (string) $finding['statusLabel'],
+                    'chapterTitle' => (string) $finding['chapterTitle'],
+                    'justification' => (string) ($finding['justification'] ?? ''),
                 ];
             }, (array) $data['findings']),
         ];
         $rounds = $this->rounds($bookId);
         foreach ($rounds as &$round) {
-            if ((string) ($round['id'] ?? '') !== $roundId) continue;
-            if (($round['status'] ?? '') === 'approved') throw new ValidationError('Esta rodada de Auditoria está aprovada e não pode mais ser alterada.');
+            if ((string) ($round['id'] ?? '') !== (string) $data['round']['id']) continue;
+            $this->assertRoundMutable($round);
             $round['report'] = $report;
             $round['updatedAt'] = gmdate('c');
             break;
@@ -289,7 +270,7 @@ final class WorkAuditRepository
     {
         $data = $this->data($userId, $bookId);
         $version = $this->auditVersion($bookId);
-        $snapshot = (array) $version['snapshot'];
+        $snapshot = is_array($version['snapshot'] ?? null) ? $version['snapshot'] : [];
         $chapters = [];
         foreach ((array) ($snapshot['chapters'] ?? []) as $chapter) {
             if (! is_array($chapter)) continue;
@@ -304,8 +285,15 @@ final class WorkAuditRepository
             'version' => $data['version'],
             'summary' => $data['summary'],
             'chapters' => $chapters,
-            'terminology' => $data['round']['terminology'] ?? [],
-            'existingFindings' => array_slice((array) $data['findings'], 0, 80),
+            'terminology' => $data['terminology'],
+            'existingFindings' => array_map(static function (array $finding): array {
+                return [
+                    'category' => $finding['category'],
+                    'severity' => $finding['severity'],
+                    'description' => $finding['description'],
+                    'status' => $finding['status'],
+                ];
+            }, array_slice((array) $data['findings'], 0, 80)),
         ];
     }
 
@@ -313,13 +301,10 @@ final class WorkAuditRepository
     public function complete(int $userId, int $bookId): array
     {
         $data = $this->data($userId, $bookId);
-        if (! $data['ready']) {
-            throw new ValidationError('Resolva as pendências obrigatórias, gere e confira o relatório e confirme a versão auditada antes de aprovar a Auditoria.');
-        }
-        $roundId = (string) $data['round']['id'];
+        if (! $data['ready']) throw new ValidationError('Resolva as pendências obrigatórias, gere e confira o relatório e confirme a versão auditada antes de aprovar a Auditoria.');
         $rounds = $this->rounds($bookId);
         foreach ($rounds as &$round) {
-            if ((string) ($round['id'] ?? '') !== $roundId) continue;
+            if ((string) ($round['id'] ?? '') !== (string) $data['round']['id']) continue;
             $round['status'] = 'approved';
             $round['result'] = 'approved';
             $round['completedAt'] = gmdate('c');
@@ -372,6 +357,7 @@ final class WorkAuditRepository
             'versionNumber' => (string) $version['number'],
             'versionName' => (string) $version['name'],
             'versionHash' => (string) $version['hash'],
+            'snapshot' => is_array($version['snapshot'] ?? null) ? $version['snapshot'] : [],
             'startedAt' => gmdate('c'),
             'updatedAt' => gmdate('c'),
             'completedAt' => '',
@@ -384,8 +370,33 @@ final class WorkAuditRepository
             'report' => [],
             'sources' => $this->sourceSnapshot($userId, $bookId, (array) ($version['snapshot']['chapters'] ?? [])),
             'terminology' => $this->terminologySnapshot($bookId),
-            'elementChoices' => [],
         ];
+    }
+
+    /** @param array<string, mixed> $round
+     *  @return array<int, array<string, mixed>>
+     */
+    private function mergedFindings(array $round): array
+    {
+        $automatic = $this->automaticFindings($round);
+        $manual = is_array($round['manualFindings'] ?? null) ? $round['manualFindings'] : [];
+        $decisions = is_array($round['decisions'] ?? null) ? $round['decisions'] : [];
+        $result = [];
+        foreach (array_merge($automatic, $manual) as $finding) {
+            if (! is_array($finding)) continue;
+            $id = (string) ($finding['id'] ?? '');
+            if ($id !== '' && isset($decisions[$id]) && is_array($decisions[$id])) {
+                $decision = $decisions[$id];
+                $status = (string) ($decision['status'] ?? 'open');
+                if (! isset(self::STATUSES[$status])) $status = 'open';
+                $finding['status'] = $status;
+                $finding['statusLabel'] = self::STATUSES[$status];
+                $finding['justification'] = (string) ($decision['justification'] ?? '');
+                $finding['resolvedAt'] = (string) ($decision['resolvedAt'] ?? '');
+            }
+            $result[] = $finding;
+        }
+        return $result;
     }
 
     /** @param array<string, mixed> $round
@@ -393,23 +404,14 @@ final class WorkAuditRepository
      */
     private function automaticFindings(array $round): array
     {
-        $version = null;
-        foreach ($this->versions((int) get_post_meta((int) 0, '', true)) as $unused) { $version = $unused; }
-        unset($version);
-        $bookId = 0;
-        $versionId = (string) ($round['versionId'] ?? '');
-        // Resolve the owning work from the active baseline stored in the round through the snapshot copy saved with the version.
-        // The caller always invokes this after auditVersion(), so find the version in the current work via the cached round snapshot below.
         $snapshot = is_array($round['snapshot'] ?? null) ? $round['snapshot'] : [];
-        if ($snapshot === []) {
-            // Older/new rounds do not duplicate the complete snapshot. It is injected by hydrateRoundSnapshot().
-            $snapshot = is_array($round['_snapshot'] ?? null) ? $round['_snapshot'] : [];
-        }
         $findings = [];
-        if ($snapshot === []) return $findings;
-        $hashValid = $this->snapshotHash($snapshot) === (string) ($round['versionHash'] ?? '');
-        if (! $hashValid) $findings[] = $this->finding('audit-integrity-hash', 'integrity', 'critical', 'O hash da versão auditada não corresponde ao snapshot preservado.', 'Volte ao Controle de Versões e selecione uma versão íntegra.', '', '', 'automatic');
-
+        if ($snapshot === []) {
+            return [$this->finding('audit-integrity-empty', 'integrity', 'critical', 'O snapshot da versão auditada está vazio.', 'Volte ao Controle de Versões e selecione uma versão íntegra.', '', '', 'automatic')];
+        }
+        if ($this->snapshotHash($snapshot) !== (string) ($round['versionHash'] ?? '')) {
+            $findings[] = $this->finding('audit-integrity-hash', 'integrity', 'critical', 'O hash da versão auditada não corresponde ao snapshot preservado.', 'Volte ao Controle de Versões e selecione uma versão íntegra.', '', '', 'automatic');
+        }
         $chapters = is_array($snapshot['chapters'] ?? null) ? $snapshot['chapters'] : [];
         if ($chapters === []) $findings[] = $this->finding('audit-integrity-no-chapters', 'integrity', 'critical', 'A versão auditada não possui capítulos.', 'Selecione uma versão completa antes de continuar.', '', '', 'automatic');
         $numbers = [];
@@ -421,7 +423,7 @@ final class WorkAuditRepository
             $title = trim((string) ($chapter['title'] ?? ''));
             $content = (string) ($chapter['content'] ?? '');
             $numbers[] = $number;
-            $titles[] = mb_strtolower($title);
+            $titles[] = strtolower($title);
             if (trim(wp_strip_all_tags($content)) === '') $findings[] = $this->finding('audit-empty-' . $chapterId, 'content', 'critical', 'O capítulo ' . $number . ' está sem conteúdo na versão auditada.', 'Preencha o capítulo e crie uma nova versão para Auditoria.', $chapterId, $title, 'automatic');
             if ($title === '') $findings[] = $this->finding('audit-title-' . $chapterId, 'structure', 'pending', 'O capítulo ' . $number . ' está sem título.', 'Defina um título e gere nova versão.', $chapterId, $title, 'automatic');
             $markerPattern = '/(?:\bTODO\b|\?\?\?|\[\s*(?:completar|inserir[^\]]*|revisar)\s*\]|X{5,})/iu';
@@ -429,11 +431,11 @@ final class WorkAuditRepository
                 $findings[] = $this->finding('audit-marker-' . $chapterId, 'content', 'pending', 'Possível marcador editorial pendente no capítulo ' . $number . ': ' . implode(', ', array_slice(array_unique($matches[0]), 0, 4)), 'Confirme se o marcador deve ser removido ou registre uma justificativa.', $chapterId, $title, 'automatic');
             }
         }
-        $expected = range(1, count($chapters));
+        $expected = $chapters === [] ? [] : range(1, count($chapters));
         $sorted = $numbers; sort($sorted);
-        if ($sorted !== $expected) $findings[] = $this->finding('audit-sequence', 'structure', 'pending', 'A numeração dos capítulos não forma uma sequência contínua.', 'Revise a ordem e a numeração no Planejamento antes de criar nova versão.', '', '', 'automatic');
+        if ($expected !== [] && $sorted !== $expected) $findings[] = $this->finding('audit-sequence', 'structure', 'pending', 'A numeração dos capítulos não forma uma sequência contínua.', 'Revise a ordem e a numeração no Planejamento antes de criar nova versão.', '', '', 'automatic');
         if (count(array_unique($numbers)) !== count($numbers)) $findings[] = $this->finding('audit-duplicate-number', 'structure', 'pending', 'Existem capítulos com numeração duplicada.', 'Revise a numeração dos capítulos.', '', '', 'automatic');
-        $nonEmptyTitles = array_values(array_filter($titles));
+        $nonEmptyTitles = array_values(array_filter($titles, static fn (string $title): bool => $title !== ''));
         if (count(array_unique($nonEmptyTitles)) !== count($nonEmptyTitles)) $findings[] = $this->finding('audit-duplicate-title', 'structure', 'warning', 'Existem títulos de capítulos duplicados ou idênticos.', 'Confirme se a repetição é intencional.', '', '', 'automatic');
 
         $front = is_array($snapshot['frontMatter'] ?? null) ? $snapshot['frontMatter'] : [];
@@ -447,20 +449,13 @@ final class WorkAuditRepository
             $title = trim((string) ($source['title'] ?? ''));
             $chapterId = (string) ($source['chapterId'] ?? '');
             $chapterTitle = (string) ($source['chapterTitle'] ?? '');
-            if ($reference === '' && $title === '') $findings[] = $this->finding('audit-source-missing-' . $id, 'sources', 'pending', 'Uma fonte utilizada não possui referência suficiente.', 'Complete a referência na Pesquisa do capítulo e crie nova versão para Auditoria.', $chapterId, $chapterTitle, 'automatic');
-            elseif (! ($source['verified'] ?? false)) $findings[] = $this->finding('audit-source-unverified-' . $id, 'sources', 'warning', 'Fonte utilizada ainda não consta como verificada: ' . ($reference !== '' ? $reference : $title) . '.', 'Confira a origem e os dados bibliográficos.', $chapterId, $chapterTitle, 'automatic');
+            if ($reference === '' && $title === '') {
+                $findings[] = $this->finding('audit-source-missing-' . $id, 'sources', 'pending', 'Uma fonte utilizada não possui referência suficiente.', 'Complete a referência na Pesquisa do capítulo e crie nova versão para Auditoria.', $chapterId, $chapterTitle, 'automatic');
+            } elseif (! ($source['verified'] ?? false)) {
+                $findings[] = $this->finding('audit-source-unverified-' . $id, 'sources', 'warning', 'Fonte utilizada ainda não consta como verificada: ' . ($reference !== '' ? $reference : $title) . '.', 'Confira a origem e os dados bibliográficos.', $chapterId, $chapterTitle, 'automatic');
+            }
         }
-
         return $findings;
-    }
-
-    /** @param array<string, mixed> $round
-     *  @return array<string, mixed>
-     */
-    private function hydrateRoundSnapshot(array $round, array $version): array
-    {
-        $round['_snapshot'] = is_array($version['snapshot'] ?? null) ? $version['snapshot'] : [];
-        return $round;
     }
 
     /** @param array<int, array<string, mixed>> $findings
@@ -478,7 +473,7 @@ final class WorkAuditRepository
             if ($severity === 'critical') $summary['critical']++;
             if ($status === 'resolved') $summary['resolved']++;
             if ($status === 'ignored') $summary['ignored']++;
-            if ($status === 'open' || $status === 'reviewing') {
+            if (in_array($status, ['open', 'reviewing'], true)) {
                 if ($severity === 'critical') $summary['openCritical']++;
                 if ($severity === 'pending') $summary['openPending']++;
             } else $summary['conforming']++;
@@ -557,6 +552,27 @@ final class WorkAuditRepository
         return $result;
     }
 
+    /** @param array<string, mixed> $snapshot
+     *  @return array<int, array<string, mixed>>
+     */
+    private function elements(array $snapshot): array
+    {
+        $front = is_array($snapshot['frontMatter'] ?? null) ? $snapshot['frontMatter'] : [];
+        $items = [
+            ['key' => 'preface', 'label' => 'Prefácio', 'required' => false],
+            ['key' => 'presentation', 'label' => 'Apresentação', 'required' => false],
+            ['key' => 'authorNote', 'label' => 'Nota do Autor', 'required' => false],
+            ['key' => 'introduction', 'label' => 'Introdução Geral', 'required' => true],
+            ['key' => 'conclusion', 'label' => 'Conclusão Geral', 'required' => true],
+        ];
+        foreach ($items as &$item) {
+            $item['present'] = trim(wp_strip_all_tags((string) ($front[$item['key']] ?? ''))) !== '';
+            $item['status'] = $item['present'] ? 'present' : ($item['required'] ? 'required_missing' : 'not_used');
+        }
+        unset($item);
+        return $items;
+    }
+
     /** @return array<int, array<string, mixed>> */
     private function rounds(int $bookId): array
     {
@@ -586,9 +602,7 @@ final class WorkAuditRepository
         return is_array($versions) ? array_values(array_filter($versions, 'is_array')) : [];
     }
 
-    /** @param array<string, mixed> $round
-     *  @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     private function roundSummary(array $round): array
     {
         return [
@@ -602,13 +616,10 @@ final class WorkAuditRepository
             'completedAt' => (string) ($round['completedAt'] ?? ''),
             'status' => (string) ($round['status'] ?? 'in_progress'),
             'result' => (string) ($round['result'] ?? 'in_progress'),
-            'terminology' => is_array($round['terminology'] ?? null) ? $round['terminology'] : [],
         ];
     }
 
-    /** @param array<string, mixed> $version
-     *  @return array<string, mixed>
-     */
+    /** @return array<string, mixed> */
     private function versionSummary(array $version): array
     {
         return [
@@ -623,9 +634,7 @@ final class WorkAuditRepository
         ];
     }
 
-    /** @param array<string, bool> $flags
-     *  @return array<string, bool>
-     */
+    /** @return array<string, bool> */
     private function normalizeFlags(array $flags): array
     {
         $clean = [];
@@ -633,14 +642,27 @@ final class WorkAuditRepository
         return $clean;
     }
 
-    /** @param array<string, string> $options
-     *  @return array<int, array<string, string>>
-     */
+    /** @return array<int, array<string, string>> */
     private function options(array $options): array
     {
         $result = [];
         foreach ($options as $key => $label) $result[] = ['key' => $key, 'label' => $label];
         return $result;
+    }
+
+    private function chapterTitleFromData(array $data, string $chapterId): string
+    {
+        if ($chapterId === '' || $chapterId === '0') return '';
+        foreach ((array) ($data['round']['snapshot']['chapters'] ?? []) as $chapter) {
+            if (is_array($chapter) && (string) ($chapter['id'] ?? '') === $chapterId) return (string) ($chapter['title'] ?? '');
+        }
+        foreach ((array) ($data['sources'] ?? []) as $source) if (is_array($source) && (string) ($source['chapterId'] ?? '') === $chapterId) return (string) ($source['chapterTitle'] ?? '');
+        return '';
+    }
+
+    private function assertRoundMutable(array $round): void
+    {
+        if (($round['status'] ?? '') === 'approved') throw new ValidationError('Esta rodada de Auditoria está aprovada e não pode mais ser alterada.');
     }
 
     /** @param array<string, mixed> $snapshot */
@@ -680,13 +702,12 @@ final class WorkAuditRepository
         $front = [];
         foreach (['preface', 'presentation', 'authorNote', 'introduction', 'conclusion'] as $key) $front[$key] = wp_kses_post((string) ($frontRaw[$key] ?? ''));
         $structure = get_post_meta($bookId, '_verbum_planning_structure_items', true);
-        $snapshot = [
+        return $this->snapshotHash([
             'metadata' => ['title' => $book instanceof \WP_Post ? get_the_title($book) : '', 'subtitle' => trim((string) get_post_meta($bookId, '_verbum_subtitle', true))],
             'structure' => is_array($structure) ? $structure : [],
             'frontMatter' => $front,
             'chapters' => $chapters,
-        ];
-        return $this->snapshotHash($snapshot);
+        ]);
     }
 
     private function protectApprovedVersion(int $bookId, string $versionId): void
