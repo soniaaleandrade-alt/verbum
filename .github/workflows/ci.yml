@@ -52,6 +52,7 @@ jobs:
           node --check frontend/app/src/chapter-writing-runtime.js
           node --check frontend/app/src/writing-hom010-hotfix.js
           node --check frontend/app/src/writing-hom011-hotfix.js
+          node --check frontend/app/src/revision-hom012-hotfix.js
           node --check frontend/app/src/chapter-revision-runtime.js
           node --check frontend/app/src/general-review-runtime.js
           node --check frontend/app/src/work-versions-runtime.js
