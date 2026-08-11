@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Verbum Studio
  * Description: Core foundation for the Verbum Studio writing operating system.
- * Version: 2.5.3
+ * Version: 2.5.4
  * Author: Verbum Studio
  * Requires PHP: 7.4
  */
@@ -16,7 +16,7 @@ if (version_compare(PHP_VERSION, '7.4', '<')) {
     return;
 }
 
-define('VERBUM_STUDIO_VERSION', '2.5.3');
+define('VERBUM_STUDIO_VERSION', '2.5.4');
 define('VERBUM_STUDIO_FILE', __FILE__);
 define('VERBUM_STUDIO_PATH', plugin_dir_path(__FILE__));
 define('VERBUM_STUDIO_URL', plugin_dir_url(__FILE__));
@@ -34,3 +34,9 @@ else {
 register_activation_hook(__FILE__, ['VerbumStudio\\Core\\Bootstrap', 'activate']);
 register_deactivation_hook(__FILE__, ['VerbumStudio\\Core\\Bootstrap', 'deactivate']);
 add_action('plugins_loaded', static function (): void { VerbumStudio\Core\Bootstrap::boot(); });
+add_action('init', static function (): void {
+    $writer = get_role(VerbumStudio\Auth\Capabilities::WRITER_ROLE);
+    if ($writer && empty($writer->capabilities['upload_files'])) {
+        $writer->add_cap('upload_files');
+    }
+});
