@@ -31,20 +31,8 @@ final class WorkEditorialDeskRepository
         'content' => 'Conteúdo da obra — requer nova Auditoria',
     ];
 
-    private const PRIORITIES = [
-        'low' => 'Baixa',
-        'medium' => 'Média',
-        'high' => 'Alta',
-        'critical' => 'Crítica',
-    ];
-
-    private const ADJUSTMENT_STATUSES = [
-        'open' => 'Aberto',
-        'in_progress' => 'Em andamento',
-        'resolved' => 'Resolvido',
-        'dismissed' => 'Dispensado com justificativa',
-    ];
-
+    private const PRIORITIES = ['low' => 'Baixa', 'medium' => 'Média', 'high' => 'Alta', 'critical' => 'Crítica'];
+    private const ADJUSTMENT_STATUSES = ['open' => 'Aberto', 'in_progress' => 'Em andamento', 'resolved' => 'Resolvido', 'dismissed' => 'Dispensado com justificativa'];
     private const ASSESSMENT_CRITERIA = [
         'audience_fit' => 'Adequação ao público',
         'proposal_clarity' => 'Clareza da proposta',
@@ -71,20 +59,19 @@ final class WorkEditorialDeskRepository
             $this->storeRounds($bookId, $rounds);
         }
 
+        $fields = is_array($round['fields'] ?? null) ? $round['fields'] : $this->initialFields($userId, $bookId, $version);
         $flags = $this->normalizeFlags(is_array($round['flags'] ?? null) ? $round['flags'] : []);
+        $assessments = $this->normalizeAssessments(is_array($round['assessments'] ?? null) ? $round['assessments'] : []);
         $adjustments = is_array($round['adjustments'] ?? null) ? array_values(array_filter($round['adjustments'], 'is_array')) : [];
         $openBlocking = count(array_filter($adjustments, static function (array $item): bool {
-            $status = (string) ($item['status'] ?? 'open');
-            $priority = (string) ($item['priority'] ?? 'medium');
-            return in_array($status, ['open', 'in_progress'], true) && in_array($priority, ['high', 'critical'], true);
+            return in_array((string) ($item['status'] ?? 'open'), ['open', 'in_progress'], true)
+                && in_array((string) ($item['priority'] ?? 'medium'), ['high', 'critical'], true);
         }));
         $requiresNewAudit = count(array_filter($adjustments, static fn (array $item): bool => (string) ($item['type'] ?? 'editorial') === 'content')) > 0;
         $completed = (string) ($round['status'] ?? '') === 'approved_for_layout';
         $auditStillValid = (string) get_post_meta($bookId, '_verbum_audit_approved_version_id', true) === (string) $version['id']
             && (string) get_post_meta($bookId, '_verbum_audit_approved_hash', true) === (string) $version['hash'];
         $finalConfirmation = (bool) ($round['finalConfirmation'] ?? false);
-        $fields = is_array($round['fields'] ?? null) ? $round['fields'] : $this->initialFields($userId, $bookId, $version);
-        $assessments = $this->normalizeAssessments(is_array($round['assessments'] ?? null) ? $round['assessments'] : []);
 
         $checklist = [];
         foreach (self::MANUAL_FLAGS as $key => $label) {
@@ -258,15 +245,15 @@ final class WorkEditorialDeskRepository
     public function assistantContext(int $userId, int $bookId): array
     {
         $data = $this->data($userId, $bookId);
+        $fields = is_array($data['fields'] ?? null) ? $data['fields'] : [];
         return [
             'version' => $data['version'],
-            'identity' => $data['fields']['identity'],
-            'positioning' => $data['fields']['positioning'],
-            'synopsis' => ['short' => $data['fields']['identity']['synopsisShort'] ?? '', 'full' => $data['fields']['identity']['synopsisFull'] ?? ''],
-            'backCover' => $data['fields']['backCover'],
-            'coverBrief' => $data['fields']['coverBrief'],
-            'layoutBrief' => $data['fields']['layoutBrief'],
-            'opinion' => $data['fields']['opinion'],
+            'identity' => $fields['identity'] ?? [],
+            'positioning' => $fields['positioning'] ?? [],
+            'backCover' => $fields['backCover'] ?? [],
+            'coverBrief' => $fields['coverBrief'] ?? [],
+            'layoutBrief' => $fields['layoutBrief'] ?? [],
+            'opinion' => $fields['opinion'] ?? [],
             'assessments' => $data['assessments'],
             'adjustments' => $data['adjustments'],
         ];
@@ -289,23 +276,20 @@ final class WorkEditorialDeskRepository
         unset($round);
         $this->storeRounds($bookId, $rounds);
 
-        $fields = (array) $data['fields'];
-        $identity = is_array($fields['identity'] ?? null) ? $fields['identity'] : [];
+        $identity = is_array($data['fields']['identity'] ?? null) ? $data['fields']['identity'] : [];
         $book = get_post($bookId);
         $title = trim(sanitize_text_field((string) ($identity['titleFinal'] ?? '')));
         if ($book instanceof \WP_Post && $title !== '') wp_update_post(['ID' => $bookId, 'post_title' => $title, 'post_content' => $book->post_content]);
-        $metaMap = [
-            'subtitle' => 'subtitleFinal', 'author_name' => 'authorDisplay', 'genre' => 'genre', 'category' => 'category', 'language' => 'language', 'audience' => 'audience', 'synopsis' => 'synopsisFull',
-        ];
+        $metaMap = ['subtitle' => 'subtitleFinal', 'author_name' => 'authorDisplay', 'genre' => 'genre', 'category' => 'category', 'language' => 'language', 'audience' => 'audience', 'synopsis' => 'synopsisFull'];
         foreach ($metaMap as $meta => $field) if (array_key_exists($field, $identity)) update_post_meta($bookId, '_verbum_' . $meta, sanitize_textarea_field((string) $identity[$field]));
 
         update_post_meta($bookId, '_verbum_editorial_approved_version_id', (string) $data['version']['id']);
         update_post_meta($bookId, '_verbum_editorial_approved_hash', (string) $data['version']['hash']);
         update_post_meta($bookId, '_verbum_editorial_completed_at', gmdate('c'));
-        $completedStages = get_post_meta($bookId, '_verbum_completed_stages', true);
-        $completedStages = is_array($completedStages) ? $completedStages : [];
-        if (! in_array('editorial_desk', $completedStages, true)) $completedStages[] = 'editorial_desk';
-        update_post_meta($bookId, '_verbum_completed_stages', array_values(array_unique($completedStages)));
+        $completed = get_post_meta($bookId, '_verbum_completed_stages', true);
+        $completed = is_array($completed) ? $completed : [];
+        if (! in_array('editorial_desk', $completed, true)) $completed[] = 'editorial_desk';
+        update_post_meta($bookId, '_verbum_completed_stages', array_values(array_unique($completed)));
         update_post_meta($bookId, '_verbum_stage', 'layout');
         $this->markApprovedVersion($bookId, (string) $data['version']['id']);
         $this->touchBook($bookId);
@@ -389,18 +373,20 @@ final class WorkEditorialDeskRepository
             ['key' => 'about_author', 'label' => 'Sobre o Autor', 'include' => true],
         ];
         $order = array_values(array_map(static fn (array $item): string => (string) $item['key'], array_filter($elements, static fn (array $item): bool => (bool) $item['include'])));
+        $authorName = trim((string) get_post_meta($bookId, '_verbum_author_name', true));
+        $fullName = is_object($user) && isset($user->display_name) ? (string) $user->display_name : '';
         return [
             'identity' => [
                 'titleFinal' => (string) (($metadata['title'] ?? '') ?: get_the_title($bookId)),
                 'subtitleFinal' => (string) (($metadata['subtitle'] ?? '') ?: get_post_meta($bookId, '_verbum_subtitle', true)),
                 'titleOptions' => [],
-                'authorDisplay' => trim((string) get_post_meta($bookId, '_verbum_author_name', true)),
+                'authorDisplay' => $authorName,
                 'genre' => trim((string) get_post_meta($bookId, '_verbum_genre', true)),
                 'subgenre' => '',
                 'category' => trim((string) get_post_meta($bookId, '_verbum_category', true)),
                 'language' => trim((string) get_post_meta($bookId, '_verbum_language', true)),
                 'audience' => $project($bookId, 'audience') ?: trim((string) get_post_meta($bookId, '_verbum_audience', true)),
-                'shortDescription' => trim((string) get_post_meta($bookId, '_verbum_proposal_summary', true)),
+                'shortDescription' => $project($bookId, 'value_proposition'),
                 'synopsisShort' => $synopsis,
                 'synopsisFull' => $synopsis,
             ],
@@ -413,11 +399,7 @@ final class WorkEditorialDeskRepository
                 'references' => '',
             ],
             'backCover' => ['headline' => '', 'text' => '', 'highlight' => $project($bookId, 'guiding_phrase'), 'authorShort' => ''],
-            'authorProfile' => [
-                'displayName' => trim((string) get_post_meta($bookId, '_verbum_author_name', true)),
-                'fullName' => $user instanceof \WP_User ? (string) $user->display_name : '',
-                'shortBio' => '', 'longBio' => '', 'site' => '', 'social' => '',
-            ],
+            'authorProfile' => ['displayName' => $authorName, 'fullName' => $fullName, 'shortBio' => '', 'longBio' => '', 'site' => '', 'social' => ''],
             'elements' => $elements,
             'elementOrder' => $order,
             'edition' => ['formats' => [], 'edition' => '1ª edição', 'year' => gmdate('Y'), 'place' => '', 'publisherType' => 'independent', 'publisherName' => '', 'trimSize' => '14 × 21 cm'],
@@ -435,10 +417,9 @@ final class WorkEditorialDeskRepository
     {
         $clean = [];
         foreach ($fields as $section => $value) {
-            $sectionKey = sanitize_key((string) $section);
-            if ($sectionKey === '') continue;
-            if (is_array($value)) $clean[$sectionKey] = $this->sanitizeArray($value);
-            else $clean[$sectionKey] = sanitize_textarea_field((string) $value);
+            $sectionKey = preg_replace('/[^A-Za-z0-9_-]/', '', (string) $section);
+            if (! is_string($sectionKey) || $sectionKey === '') continue;
+            $clean[$sectionKey] = is_array($value) ? $this->sanitizeArray($value) : sanitize_textarea_field((string) $value);
         }
         return $clean;
     }
@@ -451,6 +432,7 @@ final class WorkEditorialDeskRepository
         $clean = [];
         foreach ($value as $key => $item) {
             $targetKey = is_int($key) ? $key : preg_replace('/[^A-Za-z0-9_-]/', '', (string) $key);
+            if (! is_int($targetKey) && (! is_string($targetKey) || $targetKey === '')) continue;
             if (is_array($item)) $clean[$targetKey] = $this->sanitizeArray($item);
             elseif (is_bool($item)) $clean[$targetKey] = $item;
             elseif (is_int($item) || is_float($item)) $clean[$targetKey] = $item;
@@ -512,9 +494,16 @@ final class WorkEditorialDeskRepository
     private function roundSummary(array $round): array
     {
         return [
-            'id' => (string) ($round['id'] ?? ''), 'number' => (int) ($round['number'] ?? 0), 'versionId' => (string) ($round['versionId'] ?? ''),
-            'versionNumber' => (string) ($round['versionNumber'] ?? ''), 'versionName' => (string) ($round['versionName'] ?? ''), 'versionHash' => (string) ($round['versionHash'] ?? ''),
-            'status' => (string) ($round['status'] ?? 'in_review'), 'startedAt' => (string) ($round['startedAt'] ?? ''), 'updatedAt' => (string) ($round['updatedAt'] ?? ''), 'completedAt' => (string) ($round['completedAt'] ?? ''),
+            'id' => (string) ($round['id'] ?? ''),
+            'number' => (int) ($round['number'] ?? 0),
+            'versionId' => (string) ($round['versionId'] ?? ''),
+            'versionNumber' => (string) ($round['versionNumber'] ?? ''),
+            'versionName' => (string) ($round['versionName'] ?? ''),
+            'versionHash' => (string) ($round['versionHash'] ?? ''),
+            'status' => (string) ($round['status'] ?? 'in_review'),
+            'startedAt' => (string) ($round['startedAt'] ?? ''),
+            'updatedAt' => (string) ($round['updatedAt'] ?? ''),
+            'completedAt' => (string) ($round['completedAt'] ?? ''),
         ];
     }
 
@@ -524,9 +513,13 @@ final class WorkEditorialDeskRepository
     private function versionSummary(array $version): array
     {
         return [
-            'id' => (string) ($version['id'] ?? ''), 'number' => (string) ($version['number'] ?? ''), 'name' => (string) ($version['name'] ?? ''), 'hash' => (string) ($version['hash'] ?? ''),
-            'chapterCount' => (int) ($version['chapterCount'] ?? 0), 'wordCount' => (int) ($version['wordCount'] ?? 0), 'createdAt' => (string) ($version['createdAt'] ?? ''),
-            'auditApprovedAt' => (string) get_post_meta((int) ($version['snapshot']['metadata']['bookId'] ?? 0), '_verbum_audit_completed_at', true),
+            'id' => (string) ($version['id'] ?? ''),
+            'number' => (string) ($version['number'] ?? ''),
+            'name' => (string) ($version['name'] ?? ''),
+            'hash' => (string) ($version['hash'] ?? ''),
+            'chapterCount' => (int) ($version['chapterCount'] ?? 0),
+            'wordCount' => (int) ($version['wordCount'] ?? 0),
+            'createdAt' => (string) ($version['createdAt'] ?? ''),
         ];
     }
 
