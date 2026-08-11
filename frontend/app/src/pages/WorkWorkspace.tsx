@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { DevelopmentStage } from '../components/DevelopmentStage';
+import { EditorialDeskStage } from '../components/EditorialDeskStage';
 import { GeneralReviewStage } from '../components/GeneralReviewStage';
 import { IdentificationStage } from '../components/IdentificationStage';
 import { PlanningStage } from '../components/PlanningStage';
@@ -18,7 +19,7 @@ const stageDescriptions: Record<WorkStageKey, string> = {
   general_review: 'Revisão integral da obra após o desenvolvimento dos capítulos.',
   versions: 'Controle das versões editoriais e histórico de alterações.',
   audit: 'Verificações editoriais, estruturais e de consistência.',
-  editorial_desk: 'Organização final antes das etapas de publicação.',
+  editorial_desk: 'Decisões editoriais finais e preparação para produção gráfica.',
   layout: 'Preparação visual e diagramação da obra.',
   legal: 'Organização dos trâmites legais e documentação editorial.',
   publication: 'Etapa final de publicação da obra.',
@@ -78,6 +79,8 @@ export function WorkWorkspace({ workspace, selectedStage, onStageChange, onBackT
         <WorkVersionsStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={(stage) => guarded(() => onStageChange(stage))} onPersisted={onPersisted} />
       ) : selected.key === 'audit' ? (
         <WorkAuditStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={(stage) => guarded(() => onStageChange(stage))} onPersisted={onPersisted} />
+      ) : selected.key === 'editorial_desk' ? (
+        <EditorialDeskStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={(stage) => guarded(() => onStageChange(stage))} onPersisted={onPersisted} />
       ) : (
         <>
           <section className="verbum-stage-content">

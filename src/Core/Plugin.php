@@ -14,6 +14,7 @@ use VerbumStudio\Api\WorkChapterResearchController;
 use VerbumStudio\Api\WorkChapterRevisionController;
 use VerbumStudio\Api\WorkChapterWritingController;
 use VerbumStudio\Api\WorkDevelopmentController;
+use VerbumStudio\Api\WorkEditorialDeskController;
 use VerbumStudio\Api\WorkGeneralReviewController;
 use VerbumStudio\Api\WorkPlanningController;
 use VerbumStudio\Api\WorkProjectController;
@@ -30,6 +31,7 @@ use VerbumStudio\Library\WorkChapterResearchRepository;
 use VerbumStudio\Library\WorkChapterRevisionRepository;
 use VerbumStudio\Library\WorkChapterWritingRepository;
 use VerbumStudio\Library\WorkDevelopmentRepository;
+use VerbumStudio\Library\WorkEditorialDeskRepository;
 use VerbumStudio\Library\WorkGeneralReviewRepository;
 use VerbumStudio\Library\WorkPlanningRepository;
 use VerbumStudio\Library\WorkProjectRepository;
@@ -64,6 +66,7 @@ final class Plugin
         $this->container->get(WorkGeneralReviewController::class)->register();
         $this->container->get(WorkVersionsController::class)->register();
         $this->container->get(WorkAuditController::class)->register();
+        $this->container->get(WorkEditorialDeskController::class)->register();
         $this->container->get(FrontendAssets::class)->register();
 
         add_action('init', function (): void {
@@ -118,6 +121,7 @@ final class Plugin
         $this->container->set(WorkGeneralReviewRepository::class, static fn (): WorkGeneralReviewRepository => new WorkGeneralReviewRepository());
         $this->container->set(WorkVersionsRepository::class, static fn (): WorkVersionsRepository => new WorkVersionsRepository());
         $this->container->set(WorkAuditRepository::class, static fn (): WorkAuditRepository => new WorkAuditRepository());
+        $this->container->set(WorkEditorialDeskRepository::class, static fn (): WorkEditorialDeskRepository => new WorkEditorialDeskRepository());
         $this->container->set(LibraryController::class, static fn (Container $container): LibraryController => new LibraryController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class)));
         $this->container->set(WorkProjectController::class, static fn (Container $container): WorkProjectController => new WorkProjectController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkProjectRepository::class)));
         $this->container->set(WorkPlanningController::class, static fn (Container $container): WorkPlanningController => new WorkPlanningController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkPlanningRepository::class)));
@@ -129,6 +133,7 @@ final class Plugin
         $this->container->set(WorkGeneralReviewController::class, static fn (Container $container): WorkGeneralReviewController => new WorkGeneralReviewController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkGeneralReviewRepository::class)));
         $this->container->set(WorkVersionsController::class, static fn (Container $container): WorkVersionsController => new WorkVersionsController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkVersionsRepository::class)));
         $this->container->set(WorkAuditController::class, static fn (Container $container): WorkAuditController => new WorkAuditController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkAuditRepository::class)));
+        $this->container->set(WorkEditorialDeskController::class, static fn (Container $container): WorkEditorialDeskController => new WorkEditorialDeskController($container->get(Config::class), $container->get(ResponseFactory::class), $container->get(Capabilities::class), $container->get(LibraryRepository::class), $container->get(WorkEditorialDeskRepository::class)));
         $this->container->set(FrontendAssets::class, static fn (): FrontendAssets => new FrontendAssets());
         $this->container->set(SupabaseConfig::class, static fn (Container $container): SupabaseConfig => new SupabaseConfig($container->get(Config::class)));
         $this->container->set(SupabaseClient::class, static fn (Container $container): SupabaseClient => new SupabaseClient($container->get(SupabaseConfig::class)));
