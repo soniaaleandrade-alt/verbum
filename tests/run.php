@@ -22,7 +22,7 @@ function assert_same($expected, $actual, string $message = ''): void { if ($expe
 
 test('config exposes core defaults and production mode', function (): void {
     $config = new Config(['environment' => 'production']);
-    assert_same('2.0.0', $config->get('version'));
+    assert_same('2.1.0', $config->get('version'));
     assert_same('verbum/v1', $config->get('api_namespace'));
     assert_true($config->isProduction());
 });
@@ -52,7 +52,7 @@ test('health endpoint returns ok and version', function (): void {
     assert_same(200, $response->get_status());
     assert_same(true, $data['success']);
     assert_same('ok', $data['data']['status']);
-    assert_same('2.0.0', $data['data']['version']);
+    assert_same('2.1.0', $data['data']['version']);
 });
 
 test('me endpoint rejects visitors', function (): void {
@@ -75,13 +75,13 @@ test('shortcode avoids assets during JSON editor requests', function (): void {
     $verbum_test_json_request = false;
 });
 
-test('shortcode enqueues workflow through versions assets', function (): void {
+test('shortcode enqueues workflow through audit assets', function (): void {
     global $verbum_test_enqueued, $verbum_test_json_request;
     $verbum_test_enqueued = [];
     $verbum_test_json_request = false;
     assert_same('<div class="verbum-app" data-verbum-app></div>', (new FrontendAssets())->shortcode());
     $serialized = json_encode($verbum_test_enqueued);
-    foreach (['planning-stage.css','development-stage.css','chapter-preparation.css','chapter-research.css','chapter-writing.css','chapter-revision.css','general-review.css','work-versions.css'] as $asset) {
+    foreach (['planning-stage.css','development-stage.css','chapter-preparation.css','chapter-research.css','chapter-writing.css','chapter-revision.css','general-review.css','work-versions.css','work-audit.css'] as $asset) {
         assert_true(strpos((string) $serialized, $asset) !== false, 'Missing stylesheet: ' . $asset);
     }
 });
@@ -104,7 +104,7 @@ test('private storage types exist for projects books chapters and research', fun
     }
 });
 
-test('Sprint 14 REST routes are registered', function (): void {
+test('Sprint 15 REST routes are registered', function (): void {
     global $verbum_test_actions, $verbum_test_routes;
     $verbum_test_actions = [];
     $verbum_test_routes = [];
@@ -123,6 +123,7 @@ test('Sprint 14 REST routes are registered', function (): void {
         'verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)/revision','verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)/revision/issues','verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)/revision/issues/(?P<issue_id>[A-Za-z0-9_-]+)','verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)/revision/complete','verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)/revision/assist',
         'verbum/v1/books/(?P<id>\\d+)/general-review','verbum/v1/books/(?P<id>\\d+)/general-review/reading','verbum/v1/books/(?P<id>\\d+)/general-review/issues','verbum/v1/books/(?P<id>\\d+)/general-review/issues/(?P<issue_id>[a-zA-Z0-9_-]+)','verbum/v1/books/(?P<id>\\d+)/general-review/complete','verbum/v1/books/(?P<id>\\d+)/general-review/assist',
         'verbum/v1/books/(?P<id>\\d+)/versions-stage','verbum/v1/books/(?P<id>\\d+)/versions-stage/versions','verbum/v1/books/(?P<id>\\d+)/versions-stage/versions/(?P<version_id>[A-Za-z0-9_-]+)','verbum/v1/books/(?P<id>\\d+)/versions-stage/versions/(?P<version_id>[A-Za-z0-9_-]+)/duplicate','verbum/v1/books/(?P<id>\\d+)/versions-stage/versions/(?P<version_id>[A-Za-z0-9_-]+)/restore','verbum/v1/books/(?P<id>\\d+)/versions-stage/versions/(?P<version_id>[A-Za-z0-9_-]+)/audit-baseline','verbum/v1/books/(?P<id>\\d+)/versions-stage/compare','verbum/v1/books/(?P<id>\\d+)/versions-stage/complete',
+        'verbum/v1/books/(?P<id>\\d+)/audit-stage','verbum/v1/books/(?P<id>\\d+)/audit-stage/findings','verbum/v1/books/(?P<id>\\d+)/audit-stage/findings/(?P<finding_id>[A-Za-z0-9_-]+)','verbum/v1/books/(?P<id>\\d+)/audit-stage/report','verbum/v1/books/(?P<id>\\d+)/audit-stage/assist','verbum/v1/books/(?P<id>\\d+)/audit-stage/complete',
         'verbum/v1/books/(?P<id>\\d+)/cover','verbum/v1/books/(?P<id>\\d+)/archive',
     ] as $route) assert_true(isset($verbum_test_routes[$route]), 'Missing REST route: ' . $route);
 });
