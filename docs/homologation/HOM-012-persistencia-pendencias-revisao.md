@@ -1,8 +1,8 @@
 # HOM-012 — Persistência das Pendências da Revisão
 
-**Versão:** 2.5.6  
-**Etapa:** Desenvolvimento → Revisão do Capítulo  
-**Prioridade:** Alta  
+**Versão:** 2.5.6
+**Etapa:** Desenvolvimento → Revisão do Capítulo
+**Prioridade:** Alta
 **Tipo:** Persistência / cache
 
 ## Problema observado
