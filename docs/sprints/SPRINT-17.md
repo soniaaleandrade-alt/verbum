@@ -1,7 +1,7 @@
 # Sprint 17 — Diagramação da Obra
 
-**Versão:** 2.3.0  
-**Etapa:** 9 de 11  
+**Versão:** 2.3.0
+**Etapa:** 9 de 11
 **Fluxo:** Mesa Editorial → Diagramação → Trâmites Legais
 
 ## Objetivo
