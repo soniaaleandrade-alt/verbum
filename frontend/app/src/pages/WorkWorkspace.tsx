@@ -3,6 +3,7 @@ import { DevelopmentStage } from '../components/DevelopmentStage';
 import { EditorialDeskStage } from '../components/EditorialDeskStage';
 import { GeneralReviewStage } from '../components/GeneralReviewStage';
 import { IdentificationStage } from '../components/IdentificationStage';
+import { LayoutStage } from '../components/LayoutStage';
 import { PlanningStage } from '../components/PlanningStage';
 import { ProjectStage } from '../components/ProjectStage';
 import { WorkAuditStage } from '../components/WorkAuditStage';
@@ -41,25 +42,13 @@ export function WorkWorkspace({ workspace, selectedStage, onStageChange, onBackT
   const selectedAccessibleIndex = accessibleSteps.findIndex((step) => step.key === selected.key);
 
   useEffect(() => {
-    const handler = (event: BeforeUnloadEvent) => {
-      if (!dirty) return;
-      event.preventDefault();
-      event.returnValue = '';
-    };
+    const handler = (event: BeforeUnloadEvent) => { if (!dirty) return; event.preventDefault(); event.returnValue = ''; };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
   }, [dirty]);
 
-  function guarded(action: () => void) {
-    if (dirty && !window.confirm('Existem alterações que ainda não foram salvas. Sair sem salvar?')) return;
-    setDirty(false);
-    action();
-  }
-
-  function previous() {
-    if (selectedAccessibleIndex > 0) guarded(() => onStageChange(accessibleSteps[selectedAccessibleIndex - 1].key));
-    else guarded(onBackToLibrary);
-  }
+  function guarded(action: () => void) { if (dirty && !window.confirm('Existem alterações que ainda não foram salvas. Sair sem salvar?')) return; setDirty(false); action(); }
+  function previous() { if (selectedAccessibleIndex > 0) guarded(() => onStageChange(accessibleSteps[selectedAccessibleIndex - 1].key)); else guarded(onBackToLibrary); }
 
   return (
     <div className="verbum-workspace">
@@ -81,16 +70,11 @@ export function WorkWorkspace({ workspace, selectedStage, onStageChange, onBackT
         <WorkAuditStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={(stage) => guarded(() => onStageChange(stage))} onPersisted={onPersisted} />
       ) : selected.key === 'editorial_desk' ? (
         <EditorialDeskStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={(stage) => guarded(() => onStageChange(stage))} onPersisted={onPersisted} />
+      ) : selected.key === 'layout' ? (
+        <LayoutStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={(stage) => guarded(() => onStageChange(stage))} onPersisted={onPersisted} />
       ) : (
         <>
-          <section className="verbum-stage-content">
-            <div className="verbum-stage-placeholder">
-              <span className="verbum-eyebrow">Etapa {selected.order} de {workspace.workflow.length}</span>
-              <h2>{selected.label}</h2>
-              <p>{stageDescriptions[selected.key]}</p>
-              {selected.key === workspace.currentStage ? <div className="verbum-stage-notice is-current">Esta é a etapa atual da obra. O conteúdo funcional desta etapa será implementado no Sprint correspondente.</div> : <div className="verbum-stage-notice">Você está consultando uma etapa anterior já liberada no fluxo editorial.</div>}
-            </div>
-          </section>
+          <section className="verbum-stage-content"><div className="verbum-stage-placeholder"><span className="verbum-eyebrow">Etapa {selected.order} de {workspace.workflow.length}</span><h2>{selected.label}</h2><p>{stageDescriptions[selected.key]}</p>{selected.key === workspace.currentStage ? <div className="verbum-stage-notice is-current">Esta é a etapa atual da obra. O conteúdo funcional desta etapa será implementado no Sprint correspondente.</div> : <div className="verbum-stage-notice">Você está consultando uma etapa anterior já liberada no fluxo editorial.</div>}</div></section>
           <WorkspaceFooter canGoBack={selectedAccessibleIndex > 0} onPrevious={previous} onBackToLibrary={() => guarded(onBackToLibrary)} />
         </>
       )}
