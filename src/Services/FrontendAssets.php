@@ -25,6 +25,7 @@ final class FrontendAssets
         'verbum-studio-editorial-desk' => 'frontend/app/src/styles/editorial-desk.css',
         'verbum-studio-layout-stage' => 'frontend/app/src/styles/layout-stage.css',
         'verbum-studio-legal-stage' => 'frontend/app/src/styles/legal-stage.css',
+        'verbum-studio-publication-stage' => 'frontend/app/src/styles/publication-stage.css',
         'verbum-studio-technical' => 'frontend/app/src/styles/technical.css',
         'verbum-studio-dashboard-official' => 'frontend/app/src/styles/dashboard-official.css',
         'verbum-studio-dashboard-polish' => 'frontend/app/src/styles/dashboard-polish.css',
@@ -41,8 +42,9 @@ final class FrontendAssets
         'frontend/app/src/chapter-preparation-runtime.js', 'frontend/app/src/chapter-research-runtime.js', 'frontend/app/src/chapter-writing-runtime.js',
         'frontend/app/src/chapter-revision-runtime.js', 'frontend/app/src/general-review-runtime.js', 'frontend/app/src/work-versions-runtime.js',
         'frontend/app/src/work-audit-runtime.js', 'frontend/app/src/editorial-desk-runtime.js', 'frontend/app/src/layout-stage-runtime.js',
-        'frontend/app/src/legal-stage-runtime.js', 'frontend/app/src/technical-runtime.js', 'frontend/app/src/dashboard-official-runtime.js',
-        'frontend/app/src/sidebar-profile-runtime.js', 'frontend/app/src/minhas-obras-runtime.js', 'frontend/app/src/profile-polish-runtime.js',
+        'frontend/app/src/legal-stage-runtime.js', 'frontend/app/src/publication-stage-runtime.js', 'frontend/app/src/technical-runtime.js',
+        'frontend/app/src/dashboard-official-runtime.js', 'frontend/app/src/sidebar-profile-runtime.js', 'frontend/app/src/minhas-obras-runtime.js',
+        'frontend/app/src/profile-polish-runtime.js',
     ];
 
     public function register(): void { add_shortcode('verbum_app', [$this, 'shortcode']); }
