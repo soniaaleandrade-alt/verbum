@@ -22,95 +22,52 @@ function assert_same($expected, $actual, string $message = ''): void { if ($expe
 
 test('config exposes core defaults and production mode', function (): void {
     $config = new Config(['environment' => 'production']);
-    assert_same('2.3.0', $config->get('version'));
+    assert_same('2.4.0', $config->get('version'));
     assert_same('verbum/v1', $config->get('api_namespace'));
     assert_true($config->isProduction());
 });
 
 test('logger redacts sensitive data recursively', function (): void {
     $redacted = (new Logger())->redact(['api_key' => 'abc', 'nested' => ['token' => 'xyz'], 'safe' => 'ok']);
-    assert_same('[redacted]', $redacted['api_key']);
-    assert_same('[redacted]', $redacted['nested']['token']);
-    assert_same('ok', $redacted['safe']);
+    assert_same('[redacted]', $redacted['api_key']); assert_same('[redacted]', $redacted['nested']['token']); assert_same('ok', $redacted['safe']);
 });
 
-test('capabilities include core permissions and writer role', function (): void {
-    assert_same([Capabilities::ACCESS, Capabilities::MANAGE, Capabilities::MANAGE_SETTINGS], (new Capabilities())->all());
-    assert_same('verbum_writer', Capabilities::WRITER_ROLE);
-});
-
-test('authentication error maps to unauthorized', function (): void {
-    $error = new AuthenticationError('Acesso não autorizado.');
-    assert_same(401, $error->status());
-    assert_same('unauthorized', $error->errorCode());
-});
+test('capabilities include core permissions and writer role', function (): void { assert_same([Capabilities::ACCESS, Capabilities::MANAGE, Capabilities::MANAGE_SETTINGS], (new Capabilities())->all()); assert_same('verbum_writer', Capabilities::WRITER_ROLE); });
+test('authentication error maps to unauthorized', function (): void { $error = new AuthenticationError('Acesso não autorizado.'); assert_same(401, $error->status()); assert_same('unauthorized', $error->errorCode()); });
 
 test('health endpoint returns ok and version', function (): void {
-    $controller = new RestController(new Config(), new ResponseFactory(new Config()), new Capabilities());
-    $response = $controller->health();
-    $data = $response->get_data();
-    assert_same(200, $response->get_status());
-    assert_same(true, $data['success']);
-    assert_same('ok', $data['data']['status']);
-    assert_same('2.3.0', $data['data']['version']);
+    $controller = new RestController(new Config(), new ResponseFactory(new Config()), new Capabilities()); $response = $controller->health(); $data = $response->get_data();
+    assert_same(200, $response->get_status()); assert_same(true, $data['success']); assert_same('ok', $data['data']['status']); assert_same('2.4.0', $data['data']['version']);
 });
 
 test('me endpoint rejects visitors', function (): void {
-    global $verbum_test_logged_in;
-    $verbum_test_logged_in = false;
-    $controller = new RestController(new Config(), new ResponseFactory(new Config()), new Capabilities());
-    $response = $controller->me();
-    $data = $response->get_data();
-    assert_same(401, $response->get_status());
-    assert_same(false, $data['success']);
-    assert_same('unauthorized', $data['error']['code']);
+    global $verbum_test_logged_in; $verbum_test_logged_in = false; $controller = new RestController(new Config(), new ResponseFactory(new Config()), new Capabilities()); $response = $controller->me(); $data = $response->get_data();
+    assert_same(401, $response->get_status()); assert_same(false, $data['success']); assert_same('unauthorized', $data['error']['code']);
 });
 
 test('shortcode avoids assets during JSON editor requests', function (): void {
-    global $verbum_test_enqueued, $verbum_test_json_request;
-    $verbum_test_enqueued = [];
-    $verbum_test_json_request = true;
-    assert_same('<div class="verbum-app" data-verbum-app></div>', (new FrontendAssets())->shortcode());
-    assert_same([], $verbum_test_enqueued);
-    $verbum_test_json_request = false;
+    global $verbum_test_enqueued, $verbum_test_json_request; $verbum_test_enqueued = []; $verbum_test_json_request = true;
+    assert_same('<div class="verbum-app" data-verbum-app></div>', (new FrontendAssets())->shortcode()); assert_same([], $verbum_test_enqueued); $verbum_test_json_request = false;
 });
 
-test('shortcode enqueues workflow through layout assets', function (): void {
-    global $verbum_test_enqueued, $verbum_test_json_request;
-    $verbum_test_enqueued = [];
-    $verbum_test_json_request = false;
-    assert_same('<div class="verbum-app" data-verbum-app></div>', (new FrontendAssets())->shortcode());
-    $serialized = json_encode($verbum_test_enqueued);
-    foreach (['planning-stage.css','development-stage.css','chapter-preparation.css','chapter-research.css','chapter-writing.css','chapter-revision.css','general-review.css','work-versions.css','work-audit.css','editorial-desk.css','layout-stage.css'] as $asset) {
-        assert_true(strpos((string) $serialized, $asset) !== false, 'Missing stylesheet: ' . $asset);
-    }
+test('shortcode enqueues workflow through legal assets', function (): void {
+    global $verbum_test_enqueued, $verbum_test_json_request; $verbum_test_enqueued = []; $verbum_test_json_request = false;
+    assert_same('<div class="verbum-app" data-verbum-app></div>', (new FrontendAssets())->shortcode()); $serialized = json_encode($verbum_test_enqueued);
+    foreach (['planning-stage.css','development-stage.css','chapter-preparation.css','chapter-research.css','chapter-writing.css','chapter-revision.css','general-review.css','work-versions.css','work-audit.css','editorial-desk.css','layout-stage.css','legal-stage.css'] as $asset) assert_true(strpos((string) $serialized, $asset) !== false, 'Missing stylesheet: ' . $asset);
 });
 
 test('plugin registers shortcode and rest hooks', function (): void {
-    global $verbum_test_shortcodes, $verbum_test_actions;
-    $plugin = new Plugin(new Container(), new Config());
-    $plugin->register();
-    assert_true(isset($verbum_test_shortcodes['verbum_app']));
-    assert_true(isset($verbum_test_actions['rest_api_init']));
+    global $verbum_test_shortcodes, $verbum_test_actions; $plugin = new Plugin(new Container(), new Config()); $plugin->register();
+    assert_true(isset($verbum_test_shortcodes['verbum_app'])); assert_true(isset($verbum_test_actions['rest_api_init']));
 });
 
 test('private storage types exist for projects books chapters and research', function (): void {
-    global $verbum_test_post_types;
-    $verbum_test_post_types = [];
-    (new LibraryPostTypes())->register();
-    foreach ([LibraryPostTypes::PROJECT, LibraryPostTypes::BOOK, LibraryPostTypes::CHAPTER, LibraryPostTypes::RESEARCH] as $type) {
-        assert_true(isset($verbum_test_post_types[$type]), 'Missing post type: ' . $type);
-        assert_same(false, $verbum_test_post_types[$type]['public']);
-    }
+    global $verbum_test_post_types; $verbum_test_post_types = []; (new LibraryPostTypes())->register();
+    foreach ([LibraryPostTypes::PROJECT, LibraryPostTypes::BOOK, LibraryPostTypes::CHAPTER, LibraryPostTypes::RESEARCH] as $type) { assert_true(isset($verbum_test_post_types[$type]), 'Missing post type: ' . $type); assert_same(false, $verbum_test_post_types[$type]['public']); }
 });
 
-test('Sprint 17 REST routes are registered', function (): void {
-    global $verbum_test_actions, $verbum_test_routes;
-    $verbum_test_actions = [];
-    $verbum_test_routes = [];
-    $plugin = new Plugin(new Container(), new Config());
-    $plugin->register();
-    foreach ($verbum_test_actions['rest_api_init'] ?? [] as $callback) $callback();
+test('Sprint 18 REST routes are registered', function (): void {
+    global $verbum_test_actions, $verbum_test_routes; $verbum_test_actions = []; $verbum_test_routes = []; $plugin = new Plugin(new Container(), new Config()); $plugin->register(); foreach ($verbum_test_actions['rest_api_init'] ?? [] as $callback) $callback();
     foreach ([
         'verbum/v1/auth/login','verbum/v1/profile','verbum/v1/library','verbum/v1/projects','verbum/v1/books',
         'verbum/v1/books/(?P<id>\\d+)/workspace','verbum/v1/books/(?P<id>\\d+)/identification','verbum/v1/books/(?P<id>\\d+)/identification/complete',
@@ -126,13 +83,11 @@ test('Sprint 17 REST routes are registered', function (): void {
         'verbum/v1/books/(?P<id>\\d+)/audit-stage','verbum/v1/books/(?P<id>\\d+)/audit-stage/findings','verbum/v1/books/(?P<id>\\d+)/audit-stage/findings/(?P<finding_id>[A-Za-z0-9_-]+)','verbum/v1/books/(?P<id>\\d+)/audit-stage/report','verbum/v1/books/(?P<id>\\d+)/audit-stage/assist','verbum/v1/books/(?P<id>\\d+)/audit-stage/complete',
         'verbum/v1/books/(?P<id>\\d+)/editorial-desk','verbum/v1/books/(?P<id>\\d+)/editorial-desk/adjustments','verbum/v1/books/(?P<id>\\d+)/editorial-desk/adjustments/(?P<adjustment_id>[A-Za-z0-9_-]+)','verbum/v1/books/(?P<id>\\d+)/editorial-desk/assist','verbum/v1/books/(?P<id>\\d+)/editorial-desk/complete',
         'verbum/v1/books/(?P<id>\\d+)/layout-stage','verbum/v1/books/(?P<id>\\d+)/layout-stage/preview','verbum/v1/books/(?P<id>\\d+)/layout-stage/issues','verbum/v1/books/(?P<id>\\d+)/layout-stage/issues/(?P<issue_id>[A-Za-z0-9_-]+)','verbum/v1/books/(?P<id>\\d+)/layout-stage/proofs','verbum/v1/books/(?P<id>\\d+)/layout-stage/assist','verbum/v1/books/(?P<id>\\d+)/layout-stage/complete',
+        'verbum/v1/books/(?P<id>\\d+)/legal-stage','verbum/v1/books/(?P<id>\\d+)/legal-stage/documents','verbum/v1/books/(?P<id>\\d+)/legal-stage/documents/(?P<document_id>[A-Za-z0-9_-]+)','verbum/v1/books/(?P<id>\\d+)/legal-stage/third-party','verbum/v1/books/(?P<id>\\d+)/legal-stage/third-party/(?P<item_id>[A-Za-z0-9_-]+)','verbum/v1/books/(?P<id>\\d+)/legal-stage/issues','verbum/v1/books/(?P<id>\\d+)/legal-stage/issues/(?P<issue_id>[A-Za-z0-9_-]+)','verbum/v1/books/(?P<id>\\d+)/legal-stage/proofs','verbum/v1/books/(?P<id>\\d+)/legal-stage/assist','verbum/v1/books/(?P<id>\\d+)/legal-stage/complete',
         'verbum/v1/books/(?P<id>\\d+)/cover','verbum/v1/books/(?P<id>\\d+)/archive',
     ] as $route) assert_true(isset($verbum_test_routes[$route]), 'Missing REST route: ' . $route);
 });
 
 $failures = 0;
-foreach ($tests as $name => $callback) {
-    try { $callback(); echo "PASS {$name}\n"; }
-    catch (Throwable $throwable) { $failures++; echo "FAIL {$name}: {$throwable->getMessage()}\n"; }
-}
+foreach ($tests as $name => $callback) { try { $callback(); echo "PASS {$name}\n"; } catch (Throwable $throwable) { $failures++; echo "FAIL {$name}: {$throwable->getMessage()}\n"; } }
 if ($failures > 0) exit(1);
