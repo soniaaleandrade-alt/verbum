@@ -22,7 +22,7 @@ function assert_same($expected, $actual, string $message = ''): void { if ($expe
 
 test('config exposes core defaults and production mode', function (): void {
     $config = new Config(['environment' => 'production']);
-    assert_same('2.5.0', $config->get('version'));
+    assert_same('2.5.1', $config->get('version'));
     assert_same('verbum/v1', $config->get('api_namespace'));
     assert_true($config->isProduction());
 });
@@ -37,7 +37,7 @@ test('authentication error maps to unauthorized', function (): void { $error = n
 
 test('health endpoint returns ok and version', function (): void {
     $controller = new RestController(new Config(), new ResponseFactory(new Config()), new Capabilities()); $response = $controller->health(); $data = $response->get_data();
-    assert_same(200, $response->get_status()); assert_same(true, $data['success']); assert_same('ok', $data['data']['status']); assert_same('2.5.0', $data['data']['version']);
+    assert_same(200, $response->get_status()); assert_same(true, $data['success']); assert_same('ok', $data['data']['status']); assert_same('2.5.1', $data['data']['version']);
 });
 
 test('me endpoint rejects visitors', function (): void {
@@ -50,10 +50,11 @@ test('shortcode avoids assets during JSON editor requests', function (): void {
     assert_same('<div class="verbum-app" data-verbum-app></div>', (new FrontendAssets())->shortcode()); assert_same([], $verbum_test_enqueued); $verbum_test_json_request = false;
 });
 
-test('shortcode enqueues workflow through publication assets', function (): void {
+test('shortcode enqueues only base styles before lazy stage assets', function (): void {
     global $verbum_test_enqueued, $verbum_test_json_request; $verbum_test_enqueued = []; $verbum_test_json_request = false;
     assert_same('<div class="verbum-app" data-verbum-app></div>', (new FrontendAssets())->shortcode()); $serialized = json_encode($verbum_test_enqueued);
-    foreach (['planning-stage.css','development-stage.css','chapter-preparation.css','chapter-research.css','chapter-writing.css','chapter-revision.css','general-review.css','work-versions.css','work-audit.css','editorial-desk.css','layout-stage.css','legal-stage.css','publication-stage.css'] as $asset) assert_true(strpos((string) $serialized, $asset) !== false, 'Missing stylesheet: ' . $asset);
+    foreach (['verbum.css','library.css','technical.css','dashboard-official.css','dashboard-polish.css','sidebar-profile.css','minhas-obras.css','auth-profile.css','profile-polish.css','build/verbum-app.js'] as $asset) assert_true(strpos((string) $serialized, $asset) !== false, 'Missing base asset: ' . $asset);
+    foreach (['identification.css','planning-stage.css','development-stage.css','general-review.css','publication-stage.css'] as $asset) assert_true(strpos((string) $serialized, $asset) === false, 'Stage stylesheet must be lazy: ' . $asset);
 });
 
 test('plugin registers shortcode and rest hooks', function (): void {
