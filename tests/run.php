@@ -53,7 +53,7 @@ test('shortcode avoids assets during JSON editor requests', function (): void {
 test('shortcode enqueues only base styles before lazy stage assets', function (): void {
     global $verbum_test_enqueued, $verbum_test_json_request; $verbum_test_enqueued = []; $verbum_test_json_request = false;
     assert_same('<div class="verbum-app" data-verbum-app></div>', (new FrontendAssets())->shortcode()); $serialized = json_encode($verbum_test_enqueued);
-    foreach (['verbum.css','library.css','technical.css','dashboard-official.css','dashboard-polish.css','sidebar-profile.css','minhas-obras.css','auth-profile.css','profile-polish.css','build/verbum-app.js'] as $asset) assert_true(strpos((string) $serialized, $asset) !== false, 'Missing base asset: ' . $asset);
+    foreach (['verbum.css','library.css','technical.css','dashboard-official.css','dashboard-polish.css','sidebar-profile.css','minhas-obras.css','auth-profile.css','profile-polish.css','verbum-app.js'] as $asset) assert_true(strpos((string) $serialized, $asset) !== false, 'Missing base asset: ' . $asset);
     foreach (['identification.css','planning-stage.css','development-stage.css','general-review.css','publication-stage.css'] as $asset) assert_true(strpos((string) $serialized, $asset) === false, 'Stage stylesheet must be lazy: ' . $asset);
 });
 
