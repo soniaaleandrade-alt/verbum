@@ -31,7 +31,7 @@ const stages = [
   ['WorkAuditStage.tsx',['Auditoria da Obra','Versão em Auditoria','Relatório de Auditoria','Aprovar Auditoria']],
   ['EditorialDeskStage.tsx',['Mesa Editorial','Ficha Editorial da Obra','Briefing de Capa','Parecer Editorial','Aprovar para Diagramação']],
   ['LayoutStage.tsx',['Diagramação da Obra','Modelo visual','Prévia do miolo','PDF de prova','Concluir Diagramação']],
-  ['LegalStage.tsx',['Trâmites Legais da Obra','ISBN por formato','Ficha Catalográfica','Conteúdos de terceiros','Central de Documentos','Arquivos finais','Assistente Legal-Editorial','Concluir Trâmites Legais']],
+  ['LegalStage.tsx',['Trâmites Legais da Obra','ISBN por formato','Ficha Catalográfica','Conteúdos de terceiros','Documentos','Arquivos finais','Assistente Legal-Editorial','Concluir Trâmites Legais']],
 ];
 for (const [file, expected] of stages) requireAll(await readFile(resolve(root, `src/components/${file}`), 'utf8'), expected, file);
 
