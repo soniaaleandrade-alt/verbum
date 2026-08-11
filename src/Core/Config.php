@@ -17,7 +17,7 @@ final class Config
         $this->values = array_merge([
             'environment' => $environment,
             'debug' => $environment !== 'production' && defined('WP_DEBUG') && WP_DEBUG,
-            'version' => defined('VERBUM_STUDIO_VERSION') ? VERBUM_STUDIO_VERSION : '2.2.0',
+            'version' => defined('VERBUM_STUDIO_VERSION') ? VERBUM_STUDIO_VERSION : '2.3.0',
             'api_namespace' => 'verbum/v1',
             'supabase_url' => $this->env('VERBUM_SUPABASE_URL', ''),
             'supabase_anon_key' => $this->env('VERBUM_SUPABASE_ANON_KEY', ''),
@@ -26,20 +26,7 @@ final class Config
         ], $overrides);
     }
 
-    public function get(string $key, $default = null)
-    {
-        return $this->values[$key] ?? $default;
-    }
-
-    public function isProduction(): bool
-    {
-        return $this->get('environment') === 'production';
-    }
-
-    private function env(string $key, string $default): string
-    {
-        $constant = defined($key) ? constant($key) : null;
-        $value = $constant ?? getenv($key);
-        return is_string($value) && $value !== '' ? $value : $default;
-    }
+    public function get(string $key, $default = null) { return $this->values[$key] ?? $default; }
+    public function isProduction(): bool { return $this->get('environment') === 'production'; }
+    private function env(string $key, string $default): string { $constant = defined($key) ? constant($key) : null; $value = $constant ?? getenv($key); return is_string($value) && $value !== '' ? $value : $default; }
 }
