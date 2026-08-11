@@ -61,7 +61,6 @@ final class FrontendAssets
             wp_enqueue_style($handle, VERBUM_STUDIO_URL . $relativePath, [], $assetVersion);
         }
         wp_enqueue_script('verbum-studio-app', VERBUM_STUDIO_URL . 'build/verbum-app.js', [], $assetVersion, true);
-        wp_enqueue_script('verbum-studio-writing-hom010', VERBUM_STUDIO_URL . 'frontend/app/src/writing-hom010-hotfix.js', ['verbum-studio-app'], $assetVersion, true);
         $charset = function_exists('get_bloginfo') ? (string) get_bloginfo('charset') : 'UTF-8';
         $logoutUrl = html_entity_decode(wp_logout_url(home_url('/')), ENT_QUOTES, $charset !== '' ? $charset : 'UTF-8');
         wp_localize_script('verbum-studio-app', 'VerbumStudioConfig', ['apiRoot' => esc_url_raw(rest_url('verbum/v1')), 'nonce' => wp_create_nonce('wp_rest'), 'version' => VERBUM_STUDIO_VERSION, 'logoutUrl' => esc_url_raw($logoutUrl), 'appUrl' => esc_url_raw(home_url('/')), 'authenticated' => is_user_logged_in()]);
