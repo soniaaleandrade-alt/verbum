@@ -44,6 +44,7 @@ final class FrontendAssets
         'frontend/app/src/workspace-mobile-runtime.js', 'frontend/app/src/identification-runtime.js', 'frontend/app/src/project-stage-runtime.js',
         'frontend/app/src/planning-stage-runtime.js', 'frontend/app/src/development-stage-runtime.js', 'frontend/app/src/chapter-workflow-runtime.js',
         'frontend/app/src/chapter-preparation-runtime.js', 'frontend/app/src/chapter-research-runtime.js', 'frontend/app/src/chapter-writing-runtime.js',
+        'frontend/app/src/writing-hom010-hotfix.js',
         'frontend/app/src/chapter-revision-runtime.js', 'frontend/app/src/general-review-runtime.js', 'frontend/app/src/work-versions-runtime.js',
         'frontend/app/src/work-audit-runtime.js', 'frontend/app/src/editorial-desk-runtime.js', 'frontend/app/src/layout-stage-runtime.js',
         'frontend/app/src/legal-stage-runtime.js', 'frontend/app/src/publication-stage-runtime.js', 'frontend/app/src/technical-runtime.js',
@@ -60,6 +61,7 @@ final class FrontendAssets
             wp_enqueue_style($handle, VERBUM_STUDIO_URL . $relativePath, [], $assetVersion);
         }
         wp_enqueue_script('verbum-studio-app', VERBUM_STUDIO_URL . 'build/verbum-app.js', [], $assetVersion, true);
+        wp_enqueue_script('verbum-studio-writing-hom010', VERBUM_STUDIO_URL . 'frontend/app/src/writing-hom010-hotfix.js', ['verbum-studio-app'], $assetVersion, true);
         $charset = function_exists('get_bloginfo') ? (string) get_bloginfo('charset') : 'UTF-8';
         $logoutUrl = html_entity_decode(wp_logout_url(home_url('/')), ENT_QUOTES, $charset !== '' ? $charset : 'UTF-8');
         wp_localize_script('verbum-studio-app', 'VerbumStudioConfig', ['apiRoot' => esc_url_raw(rest_url('verbum/v1')), 'nonce' => wp_create_nonce('wp_rest'), 'version' => VERBUM_STUDIO_VERSION, 'logoutUrl' => esc_url_raw($logoutUrl), 'appUrl' => esc_url_raw(home_url('/')), 'authenticated' => is_user_logged_in()]);
