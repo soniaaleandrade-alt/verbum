@@ -57,6 +57,7 @@ jobs:
           node --check frontend/app/src/editorial-desk-runtime.js
           node --check frontend/app/src/layout-stage-runtime.js
           node --check frontend/app/src/legal-stage-runtime.js
+          node --check frontend/app/src/publication-stage-runtime.js
           node --check frontend/app/src/technical-runtime.js
           node --check frontend/app/src/dashboard-official-runtime.js
 

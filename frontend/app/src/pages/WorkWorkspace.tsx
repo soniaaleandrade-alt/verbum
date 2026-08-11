@@ -7,6 +7,7 @@ import { LayoutStage } from '../components/LayoutStage';
 import { LegalStage } from '../components/LegalStage';
 import { PlanningStage } from '../components/PlanningStage';
 import { ProjectStage } from '../components/ProjectStage';
+import { PublicationStage } from '../components/PublicationStage';
 import { WorkAuditStage } from '../components/WorkAuditStage';
 import { WorkVersionsStage } from '../components/WorkVersionsStage';
 import { WorkWorkflow } from '../components/WorkWorkflow';
@@ -24,7 +25,7 @@ const stageDescriptions: Record<WorkStageKey, string> = {
   editorial_desk: 'Decisões editoriais finais e preparação para produção gráfica.',
   layout: 'Preparação visual e diagramação da obra.',
   legal: 'Organização dos trâmites legais e documentação editorial.',
-  publication: 'Etapa final de publicação da obra.',
+  publication: 'Publicação, canais, lançamento e registro final da edição.',
 };
 
 type Props = {
@@ -75,6 +76,8 @@ export function WorkWorkspace({ workspace, selectedStage, onStageChange, onBackT
         <LayoutStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={(stage) => guarded(() => onStageChange(stage))} onPersisted={onPersisted} />
       ) : selected.key === 'legal' ? (
         <LegalStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={(stage) => guarded(() => onStageChange(stage))} onPersisted={onPersisted} />
+      ) : selected.key === 'publication' ? (
+        <PublicationStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={(stage) => guarded(() => onStageChange(stage))} onPersisted={onPersisted} />
       ) : (
         <>
           <section className="verbum-stage-content"><div className="verbum-stage-placeholder"><span className="verbum-eyebrow">Etapa {selected.order} de {workspace.workflow.length}</span><h2>{selected.label}</h2><p>{stageDescriptions[selected.key]}</p>{selected.key === workspace.currentStage ? <div className="verbum-stage-notice is-current">Esta é a etapa atual da obra. O conteúdo funcional desta etapa será implementado no Sprint correspondente.</div> : <div className="verbum-stage-notice">Você está consultando uma etapa anterior já liberada no fluxo editorial.</div>}</div></section>

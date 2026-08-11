@@ -22,7 +22,7 @@ function assert_same($expected, $actual, string $message = ''): void { if ($expe
 
 test('config exposes core defaults and production mode', function (): void {
     $config = new Config(['environment' => 'production']);
-    assert_same('2.4.0', $config->get('version'));
+    assert_same('2.5.0', $config->get('version'));
     assert_same('verbum/v1', $config->get('api_namespace'));
     assert_true($config->isProduction());
 });
@@ -37,7 +37,7 @@ test('authentication error maps to unauthorized', function (): void { $error = n
 
 test('health endpoint returns ok and version', function (): void {
     $controller = new RestController(new Config(), new ResponseFactory(new Config()), new Capabilities()); $response = $controller->health(); $data = $response->get_data();
-    assert_same(200, $response->get_status()); assert_same(true, $data['success']); assert_same('ok', $data['data']['status']); assert_same('2.4.0', $data['data']['version']);
+    assert_same(200, $response->get_status()); assert_same(true, $data['success']); assert_same('ok', $data['data']['status']); assert_same('2.5.0', $data['data']['version']);
 });
 
 test('me endpoint rejects visitors', function (): void {
@@ -50,10 +50,10 @@ test('shortcode avoids assets during JSON editor requests', function (): void {
     assert_same('<div class="verbum-app" data-verbum-app></div>', (new FrontendAssets())->shortcode()); assert_same([], $verbum_test_enqueued); $verbum_test_json_request = false;
 });
 
-test('shortcode enqueues workflow through legal assets', function (): void {
+test('shortcode enqueues workflow through publication assets', function (): void {
     global $verbum_test_enqueued, $verbum_test_json_request; $verbum_test_enqueued = []; $verbum_test_json_request = false;
     assert_same('<div class="verbum-app" data-verbum-app></div>', (new FrontendAssets())->shortcode()); $serialized = json_encode($verbum_test_enqueued);
-    foreach (['planning-stage.css','development-stage.css','chapter-preparation.css','chapter-research.css','chapter-writing.css','chapter-revision.css','general-review.css','work-versions.css','work-audit.css','editorial-desk.css','layout-stage.css','legal-stage.css'] as $asset) assert_true(strpos((string) $serialized, $asset) !== false, 'Missing stylesheet: ' . $asset);
+    foreach (['planning-stage.css','development-stage.css','chapter-preparation.css','chapter-research.css','chapter-writing.css','chapter-revision.css','general-review.css','work-versions.css','work-audit.css','editorial-desk.css','layout-stage.css','legal-stage.css','publication-stage.css'] as $asset) assert_true(strpos((string) $serialized, $asset) !== false, 'Missing stylesheet: ' . $asset);
 });
 
 test('plugin registers shortcode and rest hooks', function (): void {
@@ -66,7 +66,7 @@ test('private storage types exist for projects books chapters and research', fun
     foreach ([LibraryPostTypes::PROJECT, LibraryPostTypes::BOOK, LibraryPostTypes::CHAPTER, LibraryPostTypes::RESEARCH] as $type) { assert_true(isset($verbum_test_post_types[$type]), 'Missing post type: ' . $type); assert_same(false, $verbum_test_post_types[$type]['public']); }
 });
 
-test('Sprint 18 REST routes are registered', function (): void {
+test('Sprint 19 REST routes are registered', function (): void {
     global $verbum_test_actions, $verbum_test_routes; $verbum_test_actions = []; $verbum_test_routes = []; $plugin = new Plugin(new Container(), new Config()); $plugin->register(); foreach ($verbum_test_actions['rest_api_init'] ?? [] as $callback) $callback();
     foreach ([
         'verbum/v1/auth/login','verbum/v1/profile','verbum/v1/library','verbum/v1/projects','verbum/v1/books',
@@ -84,6 +84,7 @@ test('Sprint 18 REST routes are registered', function (): void {
         'verbum/v1/books/(?P<id>\\d+)/editorial-desk','verbum/v1/books/(?P<id>\\d+)/editorial-desk/adjustments','verbum/v1/books/(?P<id>\\d+)/editorial-desk/adjustments/(?P<adjustment_id>[A-Za-z0-9_-]+)','verbum/v1/books/(?P<id>\\d+)/editorial-desk/assist','verbum/v1/books/(?P<id>\\d+)/editorial-desk/complete',
         'verbum/v1/books/(?P<id>\\d+)/layout-stage','verbum/v1/books/(?P<id>\\d+)/layout-stage/preview','verbum/v1/books/(?P<id>\\d+)/layout-stage/issues','verbum/v1/books/(?P<id>\\d+)/layout-stage/issues/(?P<issue_id>[A-Za-z0-9_-]+)','verbum/v1/books/(?P<id>\\d+)/layout-stage/proofs','verbum/v1/books/(?P<id>\\d+)/layout-stage/assist','verbum/v1/books/(?P<id>\\d+)/layout-stage/complete',
         'verbum/v1/books/(?P<id>\\d+)/legal-stage','verbum/v1/books/(?P<id>\\d+)/legal-stage/documents','verbum/v1/books/(?P<id>\\d+)/legal-stage/documents/(?P<document_id>[A-Za-z0-9_-]+)','verbum/v1/books/(?P<id>\\d+)/legal-stage/third-party','verbum/v1/books/(?P<id>\\d+)/legal-stage/third-party/(?P<item_id>[A-Za-z0-9_-]+)','verbum/v1/books/(?P<id>\\d+)/legal-stage/issues','verbum/v1/books/(?P<id>\\d+)/legal-stage/issues/(?P<issue_id>[A-Za-z0-9_-]+)','verbum/v1/books/(?P<id>\\d+)/legal-stage/proofs','verbum/v1/books/(?P<id>\\d+)/legal-stage/assist','verbum/v1/books/(?P<id>\\d+)/legal-stage/complete',
+        'verbum/v1/books/(?P<id>\\d+)/publication-stage','verbum/v1/books/(?P<id>\\d+)/publication-stage/channels','verbum/v1/books/(?P<id>\\d+)/publication-stage/channels/(?P<channel_id>[A-Za-z0-9_-]+)','verbum/v1/books/(?P<id>\\d+)/publication-stage/tasks','verbum/v1/books/(?P<id>\\d+)/publication-stage/tasks/(?P<task_id>[A-Za-z0-9_-]+)','verbum/v1/books/(?P<id>\\d+)/publication-stage/updates','verbum/v1/books/(?P<id>\\d+)/publication-stage/assist','verbum/v1/books/(?P<id>\\d+)/publication-stage/complete',
         'verbum/v1/books/(?P<id>\\d+)/cover','verbum/v1/books/(?P<id>\\d+)/archive',
     ] as $route) assert_true(isset($verbum_test_routes[$route]), 'Missing REST route: ' . $route);
 });
