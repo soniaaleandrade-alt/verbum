@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Verbum Studio
  * Description: Core foundation for the Verbum Studio writing operating system.
- * Version: 2.5.5
+ * Version: 2.5.6
  * Author: Verbum Studio
  * Requires PHP: 7.4
  */
@@ -16,7 +16,7 @@ if (version_compare(PHP_VERSION, '7.4', '<')) {
     return;
 }
 
-define('VERBUM_STUDIO_VERSION', '2.5.5');
+define('VERBUM_STUDIO_VERSION', '2.5.6');
 define('VERBUM_STUDIO_FILE', __FILE__);
 define('VERBUM_STUDIO_PATH', plugin_dir_path(__FILE__));
 define('VERBUM_STUDIO_URL', plugin_dir_url(__FILE__));
@@ -40,3 +40,25 @@ add_action('init', static function (): void {
         $writer->add_cap('upload_files');
     }
 });
+
+// HOM-012: revision data must never be served from a stale REST/object cache.
+add_filter('rest_request_after_callbacks', static function ($response, $handler, $request) {
+    if (! is_object($request) || ! method_exists($request, 'get_route')) return $response;
+    $route = (string) $request->get_route();
+    if (! preg_match('#^/verbum/v1/books/\d+/chapters/(\d+)/revision(?:/.*)?$#', $route, $matches)) return $response;
+
+    $method = method_exists($request, 'get_method') ? strtoupper((string) $request->get_method()) : 'GET';
+    if (in_array($method, ['POST', 'PATCH', 'PUT', 'DELETE'], true)) {
+        $chapterId = (int) ($matches[1] ?? 0);
+        if ($chapterId > 0) {
+            if (function_exists('clean_post_cache')) clean_post_cache($chapterId);
+            if (function_exists('wp_cache_delete')) wp_cache_delete($chapterId, 'post_meta');
+        }
+    }
+
+    if (is_object($response) && method_exists($response, 'header')) {
+        $response->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+        $response->header('Pragma', 'no-cache');
+    }
+    return $response;
+}, 20, 3);
