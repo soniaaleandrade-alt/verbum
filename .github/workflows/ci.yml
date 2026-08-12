@@ -56,6 +56,7 @@ jobs:
           node --check frontend/app/src/chapter-revision-runtime.js
           node --check frontend/app/src/revision-hom013-hotfix.js
           node --check frontend/app/src/navigation-hom014-hotfix.js
+          node --check frontend/app/src/editorial-editor-hom016.js
           node --check frontend/app/src/general-review-runtime.js
           node --check frontend/app/src/work-versions-runtime.js
           node --check frontend/app/src/work-audit-runtime.js
