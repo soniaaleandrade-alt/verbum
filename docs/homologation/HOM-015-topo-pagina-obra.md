@@ -1,7 +1,7 @@
 # HOM-015 — Compactação e reorganização do topo da página da obra
 
-**Versão:** 2.5.10  
-**Área:** Obra → Desenvolvimento → Capítulo  
+**Versão:** 2.5.10
+**Área:** Obra → Desenvolvimento → Capítulo
 **Tipo:** UX / navegação / hierarquia visual
 
 ## Problema observado
