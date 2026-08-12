@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Verbum Studio
  * Description: Core foundation for the Verbum Studio writing operating system.
- * Version: 2.5.8
+ * Version: 2.5.9
  * Author: Verbum Studio
  * Requires PHP: 7.4
  */
@@ -16,7 +16,7 @@ if (version_compare(PHP_VERSION, '7.4', '<')) {
     return;
 }
 
-define('VERBUM_STUDIO_VERSION', '2.5.8');
+define('VERBUM_STUDIO_VERSION', '2.5.9');
 define('VERBUM_STUDIO_FILE', __FILE__);
 define('VERBUM_STUDIO_PATH', plugin_dir_path(__FILE__));
 define('VERBUM_STUDIO_URL', plugin_dir_url(__FILE__));
