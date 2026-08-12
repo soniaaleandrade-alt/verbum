@@ -24,7 +24,7 @@
     identification:['identification.css'],
     project:['project-stage.css'],
     planning:['planning-stage.css'],
-    development:['development-stage.css','chapter-workflow.css','chapter-preparation.css','chapter-research.css','chapter-writing.css','chapter-revision.css','revision-hom013.css','navigation-hom014.css','editorial-editor-hom016.css'],
+    development:['development-stage.css','chapter-workflow.css','chapter-preparation.css','chapter-research.css','chapter-writing.css','chapter-revision.css','revision-hom013.css','navigation-hom014.css','editorial-editor-hom016.css','editorial-editor-hom016a.css'],
     general_review:['general-review.css'],
     versions:['work-versions.css'],
     audit:['work-audit.css'],
