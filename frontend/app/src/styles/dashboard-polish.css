@@ -1,39 +1,5 @@
-.verbum-shell.has-hidden-header .verbum-main{padding:24px 28px 46px;background:#fbfaf7}
-.verbum-official-dashboard{max-width:1280px}
-.verbum-dashboard-hero{min-height:145px;padding:24px 42px;border-radius:18px;box-shadow:0 12px 30px rgba(196,45,45,.13)}
-.verbum-dashboard-hero:before{left:-18px;top:-34px;width:300px;height:220px;transform:rotate(-8deg);opacity:.72;background:linear-gradient(90deg,rgba(109,29,35,.34) 0 18%,transparent 18% 22%,rgba(255,184,99,.24) 22% 31%,transparent 31% 35%,rgba(111,29,45,.25) 35% 47%,transparent 47% 52%,rgba(255,213,141,.16) 52% 61%,transparent 61%),linear-gradient(20deg,rgba(255,255,255,.06),transparent 58%)}
-.verbum-dashboard-hero-copy{margin-left:115px}
-.verbum-dashboard-hero-art{gap:38px;margin-right:56px}
-.verbum-dashboard-greeting{padding:28px 0 20px}
-.verbum-dashboard-shortcuts{gap:16px;margin-bottom:22px}
-.verbum-dashboard-shortcut{min-height:78px;padding:14px 18px;border-radius:15px}
-.verbum-dashboard-shortcut>span{width:46px;height:46px}
-.verbum-dashboard-board{gap:18px}
-.verbum-dashboard-card{padding:18px;border-radius:16px}
-.verbum-dashboard-card h2{margin-bottom:16px;font-size:16px}
-.verbum-dashboard-card-title h2{margin-bottom:16px}
-.verbum-dashboard-muted{margin-top:18px}
-.verbum-dashboard-next-box{margin:14px 0 8px}
-.verbum-dashboard-donut{width:132px;height:132px;margin-bottom:14px}
-.verbum-dashboard-quick-grid{gap:10px}
-.verbum-dashboard-quick-grid button{min-height:54px}
-.verbum-dashboard-hero-mark,.verbum-dashboard-shortcut>span,.verbum-dashboard-card h2>span,.verbum-dashboard-quick-grid button>span{font-size:0;position:relative;overflow:hidden}
-.verbum-dashboard-hero-mark:before,.verbum-dashboard-shortcut.is-library>span:before,.verbum-dashboard-latest h2>span:before{content:"";position:absolute;width:18px;height:15px;border:2px solid currentColor;border-radius:3px}
-.verbum-dashboard-hero-mark:after,.verbum-dashboard-shortcut.is-library>span:after,.verbum-dashboard-latest h2>span:after{content:"";position:absolute;width:2px;height:13px;background:currentColor;border-radius:2px}
-.verbum-dashboard-shortcut.is-reports>span:before,.verbum-dashboard-statistics h2>span:before{content:"";width:18px;height:16px;background:linear-gradient(to top,currentColor 0 100%) left bottom/3px 8px no-repeat,linear-gradient(to top,currentColor 0 100%) center bottom/3px 13px no-repeat,linear-gradient(to top,currentColor 0 100%) right bottom/3px 16px no-repeat}
-.verbum-dashboard-shortcut.is-calendar>span:before{content:"";position:absolute;width:18px;height:16px;border:2px solid currentColor;border-radius:3px;top:15px;left:14px}
-.verbum-dashboard-shortcut.is-calendar>span:after{content:"";position:absolute;width:12px;height:2px;background:currentColor;top:21px;left:17px;box-shadow:-3px -6px 0 -0.5px currentColor,3px -6px 0 -0.5px currentColor}
-.verbum-dashboard-next h2>span:before,.verbum-dashboard-radar h2>span:before{content:"";position:absolute;inset:2px;border:2px solid currentColor;border-radius:50%}
-.verbum-dashboard-next h2>span:after,.verbum-dashboard-radar h2>span:after{content:"";position:absolute;inset:7px;border:2px solid currentColor;border-radius:50%}
-.verbum-dashboard-maturity h2>span:before{content:"";position:absolute;width:16px;height:8px;border:2px solid currentColor;border-bottom:0;border-radius:16px 16px 0 0;left:1px;top:4px}
-.verbum-dashboard-maturity h2>span:after{content:"";position:absolute;width:6px;height:2px;background:currentColor;transform:rotate(-32deg);left:8px;top:10px;transform-origin:left center}
-.verbum-dashboard-overall h2>span:before{content:"";position:absolute;inset:2px;border:3px solid currentColor;border-right-color:transparent;border-radius:50%}
-.verbum-dashboard-quick h2>span:before{content:"";position:absolute;width:16px;height:2px;background:currentColor;left:1px;top:8px}
-.verbum-dashboard-quick h2>span:after{content:"";position:absolute;width:2px;height:16px;background:currentColor;left:8px;top:1px}
-.verbum-dashboard-trend h2>span:before{content:"";position:absolute;width:13px;height:13px;border-top:2px solid currentColor;border-right:2px solid currentColor;transform:rotate(-1deg);right:1px;top:1px}
-.verbum-dashboard-trend h2>span:after{content:"";position:absolute;width:15px;height:2px;background:currentColor;transform:rotate(-45deg);left:0;bottom:3px;transform-origin:left center}
-.verbum-dashboard-quick-grid button>span:before{content:"";position:absolute;width:14px;height:14px;border:1.7px solid currentColor;border-radius:4px}
-.verbum-dashboard-quick-grid button>span:after{content:"";position:absolute;width:6px;height:2px;background:currentColor;border-radius:2px}
-@media(max-width:1180px){.verbum-dashboard-hero-copy{margin-left:55px}.verbum-dashboard-hero-art{margin-right:20px}}
-@media(max-width:900px){.verbum-dashboard-hero-copy{margin-left:0}.verbum-dashboard-hero:before{opacity:.35}}
-@media(max-width:650px){.verbum-shell.has-hidden-header .verbum-main{padding:14px}.verbum-dashboard-hero{padding:22px}.verbum-dashboard-shortcuts{gap:12px}.verbum-dashboard-card{padding:16px}}
+/* HOM-017 — o acabamento visual passou a ser centralizado em dashboard-official.css. */
+.verbum-shell.has-official-dashboard .verbum-official-dashboard button{transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease,transform .16s ease}
+.verbum-shell.has-official-dashboard .verbum-dashboard-new:hover,.verbum-shell.has-official-dashboard .verbum-dashboard-next>button:hover{transform:translateY(-1px);box-shadow:0 9px 20px rgba(82,58,210,.16)}
+.verbum-shell.has-official-dashboard .verbum-dashboard-shortcut[data-section]:hover,.verbum-shell.has-official-dashboard .verbum-dashboard-book-row:hover{background:#faf9ff}
+.verbum-shell.has-official-dashboard .verbum-dashboard-card-title button[data-section]:hover{color:#4c2cd7}
