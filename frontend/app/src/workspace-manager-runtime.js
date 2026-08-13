@@ -5,11 +5,12 @@
     root.querySelectorAll('.verbum-nav-item').forEach(function (button) {
       var label = (button.textContent || '').trim();
       if (label !== 'Mesa de Trabalho' && label !== 'Workspace' && label !== 'Área de Trabalho') return;
+
       var text = button.querySelector('span:last-child');
-      if (text) text.textContent = 'Área de Trabalho';
-      button.disabled = false;
-      button.removeAttribute('aria-disabled');
-      button.setAttribute('data-verbum-area-trabalho', '1');
+      if (text && text.textContent !== 'Área de Trabalho') text.textContent = 'Área de Trabalho';
+      if (button.disabled) button.disabled = false;
+      if (button.hasAttribute('aria-disabled')) button.removeAttribute('aria-disabled');
+      if (button.getAttribute('data-verbum-area-trabalho') !== '1') button.setAttribute('data-verbum-area-trabalho', '1');
     });
   }
 
@@ -24,9 +25,16 @@
   }, true);
 
   function boot() {
-    document.querySelectorAll('[data-verbum-app]').forEach(prepare);
-    new MutationObserver(function () {
+    function run() {
       document.querySelectorAll('[data-verbum-app]').forEach(prepare);
+    }
+
+    run();
+    new MutationObserver(function (mutations) {
+      var relevant = mutations.some(function (mutation) {
+        return mutation.addedNodes && mutation.addedNodes.length > 0;
+      });
+      if (relevant) run();
     }).observe(document.documentElement, { childList: true, subtree: true });
   }
 
