@@ -48,6 +48,10 @@
 .verbum-shell.has-official-dashboard .verbum-sidebar-profile-copy strong{font-size:11px!important;color:#111a35!important}
 .verbum-shell.has-official-dashboard .verbum-sidebar-profile-copy small,.verbum-shell.has-official-dashboard .verbum-sidebar-logout-label,.verbum-shell.has-official-dashboard .verbum-sidebar-collapse-label{font-size:10px!important}
 
+/* HOM-018A — remove a faixa superior duplicada em Minhas Obras. */
+.verbum-shell-main:has(.verbum-minhas-obras[data-ready="1"]) > .verbum-header{display:none!important}
+.verbum-shell-main:has(.verbum-minhas-obras[data-ready="1"]) > .verbum-main{padding-top:30px!important}
+
 @media(max-width:1180px){
  .verbum-shell.has-official-dashboard:not(.is-sidebar-collapsed){grid-template-columns:220px minmax(0,1fr)!important}
  .verbum-shell.has-official-dashboard .verbum-main{padding-left:22px!important;padding-right:22px!important}
@@ -59,4 +63,5 @@
  .verbum-shell.has-official-dashboard .verbum-main{padding-left:16px!important;padding-right:16px!important}
  .verbum-shell.has-official-dashboard .verbum-dashboard-board{grid-template-columns:1fr!important}
  .verbum-shell.has-official-dashboard .verbum-dashboard-quick{grid-column:auto!important}
+ .verbum-shell-main:has(.verbum-minhas-obras[data-ready="1"]) > .verbum-main{padding-top:22px!important}
 }
