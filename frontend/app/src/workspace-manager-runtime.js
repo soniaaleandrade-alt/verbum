@@ -1,6 +1,14 @@
 (function () {
   'use strict';
 
+  function ensureGlobalSidebarStyle() {
+    if (document.getElementById('verbum-global-sidebar-hotfix')) return;
+    var style = document.createElement('style');
+    style.id = 'verbum-global-sidebar-hotfix';
+    style.textContent = '.verbum-shell.has-official-dashboard .verbum-nav-group:nth-of-type(n+4){display:block!important}';
+    document.head.appendChild(style);
+  }
+
   function prepare(root) {
     root.querySelectorAll('.verbum-nav-item').forEach(function (button) {
       var label = (button.textContent || '').trim();
@@ -64,6 +72,8 @@
   }, true);
 
   function boot() {
+    ensureGlobalSidebarStyle();
+
     function run() {
       document.querySelectorAll('[data-verbum-app]').forEach(prepare);
     }
