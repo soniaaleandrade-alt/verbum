@@ -1,1 +1,180 @@
-.verbum-project-stage{max-width:1120px;margin:0 auto;padding-top:28px}.verbum-project-stage-heading{margin:0 0 18px}.verbum-project-stage-heading h2{margin:0;color:var(--verbum-navy);font-family:Georgia,"Times New Roman",serif;font-size:27px}.verbum-project-stage-heading p{margin:5px 0 0;color:var(--verbum-muted);font-size:12px}.verbum-project-stage-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px}.verbum-project-stage-form{display:grid;gap:18px}.verbum-project-card,.verbum-project-progress{border:1px solid var(--verbum-border);border-radius:18px;background:#fff;box-shadow:0 10px 28px rgba(31,42,61,.035)}.verbum-project-card{display:grid;gap:16px;padding:22px}.verbum-project-card h3{display:flex;align-items:center;gap:8px;margin:0;color:var(--verbum-navy);font-family:Georgia,"Times New Roman",serif;font-size:16px}.verbum-project-card h3>span{color:#167188;font-family:Arial,sans-serif}.verbum-project-card label{display:grid;gap:7px}.verbum-project-card label>span,.verbum-field-row>span{color:#4e5662;font-size:10px;font-weight:650}.verbum-project-card label b{color:#a52e45}.verbum-project-card textarea,.verbum-project-card input{width:100%;border:1px solid #dedfdd;border-radius:8px;padding:10px 11px;background:#fff;color:var(--verbum-text);font:inherit;font-size:11px;line-height:1.5;outline:0}.verbum-project-card textarea{resize:vertical}.verbum-project-card textarea:focus,.verbum-project-card input:focus{border-color:#7ca6af;box-shadow:0 0 0 3px rgba(21,103,122,.08)}.verbum-project-card label small{color:#969ba4;font-size:9px}.verbum-specific-objectives{display:grid;gap:10px}.verbum-field-row{display:flex;align-items:center;justify-content:space-between;gap:12px}.verbum-objective-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:start}.verbum-objective-row>div{display:flex;gap:4px}.verbum-objective-row button{border:1px solid var(--verbum-border);border-radius:7px;padding:6px 7px;background:#fff;color:#5d6570;font-size:10px;cursor:pointer}.verbum-objective-row button:disabled{opacity:.35;cursor:not-allowed}.verbum-objective-row button.is-danger{color:#9b3449}.verbum-project-empty-copy{margin:0;color:#9a9fa6;font-size:10px}.verbum-project-progress{align-self:start;position:sticky;top:18px;padding:21px}.verbum-project-progress>p{margin:7px 0 15px;color:#858b95;font-size:9px}.verbum-project-checklist{display:grid;gap:8px}.verbum-project-checklist>div{display:grid;grid-template-columns:17px 1fr;align-items:center;gap:8px;color:#636b74;font-size:10px}.verbum-project-checklist>div>span:first-child{display:grid;place-items:center;width:15px;height:15px;border:1px solid #d7d8d4;border-radius:4px;color:#fff;font-size:9px}.verbum-project-checklist>div.is-completed{color:#747b75;text-decoration:line-through}.verbum-project-checklist>div.is-completed>span:first-child{border-color:#19753f;background:#19753f;text-decoration:none}.verbum-project-message{margin:0;padding:10px 12px;border-radius:8px;background:#eef6f1;color:#326044;font-size:10px}.verbum-project-message.is-error{background:#fff1f3;color:#8a1f2d}.verbum-project-stage-state{max-width:1120px;margin:0 auto;padding:48px;color:var(--verbum-muted);text-align:center}@media(max-width:900px){.verbum-project-stage-layout{grid-template-columns:1fr}.verbum-project-progress{order:-1;position:static}.verbum-project-checklist{grid-template-columns:1fr 1fr}}@media(max-width:580px){.verbum-project-stage{padding-top:20px}.verbum-project-stage-heading h2{font-size:23px}.verbum-project-card{padding:17px}.verbum-project-checklist{grid-template-columns:1fr}.verbum-objective-row{grid-template-columns:1fr}.verbum-objective-row>div{justify-content:flex-end}.verbum-field-row{align-items:flex-start;flex-direction:column}.verbum-project-progress{padding:17px}}
+/* HOM-021 — Projeto da Obra no layout oficial do Verbum */
+.verbum-project-stage{
+  width:100%;
+  max-width:1220px;
+  margin:0 auto;
+  padding:30px 0 38px;
+}
+.verbum-project-stage-heading{margin:0 0 24px;padding:0 4px}
+.verbum-project-stage-heading h2{
+  margin:0;
+  color:#16213d;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:29px;
+  line-height:1.15;
+  font-weight:700;
+}
+.verbum-project-stage-heading p{margin:7px 0 0;color:#7b8496;font-size:12px}
+.verbum-project-stage-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 320px;
+  align-items:start;
+  gap:28px;
+}
+.verbum-project-stage-form{display:grid;gap:14px;min-width:0}
+.verbum-project-card,.verbum-project-progress{
+  border:1px solid #e2e5ed;
+  border-radius:13px;
+  background:#fff;
+  box-shadow:0 7px 22px rgba(31,42,68,.035);
+}
+.verbum-project-card{display:grid;gap:17px;padding:21px 22px}
+.verbum-project-card h3{
+  display:flex;
+  align-items:center;
+  gap:9px;
+  margin:0 0 2px;
+  color:#18233f;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:16px;
+  line-height:1.2;
+  font-weight:700;
+}
+.verbum-project-card h3>span{
+  display:grid;
+  place-items:center;
+  width:24px;
+  height:24px;
+  border-radius:8px;
+  background:#f1edff;
+  color:#6241ec;
+  font-family:Arial,sans-serif;
+  font-size:14px;
+  font-weight:700;
+  flex:0 0 auto;
+}
+.verbum-project-card:nth-of-type(2) h3>span{background:#eef9f8;color:#0e9c95}
+.verbum-project-card:nth-of-type(3) h3>span{background:#f0eeff;color:#6440eb}
+.verbum-project-card:nth-of-type(4) h3>span{background:#f3efff;color:#7551ed}
+.verbum-project-card label{display:grid;gap:7px;margin:0}
+.verbum-project-card label>span,.verbum-field-row>span{
+  color:#4f596d;
+  font-size:10px;
+  font-weight:750;
+  letter-spacing:.005em;
+}
+.verbum-project-card label b{color:#6542ea}
+.verbum-project-card textarea,.verbum-project-card input{
+  width:100%;
+  border:1px solid #dfe3eb;
+  border-radius:7px;
+  padding:10px 12px;
+  background:#fff;
+  color:#202a42;
+  font:inherit;
+  font-size:11px;
+  line-height:1.55;
+  outline:0;
+  transition:border-color .15s ease,box-shadow .15s ease,background .15s ease;
+}
+.verbum-project-card textarea{min-height:68px;resize:vertical}
+.verbum-project-card textarea::placeholder,.verbum-project-card input::placeholder{color:#a2a9b7;opacity:1}
+.verbum-project-card textarea:focus,.verbum-project-card input:focus{
+  border-color:#7b61ef;
+  box-shadow:0 0 0 3px rgba(103,71,232,.08);
+  background:#fff;
+}
+.verbum-project-card label small,.verbum-project-card>small{color:#9aa1af;font-size:9px;line-height:1.45}
+.verbum-specific-objectives{display:grid;gap:10px}
+.verbum-field-row{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.verbum-text-button{
+  border:0;
+  padding:4px 0;
+  background:transparent;
+  color:#6140e8;
+  font-size:10px;
+  font-weight:700;
+  cursor:pointer;
+}
+.verbum-text-button:hover{color:#4e2ed4}
+.verbum-objective-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:start}
+.verbum-objective-row>div{display:flex;gap:4px;padding-top:1px}
+.verbum-objective-row button{
+  min-width:30px;
+  min-height:30px;
+  border:1px solid #e1e4eb;
+  border-radius:7px;
+  padding:5px 7px;
+  background:#fff;
+  color:#667085;
+  font-size:10px;
+  cursor:pointer;
+}
+.verbum-objective-row button:hover:not(:disabled){border-color:#cabfff;background:#faf9ff;color:#6040e7}
+.verbum-objective-row button:disabled{opacity:.35;cursor:not-allowed}
+.verbum-objective-row button.is-danger{color:#a23c51}
+.verbum-project-empty-copy{margin:0;padding:3px 0;color:#929aaa;font-size:10px}
+.verbum-project-progress{
+  align-self:start;
+  position:sticky;
+  top:18px;
+  padding:22px 22px 24px;
+}
+.verbum-progress-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.verbum-progress-heading h3{
+  margin:0;
+  color:#17223e;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:16px;
+  line-height:1.2;
+}
+.verbum-progress-heading strong{color:#17223e;font-size:22px;line-height:1;font-weight:800}
+.verbum-progress-track{height:6px;margin-top:13px;border-radius:999px;background:#eef0f4;overflow:hidden}
+.verbum-progress-track span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#6d48ef,#5a35e1);transition:width .2s ease}
+.verbum-project-progress>p{margin:7px 0 19px;color:#9299a8;font-size:9px}
+.verbum-project-checklist{display:grid;gap:11px}
+.verbum-project-checklist>div{
+  display:grid;
+  grid-template-columns:17px 1fr;
+  align-items:center;
+  gap:9px;
+  min-height:18px;
+  color:#5f6879;
+  font-size:10px;
+}
+.verbum-project-checklist>div>span:first-child{
+  display:grid;
+  place-items:center;
+  width:16px;
+  height:16px;
+  border:1px solid #d8dce5;
+  border-radius:4px;
+  background:#fff;
+  color:#fff;
+  font-size:9px;
+  line-height:1;
+}
+.verbum-project-checklist>div.is-completed{color:#707a75;text-decoration:line-through}
+.verbum-project-checklist>div.is-completed>span:first-child{border-color:#228451;background:#228451;text-decoration:none}
+.verbum-project-message{margin:0;padding:11px 13px;border-radius:8px;background:#eef7f2;color:#326044;font-size:10px}
+.verbum-project-message.is-error{background:#fff1f3;color:#8a1f2d}
+.verbum-project-stage-state{max-width:1220px;margin:0 auto;padding:48px;color:#7a8394;text-align:center}
+
+@media(max-width:1100px){
+  .verbum-project-stage-layout{grid-template-columns:minmax(0,1fr) 285px;gap:20px}
+}
+@media(max-width:900px){
+  .verbum-project-stage{padding-top:24px}
+  .verbum-project-stage-layout{grid-template-columns:1fr}
+  .verbum-project-progress{order:-1;position:static}
+  .verbum-project-checklist{grid-template-columns:1fr 1fr}
+}
+@media(max-width:580px){
+  .verbum-project-stage{padding-top:20px}
+  .verbum-project-stage-heading h2{font-size:25px}
+  .verbum-project-card,.verbum-project-progress{padding:17px;border-radius:11px}
+  .verbum-project-checklist{grid-template-columns:1fr}
+  .verbum-objective-row{grid-template-columns:1fr}
+  .verbum-objective-row>div{justify-content:flex-end}
+  .verbum-field-row{align-items:flex-start;flex-direction:column}
+}
