@@ -1,4 +1,4 @@
-export type AppSection = 'dashboard' | 'library';
+export type AppSection = 'dashboard' | 'workspace' | 'library';
 
 type SidebarProps = {
   open: boolean;
@@ -13,7 +13,7 @@ type NavGroup = { label: string; items: NavItem[] };
 const groups: NavGroup[] = [
   { label: 'Principal', items: [
     { label: 'Painel', section: 'dashboard' },
-    { label: 'Mesa de Trabalho' },
+    { label: 'Área de Trabalho', section: 'workspace' },
     { label: 'Minhas Obras', section: 'library' },
   ] },
   { label: 'Escrita', items: [
