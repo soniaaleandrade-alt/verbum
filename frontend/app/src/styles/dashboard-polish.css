@@ -1,5 +1,47 @@
-/* HOM-017 — o acabamento visual passou a ser centralizado em dashboard-official.css. */
+/* HOM-018 — correções da Home após homologação visual */
 .verbum-shell.has-official-dashboard .verbum-official-dashboard button{transition:background-color .16s ease,border-color .16s ease,box-shadow .16s ease,transform .16s ease}
 .verbum-shell.has-official-dashboard .verbum-dashboard-new:hover,.verbum-shell.has-official-dashboard .verbum-dashboard-next>button:hover{transform:translateY(-1px);box-shadow:0 9px 20px rgba(82,58,210,.16)}
 .verbum-shell.has-official-dashboard .verbum-dashboard-shortcut[data-section]:hover,.verbum-shell.has-official-dashboard .verbum-dashboard-book-row:hover{background:#faf9ff}
 .verbum-shell.has-official-dashboard .verbum-dashboard-card-title button[data-section]:hover{color:#4c2cd7}
+
+/* O HOM-017 ficou comprimido porque limitava o conteúdo a 1050 px e a sidebar a 196 px. */
+.verbum-shell.has-official-dashboard:not(.is-sidebar-collapsed){grid-template-columns:248px minmax(0,1fr)!important}
+.verbum-shell.has-official-dashboard .verbum-main{padding:0 30px 56px!important;background:#f8f9fc!important}
+.verbum-shell.has-official-dashboard .verbum-shell-main{background:#f8f9fc!important}
+.verbum-shell.has-official-dashboard .verbum-official-dashboard{width:100%!important;max-width:1280px!important;margin:0 auto!important}
+.verbum-shell.has-official-dashboard .verbum-dashboard-greeting{padding:34px 4px 26px!important}
+.verbum-shell.has-official-dashboard .verbum-dashboard-greeting h1{font-size:25px!important;line-height:1.2!important}
+.verbum-shell.has-official-dashboard .verbum-dashboard-greeting p{font-size:12px!important}
+.verbum-shell.has-official-dashboard .verbum-dashboard-shortcuts{gap:16px!important;margin-bottom:24px!important}
+.verbum-shell.has-official-dashboard .verbum-dashboard-shortcut{min-height:132px!important;padding:22px 18px 18px!important}
+.verbum-shell.has-official-dashboard .verbum-dashboard-shortcut strong{font-size:15px!important}
+.verbum-shell.has-official-dashboard .verbum-dashboard-shortcut small{font-size:10px!important;line-height:1.6!important}
+.verbum-shell.has-official-dashboard .verbum-dashboard-board{grid-template-columns:1fr 1fr 1.05fr!important;gap:20px!important}
+.verbum-shell.has-official-dashboard .verbum-dashboard-card{padding:21px 19px!important}
+.verbum-shell.has-official-dashboard .verbum-dashboard-card h2{font-size:16px!important}
+.verbum-shell.has-official-dashboard .verbum-dashboard-statistics,.verbum-shell.has-official-dashboard .verbum-dashboard-latest,.verbum-shell.has-official-dashboard .verbum-dashboard-next{min-height:330px!important}
+.verbum-shell.has-official-dashboard .verbum-dashboard-maturity,.verbum-shell.has-official-dashboard .verbum-dashboard-radar,.verbum-shell.has-official-dashboard .verbum-dashboard-overall{min-height:430px!important}
+.verbum-shell.has-official-dashboard .verbum-dashboard-quick,.verbum-shell.has-official-dashboard .verbum-dashboard-trend{min-height:300px!important}
+.verbum-shell.has-official-dashboard .verbum-dashboard-book-copy strong{font-size:11px!important}
+.verbum-shell.has-official-dashboard .verbum-dashboard-current-title{font-size:14px!important}
+.verbum-shell.has-official-dashboard .verbum-dashboard-next-box strong{font-size:11px!important}
+.verbum-shell.has-official-dashboard .verbum-dashboard-statusbar{margin:0 -30px!important;padding-left:30px!important;padding-right:30px!important}
+
+/* A sidebar da Home deve usar os mesmos ícones SVG da página Minhas Obras. */
+.verbum-shell.has-official-dashboard .verbum-nav-dot.has-nav-icon{border:0!important;border-radius:0!important;background:transparent!important;clip-path:none!important;box-shadow:none!important}
+.verbum-shell.has-official-dashboard .verbum-nav-dot.has-nav-icon:before,.verbum-shell.has-official-dashboard .verbum-nav-dot.has-nav-icon:after{content:none!important;display:none!important}
+.verbum-shell.has-official-dashboard .verbum-nav-item:not(.is-active){background:transparent!important;color:#27324b!important}
+.verbum-shell.has-official-dashboard .verbum-nav-item.is-active{background:linear-gradient(90deg,#f1ecff,#f7f4ff)!important;color:#5f3cf0!important;box-shadow:inset 3px 0 0 #6742f1!important}
+
+@media(max-width:1180px){
+ .verbum-shell.has-official-dashboard:not(.is-sidebar-collapsed){grid-template-columns:220px minmax(0,1fr)!important}
+ .verbum-shell.has-official-dashboard .verbum-main{padding-left:22px!important;padding-right:22px!important}
+ .verbum-shell.has-official-dashboard .verbum-dashboard-board{grid-template-columns:1fr 1fr!important}
+ .verbum-shell.has-official-dashboard .verbum-dashboard-quick{grid-column:span 2!important}
+ .verbum-shell.has-official-dashboard .verbum-dashboard-statusbar{margin-left:-22px!important;margin-right:-22px!important;padding-left:22px!important;padding-right:22px!important}
+}
+@media(max-width:820px){
+ .verbum-shell.has-official-dashboard .verbum-main{padding-left:16px!important;padding-right:16px!important}
+ .verbum-shell.has-official-dashboard .verbum-dashboard-board{grid-template-columns:1fr!important}
+ .verbum-shell.has-official-dashboard .verbum-dashboard-quick{grid-column:auto!important}
+}
