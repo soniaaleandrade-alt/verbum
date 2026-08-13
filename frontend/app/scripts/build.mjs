@@ -15,7 +15,7 @@ const js = `(function(){
   var loadedScripts={};
   var loadedStyles={};
   var core=['auth-profile-runtime.js','static-runtime.js'];
-  var enhancements=['workspace-mobile-runtime.js','technical-runtime.js','dashboard-official-runtime.js','sidebar-profile-runtime.js','minhas-obras-runtime.js','profile-polish-runtime.js'];
+  var enhancements=['workspace-mobile-runtime.js','workspace-ui-runtime.js','workspace-manager-runtime.js','workspace-book-dialog-runtime.js','technical-runtime.js','dashboard-official-runtime.js','sidebar-profile-runtime.js','minhas-obras-runtime.js','profile-polish-runtime.js'];
   var stageScripts={
     identification:['identification-runtime.js'],
     project:['project-stage-runtime.js'],
@@ -77,6 +77,7 @@ const js = `(function(){
   window.addEventListener('popstate',ensureRouteAssets);
   window.addEventListener('verbum:routechange',ensureRouteAssets);
   loadScript(core[0]).then(function(){return loadScript(core[1]);}).then(function(){
+    loadStyle('workspace-manager.css');
     ensureRouteAssets();
     enhancements.forEach(loadScript);
   });
