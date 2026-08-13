@@ -1,0 +1,115 @@
+/* HOM-016D — manuscrito contínuo, folhas editoriais e pesquisa integrada */
+body.verbum-hom016-active .verbum-writing-shell.verbum-hom016d-writing .verbum-writing-paper{
+  position:relative!important;
+  overflow:visible!important;
+  max-height:none!important;
+  min-height:940px!important;
+  margin:26px auto 80px!important;
+  padding:64px 78px 110px!important;
+  border:1px solid #eceef3!important;
+  border-radius:2px!important;
+  background:#fff!important;
+  box-shadow:0 8px 30px rgba(24,31,46,.055)!important;
+}
+body.verbum-hom016-active .verbum-writing-shell.verbum-hom016d-writing .verbum-writing-center{
+  overflow:visible!important;
+  background:#f7f8fb!important;
+}
+body.verbum-hom016-active .verbum-writing-shell.verbum-hom016d-writing .verbum-writing-paper>header{
+  margin:0 0 38px!important;
+  padding:0 0 24px!important;
+  border-bottom:1px solid #eceef3!important;
+}
+body.verbum-hom016-active .verbum-writing-shell.verbum-hom016d-writing .verbum-writing-paper>header>span,
+body.verbum-hom016-active .verbum-writing-shell.verbum-hom016d-writing .verbum-writing-paper>header>p,
+body.verbum-hom016-active .verbum-writing-shell.verbum-hom016d-writing .verbum-writing-block-title,
+body.verbum-hom016-active .verbum-writing-shell.verbum-hom016d-writing .verbum-writing-topic-heading,
+body.verbum-hom016-active .verbum-writing-shell.verbum-hom016d-writing [data-writing-add-section]{display:none!important}
+body.verbum-hom016-active .verbum-writing-shell.verbum-hom016d-writing .verbum-writing-paper>header h2{
+  display:block!important;
+  margin:0!important;
+  padding:0!important;
+  color:#151926!important;
+  font-family:Georgia,"Times New Roman",serif!important;
+  font-size:30px!important;
+  font-weight:700!important;
+  line-height:1.3!important;
+}
+body.verbum-hom016-active .verbum-writing-shell.verbum-hom016d-writing .verbum-writing-block,
+body.verbum-hom016-active .verbum-writing-shell.verbum-hom016d-writing .verbum-writing-development,
+body.verbum-hom016-active .verbum-writing-shell.verbum-hom016d-writing .verbum-writing-topic{
+  display:block!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+body.verbum-hom016-active .verbum-writing-shell.verbum-hom016d-writing .verbum-writing-editor{
+  display:block!important;
+  min-height:72px!important;
+  max-height:none!important;
+  overflow:visible!important;
+  margin:0 0 18px!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  color:#232833!important;
+  font-family:Georgia,"Times New Roman",serif!important;
+  font-size:18px!important;
+  line-height:1.78!important;
+}
+body.verbum-hom016-active .verbum-writing-shell.verbum-hom016d-writing .verbum-writing-editor:focus{outline:0!important;background:transparent!important}
+body.verbum-hom016-active .verbum-writing-shell.verbum-hom016d-writing .verbum-writing-editor:empty:before{color:#a4aab5!important;font-size:14px!important}
+
+/* Guias de páginas: sem scrollbar interna, a leitura avança pelas folhas no fluxo da página. */
+.verbum-hom016d-page-guides{position:absolute;inset:0;z-index:0;pointer-events:none;overflow:visible}
+.verbum-hom016d-page-guides>span{position:absolute;left:-1px;right:-1px;height:24px;border-top:1px solid #e5e7ed;background:linear-gradient(to bottom,rgba(245,247,250,.95),rgba(255,255,255,0));box-shadow:0 -7px 18px rgba(18,24,36,.035)}
+.verbum-hom016d-page-guides>span i{position:absolute;right:14px;top:3px;color:#a1a7b2;font:500 9px/1.3 Inter,system-ui,sans-serif;font-style:normal;letter-spacing:.02em}
+body.verbum-hom016-active .verbum-writing-shell.verbum-hom016d-writing .verbum-writing-paper>header,
+body.verbum-hom016-active .verbum-writing-shell.verbum-hom016d-writing .verbum-writing-block,
+body.verbum-hom016-active .verbum-writing-shell.verbum-hom016d-writing .verbum-writing-development{position:relative;z-index:1}
+
+/* Pesquisa da etapa anterior disponível diretamente sobre o caderno de escrita. */
+.verbum-hom016d-research-tray{
+  width:min(calc(100% - 40px),860px);
+  margin:18px auto 0;
+  border:1px solid #e2e6ef;
+  border-radius:12px;
+  background:#fff;
+  box-shadow:0 4px 18px rgba(22,29,45,.035);
+}
+.verbum-hom016d-research-tray>header{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 16px;border-bottom:1px solid #eceef3}
+.verbum-hom016d-research-tray>header>div{display:flex;align-items:baseline;gap:10px;min-width:0}
+.verbum-hom016d-research-tray>header small{color:#6c7280;font-size:10px;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+.verbum-hom016d-research-tray>header strong{color:#353b48;font-size:11px;font-weight:700}
+.verbum-hom016d-research-tray>header button{border:0;background:transparent;color:#6657e8;font-size:11px;font-weight:700;cursor:pointer}
+.verbum-hom016d-research-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;max-height:260px;overflow:auto}
+.verbum-hom016d-research-grid>div{padding:15px 16px 17px}
+.verbum-hom016d-research-grid>div+div{border-left:1px solid #eceef3}
+.verbum-hom016d-research-grid h3{margin:0 0 10px;color:#343a47;font-size:11px;font-weight:800}
+.verbum-hom016d-reference,.verbum-hom016d-idea{margin:0 0 9px;padding:10px 11px;border:1px solid #e8eaf0;border-radius:8px;background:#fbfcff}
+.verbum-hom016d-reference.is-used,.verbum-hom016d-idea.is-used{border-color:#d9d3ff;background:#f7f5ff}
+.verbum-hom016d-reference span{display:block;margin-bottom:3px;color:#7664e8;font-size:9px;font-weight:800;text-transform:uppercase}
+.verbum-hom016d-reference strong,.verbum-hom016d-idea strong{display:block;color:#272d39;font-size:11px;line-height:1.35}
+.verbum-hom016d-reference p,.verbum-hom016d-idea p{margin:6px 0 0;color:#666e7c;font-size:10px;line-height:1.45}
+.verbum-hom016d-reference button,.verbum-hom016d-idea button{margin-top:8px;border:0;background:transparent;padding:0;color:#556be0;font-size:10px;font-weight:700;cursor:pointer}
+.verbum-hom016d-empty{margin:0;color:#8d94a0;font-size:10px;line-height:1.5}
+.verbum-hom016d-research-tray.is-collapsed .verbum-hom016d-research-grid{display:none}
+.verbum-hom016d-research-tray.is-collapsed>header{border-bottom:0}
+
+.verbum-hom016d-message{position:sticky;top:100px;z-index:96;margin:0 auto;width:min(calc(100% - 40px),760px);padding:10px 14px;border-radius:8px;font-size:12px;font-weight:650;text-align:center;box-shadow:0 7px 24px rgba(20,26,38,.1)}
+.verbum-hom016d-message.is-error{border:1px solid #efcbd2;background:#fff4f6;color:#8c3349}
+.verbum-hom016d-message.is-success{border:1px solid #c7e8dc;background:#effaf6;color:#286a55}
+.verbum-hom016d-message.is-info{border:1px solid #d8dff2;background:#f5f7ff;color:#44557f}
+
+@media(max-width:1100px){
+  body.verbum-hom016-active .verbum-writing-shell.verbum-hom016d-writing .verbum-writing-paper{padding:52px 48px 90px!important}
+  .verbum-hom016d-research-grid{grid-template-columns:1fr}
+  .verbum-hom016d-research-grid>div+div{border-left:0;border-top:1px solid #eceef3}
+}
+@media(max-width:760px){
+  body.verbum-hom016-active .verbum-writing-shell.verbum-hom016d-writing .verbum-writing-paper{margin-top:12px!important;padding:38px 24px 70px!important}
+  body.verbum-hom016-active .verbum-writing-shell.verbum-hom016d-writing .verbum-writing-paper>header h2{font-size:25px!important}
+  .verbum-hom016d-research-tray{width:calc(100% - 20px)}
+}
