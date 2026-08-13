@@ -27,11 +27,26 @@
 .verbum-shell.has-official-dashboard .verbum-dashboard-next-box strong{font-size:11px!important}
 .verbum-shell.has-official-dashboard .verbum-dashboard-statusbar{margin:0 -30px!important;padding-left:30px!important;padding-right:30px!important}
 
-/* A sidebar da Home deve usar os mesmos ícones SVG da página Minhas Obras. */
-.verbum-shell.has-official-dashboard .verbum-nav-dot.has-nav-icon{border:0!important;border-radius:0!important;background:transparent!important;clip-path:none!important;box-shadow:none!important}
+/* Sidebar da Home usa exatamente a mesma escala da página Minhas Obras. */
+.verbum-shell.has-official-dashboard .verbum-sidebar{padding:26px 18px 18px!important;background:#fff!important;border-right:1px solid #e8eaf0!important}
+.verbum-shell.has-official-dashboard .verbum-brand{height:auto!important;padding:0 8px 30px!important;gap:13px!important;border-bottom:0!important}
+.verbum-shell.has-official-dashboard .verbum-brand-mark{width:38px!important;height:38px!important;flex:0 0 38px!important;background:transparent!important;border:0!important;color:transparent!important}
+.verbum-shell.has-official-dashboard .verbum-brand-mark:before{left:11px!important;top:1px!important;width:14px!important;height:31px!important;border-radius:100% 0 100% 0!important;background:linear-gradient(145deg,#7650f5,#4f38e9)!important;transform:rotate(43deg)!important;box-shadow:-6px 11px 0 -4px #5c43ef!important}
+.verbum-shell.has-official-dashboard .verbum-brand-mark:after{content:""!important;display:block!important;position:absolute!important;left:4px!important;top:23px!important;width:20px!important;height:2px!important;border-radius:2px!important;background:#6247ef!important;transform:rotate(-25deg)!important}
+.verbum-shell.has-official-dashboard .verbum-brand strong{font-size:21px!important;letter-spacing:.04em!important;color:#111a35!important}
+.verbum-shell.has-official-dashboard .verbum-brand small{margin-top:6px!important;font-size:9px!important;letter-spacing:.24em!important;color:#6345ef!important}
+.verbum-shell.has-official-dashboard .verbum-nav{padding:4px 0 140px!important}
+.verbum-shell.has-official-dashboard .verbum-nav-group{margin:0 0 24px!important}
+.verbum-shell.has-official-dashboard .verbum-nav-group-label{margin:0 9px 9px!important;font-size:10px!important;color:#657087!important}
+.verbum-shell.has-official-dashboard .verbum-nav-item{min-height:43px!important;padding:0 10px!important;gap:12px!important;border-radius:7px!important;font-size:13px!important}
+.verbum-shell.has-official-dashboard .verbum-nav-dot.has-nav-icon{width:18px!important;height:18px!important;border:0!important;border-radius:0!important;background:transparent!important;clip-path:none!important;box-shadow:none!important}
 .verbum-shell.has-official-dashboard .verbum-nav-dot.has-nav-icon:before,.verbum-shell.has-official-dashboard .verbum-nav-dot.has-nav-icon:after{content:none!important;display:none!important}
 .verbum-shell.has-official-dashboard .verbum-nav-item:not(.is-active){background:transparent!important;color:#27324b!important}
 .verbum-shell.has-official-dashboard .verbum-nav-item.is-active{background:linear-gradient(90deg,#f1ecff,#f7f4ff)!important;color:#5f3cf0!important;box-shadow:inset 3px 0 0 #6742f1!important}
+.verbum-shell.has-official-dashboard .verbum-sidebar-footer{left:18px!important;right:18px!important;bottom:18px!important;padding:16px 4px 0!important;border-top:1px solid #edf0f5!important;background:#fff!important}
+.verbum-shell.has-official-dashboard .verbum-sidebar-profile{padding-top:0!important}
+.verbum-shell.has-official-dashboard .verbum-sidebar-profile-copy strong{font-size:11px!important;color:#111a35!important}
+.verbum-shell.has-official-dashboard .verbum-sidebar-profile-copy small,.verbum-shell.has-official-dashboard .verbum-sidebar-logout-label,.verbum-shell.has-official-dashboard .verbum-sidebar-collapse-label{font-size:10px!important}
 
 @media(max-width:1180px){
  .verbum-shell.has-official-dashboard:not(.is-sidebar-collapsed){grid-template-columns:220px minmax(0,1fr)!important}
