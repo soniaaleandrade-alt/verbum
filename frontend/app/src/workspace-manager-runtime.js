@@ -1,6 +1,14 @@
 (function () {
   'use strict';
 
+  function ensureGlobalSidebarStyle() {
+    if (document.getElementById('verbum-global-sidebar-hotfix')) return;
+    var style = document.createElement('style');
+    style.id = 'verbum-global-sidebar-hotfix';
+    style.textContent = '.verbum-shell.has-official-dashboard .verbum-nav-group:nth-of-type(n+4){display:block!important}';
+    document.head.appendChild(style);
+  }
+
   function prepare(root) {
     root.querySelectorAll('.verbum-nav-item').forEach(function (button) {
       var label = (button.textContent || '').trim();
@@ -14,17 +22,58 @@
     });
   }
 
+  function clearWorkRoute() {
+    try {
+      var url = new URL(window.location.href);
+      ['verbum_work', 'verbum_stage', 'verbum_chapter', 'verbum_chapter_stage'].forEach(function (key) {
+        url.searchParams.delete(key);
+      });
+      window.history.pushState({}, '', url);
+      window.dispatchEvent(new Event('verbum:routechange'));
+    } catch (error) {}
+  }
+
+  function prepareWorkspaceState(root) {
+    if (root.__vs) {
+      root.__vs.section = 'workspace';
+      root.__vs.workspace = null;
+    }
+    clearWorkRoute();
+
+    var shell = root.querySelector('.verbum-shell');
+    if (shell) shell.classList.remove('has-official-dashboard', 'has-hidden-header', 'has-minhas-obras');
+    var header = root.querySelector('.verbum-header');
+    if (header) {
+      header.hidden = false;
+      header.removeAttribute('hidden');
+    }
+  }
+
+  function openWorkspace(root, attempt) {
+    prepareWorkspaceState(root);
+    if (window.VerbumWorkspaceUI && typeof window.VerbumWorkspaceUI.open === 'function') {
+      window.VerbumWorkspaceUI.open(root);
+      return;
+    }
+    if (attempt >= 40) return;
+    window.setTimeout(function () { openWorkspace(root, attempt + 1); }, 50);
+  }
+
   document.addEventListener('click', function (event) {
-    var button = event.target.closest('[data-verbum-area-trabalho]');
+    var target = event.target;
+    if (!(target instanceof Element)) return;
+    var button = target.closest('[data-verbum-area-trabalho]');
     if (!button) return;
     var root = button.closest('[data-verbum-app]');
-    if (!root || !window.VerbumWorkspaceUI) return;
+    if (!root) return;
     event.preventDefault();
     event.stopPropagation();
-    window.VerbumWorkspaceUI.open(root);
+    openWorkspace(root, 0);
   }, true);
 
   function boot() {
+    ensureGlobalSidebarStyle();
+
     function run() {
       document.querySelectorAll('[data-verbum-app]').forEach(prepare);
     }
