@@ -14,6 +14,7 @@ type AppShellProps = {
 
 const sectionLabels: Record<AppSection, string> = {
   dashboard: 'Início',
+  workspace: 'Área de Trabalho',
   library: 'Obras',
 };
 
