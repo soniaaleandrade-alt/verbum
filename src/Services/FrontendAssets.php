@@ -20,23 +20,12 @@ final class FrontendAssets
     ];
 
     private const LAZY_STYLE_FILES = [
-        'frontend/app/src/styles/workspace.css',
-        'frontend/app/src/styles/identification.css',
-        'frontend/app/src/styles/project-stage.css',
-        'frontend/app/src/styles/planning-stage.css',
-        'frontend/app/src/styles/development-stage.css',
-        'frontend/app/src/styles/chapter-workflow.css',
-        'frontend/app/src/styles/chapter-preparation.css',
-        'frontend/app/src/styles/chapter-research.css',
-        'frontend/app/src/styles/chapter-writing.css',
-        'frontend/app/src/styles/chapter-revision.css',
-        'frontend/app/src/styles/general-review.css',
-        'frontend/app/src/styles/work-versions.css',
-        'frontend/app/src/styles/work-audit.css',
-        'frontend/app/src/styles/editorial-desk.css',
-        'frontend/app/src/styles/layout-stage.css',
-        'frontend/app/src/styles/legal-stage.css',
-        'frontend/app/src/styles/publication-stage.css',
+        'frontend/app/src/styles/workspace.css', 'frontend/app/src/styles/identification.css', 'frontend/app/src/styles/project-stage.css',
+        'frontend/app/src/styles/planning-stage.css', 'frontend/app/src/styles/development-stage.css', 'frontend/app/src/styles/chapter-workflow.css',
+        'frontend/app/src/styles/chapter-preparation.css', 'frontend/app/src/styles/chapter-research.css', 'frontend/app/src/styles/chapter-writing.css',
+        'frontend/app/src/styles/chapter-revision.css', 'frontend/app/src/styles/general-review.css', 'frontend/app/src/styles/work-versions.css',
+        'frontend/app/src/styles/work-audit.css', 'frontend/app/src/styles/editorial-desk.css', 'frontend/app/src/styles/layout-stage.css',
+        'frontend/app/src/styles/legal-stage.css', 'frontend/app/src/styles/publication-stage.css',
     ];
 
     private const SCRIPT_FILES = [
@@ -44,8 +33,8 @@ final class FrontendAssets
         'frontend/app/src/workspace-mobile-runtime.js', 'frontend/app/src/identification-runtime.js', 'frontend/app/src/project-stage-runtime.js',
         'frontend/app/src/planning-stage-runtime.js', 'frontend/app/src/development-stage-runtime.js', 'frontend/app/src/chapter-workflow-runtime.js',
         'frontend/app/src/chapter-preparation-runtime.js', 'frontend/app/src/chapter-research-runtime.js', 'frontend/app/src/chapter-writing-runtime.js',
-        'frontend/app/src/writing-hom010-hotfix.js', 'frontend/app/src/writing-hom011-hotfix.js',
-        'frontend/app/src/revision-hom012-hotfix.js', 'frontend/app/src/chapter-revision-runtime.js', 'frontend/app/src/general-review-runtime.js', 'frontend/app/src/work-versions-runtime.js',
+        'frontend/app/src/writing-hom010-hotfix.js', 'frontend/app/src/writing-hom011-hotfix.js', 'frontend/app/src/revision-hom012-hotfix.js',
+        'frontend/app/src/chapter-revision-runtime.js', 'frontend/app/src/general-review-runtime.js', 'frontend/app/src/work-versions-runtime.js',
         'frontend/app/src/work-audit-runtime.js', 'frontend/app/src/editorial-desk-runtime.js', 'frontend/app/src/layout-stage-runtime.js',
         'frontend/app/src/legal-stage-runtime.js', 'frontend/app/src/publication-stage-runtime.js', 'frontend/app/src/technical-runtime.js',
         'frontend/app/src/dashboard-official-runtime.js', 'frontend/app/src/sidebar-profile-runtime.js', 'frontend/app/src/minhas-obras-runtime.js',
