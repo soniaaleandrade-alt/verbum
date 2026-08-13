@@ -34,8 +34,6 @@ export function BookDialog({ open, projects, book, defaultProjectId, onClose, on
 
   if (!open) return null;
 
-  const selectableProjects = projects.filter((project) => project.status === 'active' || project.id === book?.projectId);
-
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
   }
@@ -43,7 +41,7 @@ export function BookDialog({ open, projects, book, defaultProjectId, onClose, on
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (!form.projectId) {
-      setError('Selecione o projeto da obra.');
+      setError('Não foi possível preparar o cadastro da obra.');
       return;
     }
     if (!form.title.trim()) {
@@ -80,13 +78,6 @@ export function BookDialog({ open, projects, book, defaultProjectId, onClose, on
 
         <form className="verbum-form" onSubmit={submit}>
           <div className="verbum-form-grid">
-            <label className="verbum-field-span-2">
-              <span>Projeto *</span>
-              <select value={form.projectId} onChange={(event) => set('projectId', event.target.value)}>
-                <option value="">Selecione um projeto</option>
-                {selectableProjects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
-              </select>
-            </label>
             <label>
               <span>Título *</span>
               <input value={form.title} onChange={(event) => set('title', event.target.value)} maxLength={180} autoFocus />
