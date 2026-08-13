@@ -20,7 +20,7 @@ const js = `(function(){
     identification:['identification-runtime.js'],
     project:['project-stage-runtime.js'],
     planning:['planning-stage-runtime.js'],
-    development:['development-stage-runtime.js','chapter-workflow-runtime.js','chapter-preparation-runtime.js','chapter-research-runtime.js','chapter-writing-runtime.js','writing-hom010-hotfix.js','writing-hom011-hotfix.js','revision-hom012-hotfix.js','chapter-revision-runtime.js','revision-hom013-hotfix.js','navigation-hom014-hotfix.js','editorial-editor-hom016.js','editorial-editor-hom016b.js','editorial-menu-hom016c.js'],
+    development:['development-stage-runtime.js','chapter-workflow-runtime.js','chapter-preparation-runtime.js','chapter-research-runtime.js','chapter-writing-runtime.js','writing-hom010-hotfix.js','writing-hom011-hotfix.js','revision-hom012-hotfix.js','chapter-revision-runtime.js','revision-hom013-hotfix.js','navigation-hom014-hotfix.js','editorial-editor-hom016.js','editorial-editor-hom016b.js','editorial-menu-hom016c.js','editorial-writing-hom016d.js'],
     general_review:['general-review-runtime.js'],
     versions:['work-versions-runtime.js'],
     audit:['work-audit-runtime.js'],
@@ -33,7 +33,7 @@ const js = `(function(){
     identification:['identification.css'],
     project:['project-stage.css'],
     planning:['planning-stage.css'],
-    development:['development-stage.css','chapter-workflow.css','chapter-preparation.css','chapter-research.css','chapter-writing.css','chapter-revision.css','revision-hom013.css','navigation-hom014.css','editorial-editor-hom016.css','editorial-editor-hom016a.css','editorial-editor-hom016b.css'],
+    development:['development-stage.css','chapter-workflow.css','chapter-preparation.css','chapter-research.css','chapter-writing.css','chapter-revision.css','revision-hom013.css','navigation-hom014.css','editorial-editor-hom016.css','editorial-editor-hom016a.css','editorial-editor-hom016b.css','editorial-writing-hom016d.css'],
     general_review:['general-review.css'],
     versions:['work-versions.css'],
     audit:['work-audit.css'],
@@ -100,6 +100,7 @@ const css = `@import url("../frontend/app/src/styles/verbum.css");
 @import url("../frontend/app/src/styles/editorial-editor-hom016.css");
 @import url("../frontend/app/src/styles/editorial-editor-hom016a.css");
 @import url("../frontend/app/src/styles/editorial-editor-hom016b.css");
+@import url("../frontend/app/src/styles/editorial-writing-hom016d.css");
 @import url("../frontend/app/src/styles/general-review.css");
 @import url("../frontend/app/src/styles/work-versions.css");
 @import url("../frontend/app/src/styles/work-audit.css");
