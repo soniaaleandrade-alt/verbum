@@ -24,16 +24,9 @@ final class LibraryRepository
     ];
 
     private const IDENTIFICATION_CHECKLIST = [
-        'title' => 'Definir título',
-        'subtitle' => 'Definir subtítulo',
-        'synopsis' => 'Escrever sinopse',
-        'keywords' => 'Definir palavras-chave',
-        'workflow_status' => 'Definir status',
-        'genre' => 'Definir gênero',
-        'language' => 'Definir idioma',
-        'audience' => 'Definir público-alvo',
-        'color' => 'Escolher cor da obra',
-        'cover' => 'Enviar capa da obra',
+        'title' => 'Título provisório',
+        'genre' => 'Gênero',
+        'language' => 'Idioma',
     ];
 
     private const BOOK_META_FIELDS = [
@@ -215,13 +208,6 @@ final class LibraryRepository
         update_post_meta($bookId, '_verbum_cover_url', '');
         $this->touchBook($bookId);
 
-        $completed = get_post_meta($bookId, '_verbum_completed_stages', true);
-        $completed = is_array($completed) ? $completed : [];
-        if (in_array('identification', $completed, true)) {
-            update_post_meta($bookId, '_verbum_completed_stages', array_values(array_diff($completed, ['identification'])));
-            update_post_meta($bookId, '_verbum_stage', 'identification');
-        }
-
         return $this->workspaceForBook($userId, $bookId);
     }
 
@@ -280,7 +266,10 @@ final class LibraryRepository
         update_post_meta($bookId, '_verbum_stage', 'identification');
         update_post_meta($bookId, '_verbum_completed_stages', []);
         if (! array_key_exists('workflow_status', $fields)) {
-            $fields['workflow_status'] = 'Planejamento';
+            $fields['workflow_status'] = 'Identificação';
+        }
+        if (! array_key_exists('language', $fields) || trim((string) $fields['language']) === '') {
+            $fields['language'] = 'Português (BR)';
         }
         $this->saveBookMeta($bookId, $fields);
 
@@ -410,31 +399,16 @@ final class LibraryRepository
     /** @return array<string, mixed> */
     private function identificationData(\WP_Post $post): array
     {
-        $keywords = get_post_meta($post->ID, '_verbum_keywords', true);
-        if (! is_array($keywords)) {
-            $legacyKeyword = trim((string) get_post_meta($post->ID, '_verbum_keyword', true));
-            $keywords = $legacyKeyword === '' ? [] : array_values(array_filter(array_map('trim', explode(',', $legacyKeyword))));
-        }
-
         $values = [
             'title' => trim((string) get_the_title($post)),
-            'subtitle' => trim((string) get_post_meta($post->ID, '_verbum_subtitle', true)),
-            'synopsis' => trim((string) get_post_meta($post->ID, '_verbum_synopsis', true)),
-            'keywords' => $keywords,
-            'workflow_status' => trim((string) get_post_meta($post->ID, '_verbum_workflow_status', true)),
             'genre' => trim((string) get_post_meta($post->ID, '_verbum_genre', true)),
             'language' => trim((string) get_post_meta($post->ID, '_verbum_language', true)),
-            'audience' => trim((string) get_post_meta($post->ID, '_verbum_audience', true)),
-            'color' => trim((string) get_post_meta($post->ID, '_verbum_color', true)),
-            'cover' => ((int) get_post_meta($post->ID, '_verbum_cover_id', true) > 0) || trim((string) get_post_meta($post->ID, '_verbum_cover_url', true)) !== '',
         ];
 
         $checklist = [];
         $completedCount = 0;
         foreach (self::IDENTIFICATION_CHECKLIST as $key => $label) {
-            $completed = $key === 'keywords'
-                ? count($values['keywords']) > 0
-                : ($key === 'cover' ? (bool) $values['cover'] : trim((string) $values[$key]) !== '');
+            $completed = trim((string) $values[$key]) !== '';
             if ($completed) {
                 $completedCount++;
             }
@@ -501,7 +475,45 @@ final class LibraryRepository
             $data[$this->camelCase($field)] = get_post_meta($post->ID, '_verbum_' . $field, true);
         }
 
+        $data['workflowStatus'] = $this->automaticWorkflowStatus($post);
+
         return $data;
+    }
+
+    private function automaticWorkflowStatus(\WP_Post $post): string
+    {
+        $recordStatus = strtolower(trim((string) get_post_meta($post->ID, '_verbum_status', true)));
+        $savedStatus = trim((string) get_post_meta($post->ID, '_verbum_workflow_status', true));
+        $normalized = strtolower(remove_accents($savedStatus));
+
+        if ($recordStatus === 'archived' || in_array($normalized, ['arquivada', 'arquivado'], true)) {
+            return 'Arquivada';
+        }
+        if ($recordStatus === 'paused' || in_array($normalized, ['pausada', 'pausado', 'em pausa'], true)) {
+            return 'Pausada';
+        }
+
+        $stage = (string) (get_post_meta($post->ID, '_verbum_stage', true) ?: 'identification');
+        $statuses = [
+            'identification' => 'Identificação',
+            'project' => 'Em planejamento',
+            'planning' => 'Em planejamento',
+            'development' => 'Em escrita',
+            'general_review' => 'Em revisão',
+            'versions' => 'Em revisão',
+            'audit' => 'Em revisão',
+            'editorial_desk' => 'Preparação editorial',
+            'layout' => 'Preparação editorial',
+            'legal' => 'Preparação editorial',
+            'publication' => 'Publicada',
+        ];
+        $status = $statuses[$stage] ?? 'Identificação';
+
+        if ($savedStatus !== $status) {
+            update_post_meta($post->ID, '_verbum_workflow_status', $status);
+        }
+
+        return $status;
     }
 
     private function camelCase(string $value): string

@@ -22,46 +22,25 @@ type Props = {
 type FormState = {
   title: string;
   subtitle: string;
-  workflowStatus: string;
   genre: string;
   language: string;
-  audience: string;
   synopsis: string;
-  keywords: string;
   color: string;
 };
 
-const statuses = ['Planejamento', 'Em andamento', 'Em pausa'];
 const genres = ['Formação', 'Ensaio', 'Romance', 'Biografia', 'Devocional', 'Manual', 'Catequético', 'Acadêmico', 'Testemunho', 'Meditação', 'Não ficção', 'Ficção', 'Outro'];
 const languages = ['Português (BR)', 'Português (PT)', 'Espanhol', 'Inglês', 'Italiano', 'Francês', 'Outro'];
-const audiences = ['Leitores em geral', 'Crianças', 'Adolescentes', 'Jovens', 'Adultos', 'Famílias', 'Estudantes', 'Profissionais', 'Leigos', 'Clero e vida consagrada', 'Outro'];
 const colors = ['#15677a', '#9b6b2f', '#4f825e', '#8b38d1', '#c41f25', '#244bb8', '#bf1f62', '#187a6f', '#c84b0a', '#4d3dc4'];
-
-const checklistLabels = [
-  ['title', 'Definir título'],
-  ['subtitle', 'Definir subtítulo'],
-  ['synopsis', 'Escrever sinopse'],
-  ['keywords', 'Definir palavras-chave'],
-  ['workflowStatus', 'Definir status'],
-  ['genre', 'Definir gênero'],
-  ['language', 'Definir idioma'],
-  ['audience', 'Definir público-alvo'],
-  ['color', 'Escolher cor da obra'],
-  ['cover', 'Enviar capa da obra'],
-] as const;
 
 function initialForm(workspace: WorkWorkspaceData): FormState {
   const book = workspace.book;
-  const language = book.language === 'Português' ? 'Português (BR)' : (book.language || 'Português (BR)');
+  const language = book.language === 'Português' ? 'Português (BR)' : (book.language || '');
   return {
     title: book.title || '',
     subtitle: book.subtitle || '',
-    workflowStatus: book.workflowStatus || 'Planejamento',
     genre: book.genre || '',
     language,
-    audience: book.audience || '',
     synopsis: book.synopsis || '',
-    keywords: Array.isArray(book.keywords) ? book.keywords.join(', ') : (book.keyword || ''),
     color: book.color || '',
   };
 }
@@ -76,32 +55,36 @@ export function IdentificationStage({ workspace, onWorkspaceChange, onStageChang
   const [message, setMessage] = useState('');
   const [coverBusy, setCoverBusy] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+  const autoSaveTimer = useRef<number | null>(null);
 
   useEffect(() => {
-    if (saveState === 'dirty') return;
+    if (saveState === 'dirty' || saveState === 'saving') return;
     setForm(initialForm(workspace));
   }, [workspace, saveState]);
 
-  const checklist = useMemo(() => {
-    const values: Record<string, boolean> = {
-      title: form.title.trim() !== '',
-      subtitle: form.subtitle.trim() !== '',
-      synopsis: form.synopsis.trim() !== '',
-      keywords: form.keywords.split(',').some((item) => item.trim() !== ''),
-      workflowStatus: form.workflowStatus.trim() !== '',
-      genre: form.genre.trim() !== '',
-      language: form.language.trim() !== '',
-      audience: form.audience.trim() !== '',
-      color: form.color.trim() !== '',
-      cover: Boolean(workspace.book.coverUrl),
-    };
-    return checklistLabels.map(([key, label]) => ({ key, label, completed: values[key] }));
-  }, [form, workspace.book.coverUrl]);
+  const essentialItems = useMemo(() => [
+    { key: 'title', label: 'Título provisório', completed: form.title.trim() !== '' },
+    { key: 'genre', label: 'Gênero', completed: form.genre.trim() !== '' },
+    { key: 'language', label: 'Idioma', completed: form.language.trim() !== '' },
+  ], [form.title, form.genre, form.language]);
 
-  const completedCount = checklist.filter((item) => item.completed).length;
-  const progress = completedCount * 10;
-  const ready = completedCount === checklist.length;
-  const completed = workspace.identification.completed && saveState !== 'dirty';
+  const optionalItems = useMemo(() => [
+    { key: 'subtitle', label: 'Subtítulo provisório', completed: form.subtitle.trim() !== '' },
+    { key: 'synopsis', label: 'Descrição inicial', completed: form.synopsis.trim() !== '' },
+    { key: 'cover', label: 'Capa provisória', completed: Boolean(workspace.book.coverUrl) },
+    { key: 'color', label: 'Cor de identificação', completed: form.color.trim() !== '' },
+  ], [form.subtitle, form.synopsis, form.color, workspace.book.coverUrl]);
+
+  const completedCount = essentialItems.filter((item) => item.completed).length;
+  const progress = Math.round((completedCount / essentialItems.length) * 100);
+  const ready = completedCount === essentialItems.length;
+
+  function clearAutoSave() {
+    if (autoSaveTimer.current !== null) {
+      window.clearTimeout(autoSaveTimer.current);
+      autoSaveTimer.current = null;
+    }
+  }
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -114,17 +97,15 @@ export function IdentificationStage({ workspace, onWorkspaceChange, onStageChang
     return {
       title: form.title.trim(),
       subtitle: form.subtitle.trim(),
-      workflow_status: form.workflowStatus,
       genre: form.genre,
       language: form.language,
-      audience: form.audience,
       synopsis: form.synopsis.trim(),
-      keywords: form.keywords.split(',').map((item) => item.trim()).filter(Boolean),
       color: form.color,
-    };
+    } as IdentificationInput;
   }
 
   async function persist() {
+    clearAutoSave();
     setSaveState('saving');
     setMessage('');
     try {
@@ -132,7 +113,6 @@ export function IdentificationStage({ workspace, onWorkspaceChange, onStageChang
       onWorkspaceChange(updated);
       onDirtyChange(false);
       setSaveState('saved');
-      setMessage('Alterações salvas.');
       await onPersisted();
       return updated;
     } catch (cause) {
@@ -142,12 +122,23 @@ export function IdentificationStage({ workspace, onWorkspaceChange, onStageChang
     }
   }
 
+  useEffect(() => {
+    if (saveState !== 'dirty') return;
+    clearAutoSave();
+    autoSaveTimer.current = window.setTimeout(() => {
+      persist().catch(() => undefined);
+    }, 900);
+    return clearAutoSave;
+  }, [form, saveState]);
+
   async function finish() {
+    clearAutoSave();
     try {
       let current = workspace;
       if (saveState === 'dirty' || saveState === 'error') current = await persist();
       if (!current.identification.ready) {
-        setMessage('Complete os itens pendentes da Identificação antes de continuar.');
+        const missing = essentialItems.filter((item) => !item.completed).map((item) => item.label).join(', ');
+        setMessage(`Preencha os campos essenciais antes de continuar${missing ? `: ${missing}` : ''}.`);
         return;
       }
       setSaveState('saving');
@@ -155,13 +146,17 @@ export function IdentificationStage({ workspace, onWorkspaceChange, onStageChang
       onWorkspaceChange(updated);
       onDirtyChange(false);
       setSaveState('saved');
-      setMessage('Identificação concluída. Projeto da Obra foi liberado.');
       await onPersisted();
+      // Compatibilidade temporária: Fundação usa a rota legada "project" até a nova página ser implementada.
       onStageChange('project');
     } catch (cause) {
       setSaveState('error');
       setMessage(cause instanceof Error ? cause.message : 'Não foi possível concluir a Identificação.');
     }
+  }
+
+  async function ensureTextSaved() {
+    if (saveState === 'dirty' || saveState === 'error') await persist();
   }
 
   async function upload(file: File) {
@@ -174,13 +169,18 @@ export function IdentificationStage({ workspace, onWorkspaceChange, onStageChang
       setMessage('A capa deve ter no máximo 10 MB.');
       return;
     }
+    clearAutoSave();
     setCoverBusy(true);
     try {
+      await ensureTextSaved();
+      setSaveState('saving');
       const updated = await uploadBookCover(workspace.book.id, file);
       onWorkspaceChange(updated);
+      onDirtyChange(false);
+      setSaveState('saved');
       await onPersisted();
-      setMessage('Capa atualizada.');
     } catch (cause) {
+      setSaveState('error');
       setMessage(cause instanceof Error ? cause.message : 'Não foi possível enviar a capa.');
     } finally {
       setCoverBusy(false);
@@ -189,15 +189,20 @@ export function IdentificationStage({ workspace, onWorkspaceChange, onStageChang
   }
 
   async function removeCover() {
-    if (!workspace.book.coverUrl || !window.confirm('Remover a capa desta obra?')) return;
+    if (!workspace.book.coverUrl || !window.confirm('Remover a capa provisória desta obra?')) return;
+    clearAutoSave();
     setCoverBusy(true);
     setMessage('');
     try {
+      await ensureTextSaved();
+      setSaveState('saving');
       const updated = await removeBookCover(workspace.book.id);
       onWorkspaceChange(updated);
+      onDirtyChange(false);
+      setSaveState('saved');
       await onPersisted();
-      setMessage('Capa removida.');
     } catch (cause) {
+      setSaveState('error');
       setMessage(cause instanceof Error ? cause.message : 'Não foi possível remover a capa.');
     } finally {
       setCoverBusy(false);
@@ -207,124 +212,130 @@ export function IdentificationStage({ workspace, onWorkspaceChange, onStageChang
   return (
     <>
       <section className="verbum-stage-content verbum-identification-stage">
+        <header className="verbum-identification-heading">
+          <h2>Identificação da Obra</h2>
+          <p>Cadastre o essencial para identificar sua obra. As decisões de Fundação serão desenvolvidas na próxima etapa.</p>
+        </header>
         <div className="verbum-identification-layout">
           <form className="verbum-identification-card" onSubmit={(event) => { event.preventDefault(); persist().catch(() => undefined); }}>
-            <div className="verbum-identification-grid">
-              <label>
-                <span>Título</span>
-                <input value={form.title} onChange={(event) => update('title', event.target.value)} />
-              </label>
-              <label>
-                <span>Subtítulo</span>
-                <input value={form.subtitle} onChange={(event) => update('subtitle', event.target.value)} />
-              </label>
-              <label>
-                <span>Status</span>
-                <select value={form.workflowStatus} onChange={(event) => update('workflowStatus', event.target.value)}>
-                  {withCurrent(statuses, form.workflowStatus).map((option) => <option key={option}>{option}</option>)}
-                </select>
-              </label>
-              <label>
-                <span>Gênero</span>
-                <select value={form.genre} onChange={(event) => update('genre', event.target.value)}>
-                  <option value="">Selecione...</option>
-                  {withCurrent(genres, form.genre).map((option) => <option key={option}>{option}</option>)}
-                </select>
-              </label>
-              <label>
-                <span>Idioma</span>
-                <select value={form.language} onChange={(event) => update('language', event.target.value)}>
-                  {withCurrent(languages, form.language).map((option) => <option key={option}>{option}</option>)}
-                </select>
-              </label>
-              <label>
-                <span>Público-alvo</span>
-                <select value={form.audience} onChange={(event) => update('audience', event.target.value)}>
-                  <option value="">Selecione...</option>
-                  {withCurrent(audiences, form.audience).map((option) => <option key={option}>{option}</option>)}
-                </select>
-              </label>
-              <label className="verbum-identification-span-2">
-                <span>Sinopse</span>
-                <textarea rows={5} value={form.synopsis} onChange={(event) => update('synopsis', event.target.value)} />
-              </label>
-              <label>
-                <span>Palavras-chave</span>
-                <input value={form.keywords} onChange={(event) => update('keywords', event.target.value)} placeholder="sacerdote, leigos, católicos" />
-                <small>Separe as palavras-chave por vírgula.</small>
-              </label>
-              <div className="verbum-cover-field">
-                <span className="verbum-field-label">Capa da obra</span>
-                <div className="verbum-cover-editor">
-                  <div className="verbum-cover-preview" style={{ backgroundColor: form.color || '#15677a' }}>
-                    {workspace.book.coverUrl ? <img src={workspace.book.coverUrl} alt={`Capa de ${form.title || 'obra'}`} /> : <span>V</span>}
-                  </div>
-                  <button
-                    type="button"
-                    className="verbum-cover-dropzone"
-                    disabled={coverBusy}
-                    onClick={() => fileInput.current?.click()}
-                    onDragOver={(event) => event.preventDefault()}
-                    onDrop={(event) => {
-                      event.preventDefault();
-                      const file = event.dataTransfer.files?.[0];
-                      if (file) upload(file);
-                    }}
-                  >
-                    <strong>{coverBusy ? 'Enviando...' : '↻'}</strong>
-                    <span>Arraste para substituir ou clique em “Trocar imagem”</span>
-                  </button>
-                </div>
-                <div className="verbum-cover-actions">
-                  <button type="button" className="verbum-secondary-button" disabled={coverBusy} onClick={() => fileInput.current?.click()}>Trocar imagem</button>
-                  <button type="button" className="verbum-text-button is-danger" disabled={coverBusy || !workspace.book.coverUrl} onClick={removeCover}>Remover</button>
-                </div>
-                <input ref={fileInput} className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { const file = event.target.files?.[0]; if (file) upload(file); }} />
+            <section className="verbum-identification-section">
+              <div className="verbum-identification-section-title"><span>1</span><div><h3>Dados essenciais</h3><p>Estes três campos liberam a continuação da obra.</p></div></div>
+              <div className="verbum-identification-grid is-essential">
+                <label className="verbum-identification-span-2">
+                  <span>Título provisório <b>*</b></span>
+                  <input value={form.title} onChange={(event) => update('title', event.target.value)} placeholder="Digite o título provisório da obra" />
+                </label>
+                <label>
+                  <span>Gênero <b>*</b></span>
+                  <select value={form.genre} onChange={(event) => update('genre', event.target.value)}>
+                    <option value="">Selecione...</option>
+                    {withCurrent(genres, form.genre).map((option) => <option key={option}>{option}</option>)}
+                  </select>
+                </label>
+                <label>
+                  <span>Idioma <b>*</b></span>
+                  <select value={form.language} onChange={(event) => update('language', event.target.value)}>
+                    <option value="">Selecione...</option>
+                    {withCurrent(languages, form.language).map((option) => <option key={option}>{option}</option>)}
+                  </select>
+                </label>
               </div>
-              <div className="verbum-identification-span-2 verbum-color-field">
-                <span className="verbum-field-label">Cor da obra</span>
-                <div className="verbum-color-palette" role="radiogroup" aria-label="Cor da obra">
-                  {colors.map((option) => (
+            </section>
+
+            <section className="verbum-identification-section is-optional">
+              <div className="verbum-identification-section-title"><span>2</span><div><h3>Identificação complementar</h3><p>Campos opcionais que ajudam a reconhecer a obra no sistema.</p></div></div>
+              <div className="verbum-identification-grid">
+                <label className="verbum-identification-span-2">
+                  <span>Subtítulo provisório <em>Opcional</em></span>
+                  <input value={form.subtitle} onChange={(event) => update('subtitle', event.target.value)} placeholder="Digite um subtítulo, se desejar" />
+                </label>
+                <label className="verbum-identification-span-2">
+                  <span>Descrição inicial da obra <em>Opcional</em></span>
+                  <textarea rows={5} value={form.synopsis} onChange={(event) => update('synopsis', event.target.value)} placeholder="Registre brevemente a ideia inicial do livro" />
+                  <small>Registre brevemente a ideia do livro. Este texto poderá ser revisto durante o desenvolvimento.</small>
+                </label>
+
+                <div className="verbum-cover-field">
+                  <span className="verbum-field-label">Capa provisória <em>Opcional</em></span>
+                  <div className="verbum-cover-editor">
+                    <div className="verbum-cover-preview" style={{ backgroundColor: form.color || '#15677a' }}>
+                      {workspace.book.coverUrl ? <img src={workspace.book.coverUrl} alt={`Capa de ${form.title || 'obra'}`} /> : <span>V</span>}
+                    </div>
                     <button
-                      key={option}
                       type="button"
-                      role="radio"
-                      aria-checked={form.color === option}
-                      className={form.color === option ? 'is-selected' : ''}
-                      style={{ backgroundColor: option }}
-                      onClick={() => update('color', option)}
-                      aria-label={`Selecionar cor ${option}`}
-                    />
-                  ))}
+                      className="verbum-cover-dropzone"
+                      disabled={coverBusy}
+                      onClick={() => fileInput.current?.click()}
+                      onDragOver={(event) => event.preventDefault()}
+                      onDrop={(event) => {
+                        event.preventDefault();
+                        const file = event.dataTransfer.files?.[0];
+                        if (file) upload(file);
+                      }}
+                    >
+                      <strong>{coverBusy ? 'Enviando...' : '↻'}</strong>
+                      <span>Arraste uma imagem ou clique para enviar</span>
+                    </button>
+                  </div>
+                  <div className="verbum-cover-actions">
+                    <button type="button" className="verbum-secondary-button" disabled={coverBusy} onClick={() => fileInput.current?.click()}>{workspace.book.coverUrl ? 'Trocar imagem' : 'Enviar imagem'}</button>
+                    <button type="button" className="verbum-text-button is-danger" disabled={coverBusy || !workspace.book.coverUrl} onClick={removeCover}>Remover</button>
+                  </div>
+                  <input ref={fileInput} className="sr-only" type="file" accept="image/jpeg,image/png,image/webp" onChange={(event) => { const file = event.target.files?.[0]; if (file) upload(file); }} />
+                </div>
+
+                <div className="verbum-color-field">
+                  <span className="verbum-field-label">Cor de identificação no sistema <em>Opcional</em></span>
+                  <div className="verbum-color-palette" role="radiogroup" aria-label="Cor de identificação da obra">
+                    {colors.map((option) => (
+                      <button
+                        key={option}
+                        type="button"
+                        role="radio"
+                        aria-checked={form.color === option}
+                        className={form.color === option ? 'is-selected' : ''}
+                        style={{ backgroundColor: option }}
+                        onClick={() => update('color', option)}
+                        aria-label={`Selecionar cor ${option}`}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
+            </section>
             {message && <p className={`verbum-identification-message${saveState === 'error' ? ' is-error' : ''}`} role="status">{message}</p>}
           </form>
 
           <aside className="verbum-identification-progress" aria-label="Progresso da Identificação">
-            <div className="verbum-progress-heading"><h3>Progresso da Etapa</h3><strong>{progress}%</strong></div>
+            <div className="verbum-progress-heading"><h3>{ready ? 'Identificação pronta para continuar' : 'Identificação em andamento'}</h3><strong>{progress}%</strong></div>
             <div className="verbum-progress-track"><span style={{ width: `${progress}%` }} /></div>
-            <p>{completedCount} de {checklist.length} itens concluídos</p>
+            <p>{completedCount} de 3 itens essenciais preenchidos</p>
             <div className="verbum-identification-checklist">
-              {checklist.map((item) => (
+              {essentialItems.map((item) => (
                 <div key={item.key} className={item.completed ? 'is-completed' : ''}>
                   <span aria-hidden="true">{item.completed ? '✓' : ''}</span>
                   <span>{item.label}</span>
                 </div>
               ))}
             </div>
+            {!ready && <div className="verbum-identification-missing"><strong>Para continuar:</strong>{essentialItems.filter((item) => !item.completed).map((item) => <span key={item.key}>{item.label}</span>)}</div>}
+            <div className="verbum-identification-optional-progress">
+              <strong>Opcionais preenchidos</strong>
+              {optionalItems.map((item) => <div key={item.key} className={item.completed ? 'is-completed' : ''}><span>{item.completed ? '✓' : '○'}</span><span>{item.label}</span></div>)}
+            </div>
           </aside>
         </div>
       </section>
       <WorkspaceFooter
         canGoBack={false}
+        hidePrevious
         onPrevious={onBackToLibrary}
         onBackToLibrary={onBackToLibrary}
         saveState={saveState}
-        saveDisabled={saveState !== 'dirty' && saveState !== 'error'}
-        continueDisabled={!ready || saveState === 'saving' || completed}
-        continueLabel={completed ? 'Etapa concluída ✓' : ready ? 'Concluir etapa ›' : 'Salvar e continuar ›'}
+        hideSaveButton
+        saveStateLabels={{ saved: 'Alterações salvas', dirty: 'Aguardando salvamento...', saving: 'Salvando...', error: 'Erro ao salvar' }}
+        continueDisabled={!ready || saveState === 'saving' || coverBusy}
+        continueLabel="Continuar para Fundação"
         onSave={() => persist().catch(() => undefined)}
         onContinue={finish}
       />
