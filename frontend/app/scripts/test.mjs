@@ -9,7 +9,7 @@ const requiredFiles = [
   'src/components/AppShell.tsx','src/components/Sidebar.tsx','src/components/Header.tsx','src/components/UserMenu.tsx','src/components/WorkWorkflow.tsx','src/components/WorkspaceFooter.tsx',
   'src/components/IdentificationStage.tsx','src/components/ProjectStage.tsx','src/components/PlanningStage.tsx','src/components/DevelopmentStage.tsx','src/components/ChapterPreparationStage.tsx','src/components/ChapterResearchStage.tsx','src/components/ChapterWritingStage.tsx','src/components/ChapterRevisionStage.tsx','src/components/GeneralReviewStage.tsx','src/components/WorkVersionsStage.tsx','src/components/WorkAuditStage.tsx','src/components/EditorialDeskStage.tsx','src/components/LayoutStage.tsx','src/components/LegalStage.tsx','src/components/PublicationStage.tsx',
   'src/pages/Dashboard.tsx','src/pages/LibraryPage.tsx','src/pages/WorkWorkspace.tsx','src/main.tsx','src/pages/VerbumApp.tsx',
-  'src/styles/verbum.css','src/styles/workspace.css','src/styles/planning-stage.css','src/styles/development-stage.css','src/styles/chapter-preparation.css','src/styles/chapter-research.css','src/styles/chapter-writing.css','src/styles/chapter-revision.css','src/styles/general-review.css','src/styles/work-versions.css','src/styles/work-audit.css','src/styles/editorial-desk.css','src/styles/layout-stage.css','src/styles/legal-stage.css','src/styles/publication-stage.css',
+  'src/styles/verbum.css','src/styles/workspace.css','src/styles/planning-stage.css','src/styles/structure-stage.css','src/styles/development-stage.css','src/styles/chapter-preparation.css','src/styles/chapter-research.css','src/styles/chapter-writing.css','src/styles/chapter-revision.css','src/styles/general-review.css','src/styles/work-versions.css','src/styles/work-audit.css','src/styles/editorial-desk.css','src/styles/layout-stage.css','src/styles/legal-stage.css','src/styles/publication-stage.css',
   'src/auth-profile-runtime.js','src/static-runtime.js','src/workspace-mobile-runtime.js','src/identification-runtime.js','src/project-stage-runtime.js','src/planning-stage-runtime.js','src/development-stage-runtime.js','src/chapter-workflow-runtime.js','src/chapter-preparation-runtime.js','src/chapter-research-runtime.js','src/chapter-writing-runtime.js','src/revision-hom012-hotfix.js','src/chapter-revision-runtime.js','src/general-review-runtime.js','src/work-versions-runtime.js','src/work-audit-runtime.js','src/editorial-desk-runtime.js','src/layout-stage-runtime.js','src/legal-stage-runtime.js','src/publication-stage-runtime.js','src/technical-runtime.js','src/dashboard-official-runtime.js','src/sidebar-profile-runtime.js','src/minhas-obras-runtime.js','src/profile-polish-runtime.js','src/vite-env.d.ts',
 ];
 for (const file of requiredFiles) { const contents = await readFile(resolve(root, file), 'utf8'); if (!contents.trim()) throw new Error(`${file} is empty`); }
@@ -19,12 +19,31 @@ const workspace = await readFile(resolve(root, 'src/pages/WorkWorkspace.tsx'), '
 requireAll(workspace, ['IdentificationStage','ProjectStage','PlanningStage','DevelopmentStage','GeneralReviewStage','WorkVersionsStage','WorkAuditStage','EditorialDeskStage','LayoutStage','LegalStage','PublicationStage','WorkWorkflow','WorkspaceFooter','beforeunload'], 'WorkWorkspace');
 
 const planning = await readFile(resolve(root, 'src/components/PlanningStage.tsx'), 'utf8');
-requireAll(planning, ['getWorkDevelopment','generatedChapterIds.length','Prévia somente leitura','Conclua o Planejamento para editar os capítulos'], 'PlanningStage HOM-005/HOM-006');
+requireAll(planning, ['getWorkDevelopment','generatedChapterIds.length','Prévia somente leitura','Conclua o Planejamento para editar os capítulos'], 'PlanningStage compatibility');
 const planningRuntime = await readFile(resolve(root, 'src/planning-stage-runtime.js'), 'utf8');
-requireAll(planningRuntime, ['function updateHeader','generatedChapterIds','/development-stage','verbum-planning-preview','Prévia somente leitura','Conclua o Planejamento para editar os capítulos'], 'Planning runtime HOM-005/HOM-006');
-if (planningRuntime.includes("data-view-chapters]').onclick=function(){nav('development')")) throw new Error('Planning preview must not navigate to locked Development');
+requireAll(planningRuntime, [
+  'function updateHeader',
+  'Estrutura da Obra',
+  'Fio condutor e movimento da obra',
+  'Observações estruturais',
+  'Elementos iniciais',
+  'Corpo da obra',
+  'Elementos finais',
+  'Capítulo pai',
+  'chapter-sync-preview',
+  'Gerar ou sincronizar capítulos',
+  'Confirmar sincronização',
+  'Continuar para Capítulos',
+  'Conteúdos anteriores preservados',
+  'Salvando...',
+  'Alterações salvas',
+  'Erro ao salvar',
+], 'Structure runtime HOM-025');
+if (planningRuntime.includes("data-generate-preview]').onclick=function(){api('/books/")) throw new Error('Structure synchronization must display preview before mutations');
 const planningCss = await readFile(resolve(root, 'src/styles/planning-stage.css'), 'utf8');
-requireAll(planningCss, ['.verbum-planning-preview','.verbum-planning-preview-list','.verbum-planning-preview-note'], 'Planning preview CSS');
+requireAll(planningCss, ['.verbum-planning-stage','.verbum-outline-item','.verbum-project-progress'], 'Planning compatibility CSS');
+const structureCss = await readFile(resolve(root, 'src/styles/structure-stage.css'), 'utf8');
+requireAll(structureCss, ['.verbum-structure-stage','.verbum-structure-group','.verbum-outline-parent','.verbum-sync-preview','.verbum-structure-progress-stats','@media'], 'Structure CSS HOM-025');
 
 const development = await readFile(resolve(root, 'src/components/DevelopmentStage.tsx'), 'utf8');
 requireAll(development, ['Desenvolvimento da Obra','ChapterPreparationStage','ChapterResearchStage','ChapterWritingStage','ChapterRevisionStage','Preparação','Pesquisa','Redação','Revisão','Abrir capítulo'], 'DevelopmentStage');
@@ -77,4 +96,4 @@ const buildJs = await readFile(resolve(repoRoot, 'build/verbum-app.js'), 'utf8')
 const buildCss = await readFile(resolve(repoRoot, 'build/verbum-app.css'), 'utf8'); requireAll(buildCss, ['layout-stage.css','legal-stage.css','publication-stage.css','profile-polish.css'], 'Static CSS build');
 const sensitivePattern = /(SUPABASE_SERVICE|SERVICE_KEY|OPENAI_API_KEY|sk-[A-Za-z0-9_-]{10,})/;
 for (const file of requiredFiles) { const contents = await readFile(resolve(root, file), 'utf8'); if (sensitivePattern.test(contents)) throw new Error(`Sensitive value pattern found in ${file}`); }
-console.log('Frontend homologation checks passed for Verbum Studio 2.5.7');
+console.log('Frontend homologation checks passed for Verbum Studio HOM-025');
