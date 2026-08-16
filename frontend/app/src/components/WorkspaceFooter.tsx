@@ -9,6 +9,8 @@ type Props = {
   hidePrevious?: boolean;
   saveState?: SaveState;
   saveDisabled?: boolean;
+  hideSaveButton?: boolean;
+  saveStateLabels?: Partial<Record<SaveState, string>>;
   continueDisabled?: boolean;
   continueLabel?: string;
   onSave?: () => void;
@@ -31,6 +33,8 @@ export function WorkspaceFooter({
   hidePrevious = false,
   saveState = 'saved',
   saveDisabled = true,
+  hideSaveButton = false,
+  saveStateLabels,
   continueDisabled = true,
   continueLabel = 'Salvar e continuar ›',
   onSave,
@@ -38,6 +42,7 @@ export function WorkspaceFooter({
 }: Props) {
   const isPreviousDisabled = previousDisabled ?? !canGoBack;
   const label = previousLabel ?? 'Etapa anterior';
+  const visibleStateLabels = { ...stateLabels, ...saveStateLabels };
   return (
     <footer className={`verbum-workspace-footer${hidePrevious ? ' is-first-stage' : ''}`}>
       {hidePrevious ? (
@@ -53,8 +58,8 @@ export function WorkspaceFooter({
         </button>
       )}
       <div className="verbum-workspace-save-actions">
-        <span className={`verbum-save-state is-${saveState}`}>{stateLabels[saveState]}</span>
-        <button type="button" className="verbum-secondary-button" disabled={saveDisabled} onClick={onSave}>Salvar</button>
+        <span className={`verbum-save-state is-${saveState}`}>{visibleStateLabels[saveState]}</span>
+        {!hideSaveButton && <button type="button" className="verbum-secondary-button" disabled={saveDisabled} onClick={onSave}>Salvar</button>}
         <button type="button" className="verbum-primary-button" disabled={continueDisabled} onClick={onContinue}>{continueLabel}</button>
       </div>
     </footer>
