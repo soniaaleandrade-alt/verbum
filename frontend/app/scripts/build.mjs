@@ -15,7 +15,7 @@ const js = `(function(){
   var loadedScripts={};
   var loadedStyles={};
   var core=['auth-profile-runtime.js','static-runtime.js'];
-  var enhancements=['workspace-mobile-runtime.js','workspace-ui-runtime.js','workspace-manager-runtime.js','hom023a-journey-runtime.js','workspace-book-dialog-runtime.js','technical-runtime.js','dashboard-official-runtime.js','sidebar-profile-runtime.js','minhas-obras-runtime.js','profile-polish-runtime.js'];
+  var enhancements=['workspace-mobile-runtime.js','workspace-ui-runtime.js','workspace-manager-runtime.js','hom023a-journey-runtime.js','workspace-book-dialog-runtime.js','project-stage-runtime.js','technical-runtime.js','dashboard-official-runtime.js','sidebar-profile-runtime.js','minhas-obras-runtime.js','profile-polish-runtime.js'];
   var stageScripts={
     identification:['identification-runtime.js'],
     project:['project-stage-runtime.js'],
