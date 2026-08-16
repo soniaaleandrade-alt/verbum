@@ -1,4 +1,5 @@
 import type { WorkWorkspaceData } from '../types/verbum';
+import { workflowVisualLabel } from './WorkWorkflow';
 
 type Props = {
   workspace: WorkWorkspaceData;
@@ -21,8 +22,8 @@ function relativeDate(value: string) {
 }
 
 export function WorkHeader({ workspace, onBack, onOpenNavigation }: Props) {
-  const { book, metrics, currentStage, workflow } = workspace;
-  const currentLabel = workflow.find((step) => step.key === currentStage)?.label ?? 'Identificação';
+  const { book, metrics, currentStage } = workspace;
+  const currentLabel = workflowVisualLabel(currentStage);
   return (
     <header className="verbum-work-header">
       <div className="verbum-work-header-actions">
@@ -43,8 +44,6 @@ export function WorkHeader({ workspace, onBack, onOpenNavigation }: Props) {
         </div>
         <div className="verbum-work-metrics">
           <div><span>ETAPA ATUAL</span><strong>{currentLabel}</strong></div>
-          <div><span>IMO</span><strong>{metrics.imo == null ? '—' : `${metrics.imo}%`}</strong></div>
-          <div><span>RME</span><strong>{metrics.rme == null ? '—' : `${metrics.rme}%`}</strong></div>
           <div><span>PROGRESSO</span><strong>{metrics.progress}%</strong></div>
           <div><span>CAPÍTULOS</span><strong>{metrics.chapters}</strong></div>
           <div><span>PALAVRAS</span><strong>{metrics.words.toLocaleString('pt-BR')}</strong></div>
