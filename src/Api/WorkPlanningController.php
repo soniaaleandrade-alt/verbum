@@ -6,6 +6,7 @@ namespace VerbumStudio\Api;
 
 use VerbumStudio\Auth\Capabilities;
 use VerbumStudio\Core\Config;
+use VerbumStudio\Exceptions\ValidationError;
 use VerbumStudio\Library\LibraryRepository;
 use VerbumStudio\Library\WorkPlanningRepository;
 
@@ -98,7 +99,7 @@ final class WorkPlanningController
         try {
             $bookId = (int) $request['id'];
             $this->assertOwned($bookId);
-            return $this->responses->success($this->planning->syncPreview($bookId));
+            return $this->responses->success($this->safePreview($bookId));
         } catch (\Throwable $exception) {
             return $this->responses->error($exception);
         }
@@ -109,6 +110,10 @@ final class WorkPlanningController
         try {
             $bookId = (int) $request['id'];
             $this->assertOwned($bookId);
+            $preview = $this->safePreview($bookId);
+            if (! (bool) ($preview['canConfirm'] ?? false)) {
+                throw new ValidationError('Existem conflitos na pré-visualização. Revise a Estrutura antes de sincronizar.');
+            }
             $payload = $request->get_json_params();
             $payload = is_array($payload) ? $payload : [];
             $titleUpdates = is_array($payload['title_updates'] ?? null) ? $payload['title_updates'] : [];
@@ -145,6 +150,36 @@ final class WorkPlanningController
     private function assertOwned(int $bookId): void
     {
         $this->library->workspaceForBook(get_current_user_id(), $bookId);
+    }
+
+    /** @return array<string, mixed> */
+    private function safePreview(int $bookId): array
+    {
+        $preview = $this->planning->syncPreview($bookId);
+        $seen = [];
+        $duplicates = [];
+        foreach (is_array($preview['link'] ?? null) ? $preview['link'] : [] as $entry) {
+            $chapterId = (string) ($entry['chapterId'] ?? '');
+            if ($chapterId === '') continue;
+            if (isset($seen[$chapterId])) {
+                $duplicates[] = [
+                    'itemId' => (string) ($entry['itemId'] ?? ''),
+                    'title' => (string) ($entry['title'] ?? ''),
+                    'reason' => 'Este item corresponde ao mesmo capítulo já sugerido para outro item estrutural. Revise os títulos antes de continuar.',
+                    'chapterIds' => [$chapterId],
+                ];
+            }
+            $seen[$chapterId] = true;
+        }
+        if ($duplicates !== []) {
+            $conflicts = is_array($preview['conflicts'] ?? null) ? $preview['conflicts'] : [];
+            $preview['conflicts'] = array_merge($conflicts, $duplicates);
+            $preview['canConfirm'] = false;
+            if (isset($preview['summary']) && is_array($preview['summary'])) {
+                $preview['summary']['conflicts'] = count($preview['conflicts']);
+            }
+        }
+        return $preview;
     }
 
     /** @return array<string, mixed> */
