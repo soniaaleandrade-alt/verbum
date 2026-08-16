@@ -34,7 +34,7 @@ const colors = ['#15677a', '#9b6b2f', '#4f825e', '#8b38d1', '#c41f25', '#244bb8'
 
 function initialForm(workspace: WorkWorkspaceData): FormState {
   const book = workspace.book;
-  const language = book.language === 'Português' ? 'Português (BR)' : (book.language || 'Português (BR)');
+  const language = book.language === 'Português' ? 'Português (BR)' : (book.language || '');
   return {
     title: book.title || '',
     subtitle: book.subtitle || '',
@@ -138,7 +138,7 @@ export function IdentificationStage({ workspace, onWorkspaceChange, onStageChang
       if (saveState === 'dirty' || saveState === 'error') current = await persist();
       if (!current.identification.ready) {
         const missing = essentialItems.filter((item) => !item.completed).map((item) => item.label).join(', ');
-        setMessage(`Preencha os campos essenciais antes de continuar: ${missing}.`);
+        setMessage(`Preencha os campos essenciais antes de continuar${missing ? `: ${missing}` : ''}.`);
         return;
       }
       setSaveState('saving');
@@ -155,6 +155,10 @@ export function IdentificationStage({ workspace, onWorkspaceChange, onStageChang
     }
   }
 
+  async function ensureTextSaved() {
+    if (saveState === 'dirty' || saveState === 'error') await persist();
+  }
+
   async function upload(file: File) {
     setMessage('');
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
@@ -167,8 +171,9 @@ export function IdentificationStage({ workspace, onWorkspaceChange, onStageChang
     }
     clearAutoSave();
     setCoverBusy(true);
-    setSaveState('saving');
     try {
+      await ensureTextSaved();
+      setSaveState('saving');
       const updated = await uploadBookCover(workspace.book.id, file);
       onWorkspaceChange(updated);
       onDirtyChange(false);
@@ -187,9 +192,10 @@ export function IdentificationStage({ workspace, onWorkspaceChange, onStageChang
     if (!workspace.book.coverUrl || !window.confirm('Remover a capa provisória desta obra?')) return;
     clearAutoSave();
     setCoverBusy(true);
-    setSaveState('saving');
     setMessage('');
     try {
+      await ensureTextSaved();
+      setSaveState('saving');
       const updated = await removeBookCover(workspace.book.id);
       onWorkspaceChange(updated);
       onDirtyChange(false);
@@ -229,6 +235,7 @@ export function IdentificationStage({ workspace, onWorkspaceChange, onStageChang
                 <label>
                   <span>Idioma <b>*</b></span>
                   <select value={form.language} onChange={(event) => update('language', event.target.value)}>
+                    <option value="">Selecione...</option>
                     {withCurrent(languages, form.language).map((option) => <option key={option}>{option}</option>)}
                   </select>
                 </label>
