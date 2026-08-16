@@ -10,12 +10,12 @@ import { ProjectStage } from '../components/ProjectStage';
 import { PublicationStage } from '../components/PublicationStage';
 import { WorkAuditStage } from '../components/WorkAuditStage';
 import { WorkVersionsStage } from '../components/WorkVersionsStage';
-import { WorkWorkflow } from '../components/WorkWorkflow';
+import { WorkWorkflow, workflowVisualLabel } from '../components/WorkWorkflow';
 import { WorkspaceFooter } from '../components/WorkspaceFooter';
 import type { WorkStageKey, WorkWorkspaceData } from '../types/verbum';
 
 const stageDescriptions: Record<WorkStageKey, string> = {
-  identification: 'Dados fundamentais e identidade editorial da obra.',
+  identification: 'Cadastro inicial e identificação visual da obra.',
   project: 'Fundação conceitual, objetivo, público e proposta da obra.',
   planning: 'Estrutura, organização editorial e índice provisório.',
   development: 'Gestão e desenvolvimento dos capítulos da obra.',
@@ -54,7 +54,7 @@ export function WorkWorkspace({ workspace, selectedStage, onStageChange, onBackT
 
   return (
     <div className="verbum-workspace">
-      <div className="verbum-work-breadcrumb">Minhas Obras <span>›</span> {workspace.book.title || 'Obra sem título'} <span>›</span> {selected.label}</div>
+      <div className="verbum-work-breadcrumb">Minhas Obras <span>›</span> {workspace.book.title || 'Obra sem título'} <span>›</span> {workflowVisualLabel(selected.key)}</div>
       <WorkWorkflow steps={workspace.workflow} selectedStage={selected.key} onSelect={(stage) => guarded(() => onStageChange(stage))} />
       {selected.key === 'identification' ? (
         <IdentificationStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={onStageChange} onBackToLibrary={() => guarded(onBackToLibrary)} onDirtyChange={setDirty} onPersisted={onPersisted} />
@@ -80,7 +80,7 @@ export function WorkWorkspace({ workspace, selectedStage, onStageChange, onBackT
         <PublicationStage workspace={workspace} onWorkspaceChange={onWorkspaceChange} onStageChange={(stage) => guarded(() => onStageChange(stage))} onPersisted={onPersisted} />
       ) : (
         <>
-          <section className="verbum-stage-content"><div className="verbum-stage-placeholder"><span className="verbum-eyebrow">Etapa {selected.order} de {workspace.workflow.length}</span><h2>{selected.label}</h2><p>{stageDescriptions[selected.key]}</p>{selected.key === workspace.currentStage ? <div className="verbum-stage-notice is-current">Esta é a etapa atual da obra. O conteúdo funcional desta etapa será implementado no Sprint correspondente.</div> : <div className="verbum-stage-notice">Você está consultando uma etapa anterior já liberada no fluxo editorial.</div>}</div></section>
+          <section className="verbum-stage-content"><div className="verbum-stage-placeholder"><span className="verbum-eyebrow">Etapa {selected.order} de {workspace.workflow.length}</span><h2>{workflowVisualLabel(selected.key)}</h2><p>{stageDescriptions[selected.key]}</p>{selected.key === workspace.currentStage ? <div className="verbum-stage-notice is-current">Esta é a etapa atual da obra. O conteúdo funcional desta etapa será implementado no Sprint correspondente.</div> : <div className="verbum-stage-notice">Você está consultando uma etapa anterior já liberada no fluxo editorial.</div>}</div></section>
           <WorkspaceFooter canGoBack={selectedAccessibleIndex > 0} onPrevious={previous} onBackToLibrary={() => guarded(onBackToLibrary)} />
         </>
       )}
