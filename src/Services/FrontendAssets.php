@@ -30,7 +30,7 @@ final class FrontendAssets
 
     private const SCRIPT_FILES = [
         'build/verbum-app.js', 'frontend/app/src/auth-profile-runtime.js', 'frontend/app/src/static-runtime.js',
-        'frontend/app/src/workspace-mobile-runtime.js', 'frontend/app/src/workspace-ui-runtime.js', 'frontend/app/src/workspace-manager-runtime.js', 'frontend/app/src/workspace-book-dialog-runtime.js',
+        'frontend/app/src/workspace-mobile-runtime.js', 'frontend/app/src/workspace-ui-runtime.js', 'frontend/app/src/workspace-manager-runtime.js', 'frontend/app/src/hom023a-journey-runtime.js', 'frontend/app/src/workspace-book-dialog-runtime.js',
         'frontend/app/src/identification-runtime.js', 'frontend/app/src/project-stage-runtime.js',
         'frontend/app/src/planning-stage-runtime.js', 'frontend/app/src/development-stage-runtime.js', 'frontend/app/src/chapter-workflow-runtime.js',
         'frontend/app/src/chapter-preparation-runtime.js', 'frontend/app/src/chapter-research-runtime.js', 'frontend/app/src/chapter-writing-runtime.js',
