@@ -38,16 +38,8 @@ final class WorkProjectController
             $permission = [$this, 'canAccess'];
 
             register_rest_route($namespace, '/books/(?P<id>\d+)/project-stage', [
-                [
-                    'methods' => 'GET',
-                    'callback' => [$this, 'show'],
-                    'permission_callback' => $permission,
-                ],
-                [
-                    'methods' => 'PATCH',
-                    'callback' => [$this, 'save'],
-                    'permission_callback' => $permission,
-                ],
+                ['methods' => 'GET', 'callback' => [$this, 'show'], 'permission_callback' => $permission],
+                ['methods' => 'PATCH', 'callback' => [$this, 'save'], 'permission_callback' => $permission],
             ]);
 
             register_rest_route($namespace, '/books/(?P<id>\d+)/project-stage/complete', [
@@ -119,21 +111,27 @@ final class WorkProjectController
         $clean = [];
 
         foreach ([
-            'general_objective',
-            'purpose',
-            'audience',
-            'benefits',
-            'transformation',
-            'central_message',
-            'differentials',
-            'value_proposition',
-            'keyword',
-            'motivation',
-            'verse',
-            'guiding_phrase',
+            'theme', 'general_objective', 'purpose', 'audience', 'secondary_audience', 'reader_need',
+            'benefits', 'transformation', 'central_message', 'differentials', 'value_proposition',
+            'limits', 'motivation', 'verse', 'guiding_phrase', 'central_question', 'main_thesis',
+            'overview', 'methodology', 'presentation_form', 'approach', 'audience_main',
         ] as $field) {
             if (array_key_exists($field, $payload)) {
                 $clean[$field] = sanitize_textarea_field((string) $payload[$field]);
+            }
+        }
+
+        if (array_key_exists('keywords', $payload)) {
+            $keywords = is_array($payload['keywords']) ? $payload['keywords'] : [];
+            $clean['keywords'] = array_values(array_filter(array_map(
+                static fn ($item): string => sanitize_text_field((string) $item),
+                $keywords
+            ), static fn (string $item): bool => trim($item) !== ''));
+        }
+
+        foreach (['benefits_consolidated', 'value_proposition_consolidated'] as $field) {
+            if (array_key_exists($field, $payload)) {
+                $clean[$field] = (bool) $payload[$field];
             }
         }
 
