@@ -45,6 +45,7 @@ jobs:
           node --check frontend/app/src/identification-runtime.js
           node --check frontend/app/src/project-stage-runtime.js
           node --check frontend/app/src/planning-stage-runtime.js
+          node --check frontend/app/src/structure-refinement-runtime.js
           node --check frontend/app/src/development-stage-runtime.js
           node --check frontend/app/src/chapter-workflow-runtime.js
           node --check frontend/app/src/chapter-preparation-runtime.js
