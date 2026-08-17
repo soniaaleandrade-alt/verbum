@@ -111,3 +111,41 @@ add_filter('rest_request_after_callbacks', static function ($response, $handler,
 
     return $response;
 }, 30, 3);
+
+// HOM-025A: keep the new Fio Condutor separate from the legacy Estrutura Geral.
+add_filter('rest_request_after_callbacks', static function ($response, $handler, $request) {
+    if (! is_object($request) || ! method_exists($request, 'get_route')) return $response;
+    $route = (string) $request->get_route();
+    if (! preg_match('#^/verbum/v1/books/(\d+)/planning-stage/?$#', $route, $matches)) return $response;
+
+    $bookId = (int) ($matches[1] ?? 0);
+    if ($bookId <= 0) return $response;
+
+    $method = method_exists($request, 'get_method') ? strtoupper((string) $request->get_method()) : 'GET';
+    if ($method === 'PATCH' && method_exists($request, 'get_json_params')) {
+        $params = $request->get_json_params();
+        if (is_array($params) && array_key_exists('structural_thread', $params)) {
+            update_post_meta($bookId, '_verbum_structure_thread', sanitize_textarea_field((string) $params['structural_thread']));
+            if (function_exists('clean_post_cache')) clean_post_cache($bookId);
+            if (function_exists('wp_cache_delete')) wp_cache_delete($bookId, 'post_meta');
+        }
+    }
+
+    $thread = trim((string) get_post_meta($bookId, '_verbum_structure_thread', true));
+    if (is_object($response) && method_exists($response, 'get_data') && method_exists($response, 'set_data')) {
+        $data = $response->get_data();
+        if (is_array($data) && ! empty($data['success']) && isset($data['data']) && is_array($data['data'])) {
+            if (isset($data['data']['planningStage']['values']) && is_array($data['data']['planningStage']['values'])) {
+                $data['data']['planningStage']['values']['structuralThread'] = $thread;
+            } elseif (isset($data['data']['values']) && is_array($data['data']['values'])) {
+                $data['data']['values']['structuralThread'] = $thread;
+            }
+            $response->set_data($data);
+        }
+    }
+
+    if (is_object($response) && method_exists($response, 'header')) {
+        $response->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+    }
+    return $response;
+}, 35, 3);
