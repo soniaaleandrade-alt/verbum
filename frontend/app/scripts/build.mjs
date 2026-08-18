@@ -15,7 +15,7 @@ const js = `(function(){
   var loadedScripts={};
   var loadedStyles={};
   var core=['auth-profile-runtime.js','static-runtime.js'];
-  var enhancements=['workspace-mobile-runtime.js','workspace-ui-runtime.js','workspace-manager-runtime.js','hom023a-journey-runtime.js','workspace-book-dialog-runtime.js','project-stage-runtime.js','technical-runtime.js','dashboard-official-runtime.js','sidebar-profile-runtime.js','minhas-obras-runtime.js','profile-polish-runtime.js'];
+  var enhancements=['workspace-mobile-runtime.js','workspace-ui-runtime.js','workspace-manager-runtime.js','hom023a-journey-runtime.js','hom027-journey-runtime.js','workspace-book-dialog-runtime.js','project-stage-runtime.js','technical-runtime.js','dashboard-official-runtime.js','sidebar-profile-runtime.js','minhas-obras-runtime.js','profile-polish-runtime.js'];
   var stageScripts={
     identification:['identification-initial-prelude.js','identification-runtime.js'],
     project:['project-stage-runtime.js'],
@@ -30,7 +30,7 @@ const js = `(function(){
     publication:['publication-stage-runtime.js']
   };
   var stageStyles={
-    identification:['identification.css'],
+    identification:['identification.css','identification-hom027-polish.css'],
     project:['project-stage.css'],
     planning:['planning-stage.css'],
     development:['development-stage.css','chapter-workflow.css','chapter-preparation.css','chapter-research.css','chapter-writing.css','chapter-revision.css','revision-hom013.css','navigation-hom014.css','editorial-editor-hom016.css','editorial-editor-hom016a.css','editorial-editor-hom016b.css','editorial-writing-hom016d.css','editorial-writing-hom016e.css'],
