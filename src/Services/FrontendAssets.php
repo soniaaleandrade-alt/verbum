@@ -33,7 +33,7 @@ final class FrontendAssets
         'build/verbum-app.js', 'frontend/app/src/auth-profile-runtime.js', 'frontend/app/src/static-runtime.js',
         'frontend/app/src/workspace-mobile-runtime.js', 'frontend/app/src/workspace-ui-runtime.js', 'frontend/app/src/workspace-manager-runtime.js', 'frontend/app/src/hom023a-journey-runtime.js', 'frontend/app/src/hom027-journey-runtime.js', 'frontend/app/src/workspace-book-dialog-runtime.js',
         'frontend/app/src/identification-initial-prelude.js', 'frontend/app/src/identification-runtime.js', 'frontend/app/src/project-stage-runtime.js', 'frontend/app/src/foundation-intention-runtime.js', 'frontend/app/src/foundation-reader-result-runtime.js', 'frontend/app/src/foundation-truth-central-runtime.js', 'frontend/app/src/foundation-simplification-runtime.js',
-        'frontend/app/src/planning-stage-runtime.js', 'frontend/app/src/structure-refinement-runtime.js', 'frontend/app/src/development-stage-runtime.js', 'frontend/app/src/chapter-workflow-runtime.js',
+        'frontend/app/src/planning-stage-runtime.js', 'frontend/app/src/structure-direction-runtime.js', 'frontend/app/src/structure-refinement-runtime.js', 'frontend/app/src/development-stage-runtime.js', 'frontend/app/src/chapter-workflow-runtime.js',
         'frontend/app/src/chapter-preparation-runtime.js', 'frontend/app/src/chapter-research-runtime.js', 'frontend/app/src/chapter-writing-runtime.js',
         'frontend/app/src/writing-hom010-hotfix.js', 'frontend/app/src/writing-hom011-hotfix.js', 'frontend/app/src/revision-hom012-hotfix.js',
         'frontend/app/src/chapter-revision-runtime.js', 'frontend/app/src/general-review-runtime.js', 'frontend/app/src/work-versions-runtime.js',
