@@ -24,6 +24,16 @@ window.fetch=function(input,init){
 // reutilizar o snapshot legado já carregado pelo shell.
 if(root&&root.__vs)root.__vs.workspace=null;
 
+// Menu móvel independente do cabeçalho antigo, que é ocultado nesta referência.
+if(root&&!root.querySelector('.verbum-id-mobile-toggle')){
+  var menu=document.createElement('button');
+  menu.type='button';menu.className='verbum-id-mobile-toggle';menu.setAttribute('aria-label','Abrir navegação da obra');
+  menu.innerHTML='<span></span><span></span><span></span>';
+  menu.onclick=function(){var side=root.querySelector('.verbum-sidebar');if(!side)return;var open=side.classList.toggle('is-open');menu.setAttribute('aria-expanded',open?'true':'false');};
+  root.appendChild(menu);
+  document.addEventListener('click',function(e){if(!active())return;var side=root.querySelector('.verbum-sidebar');if(!side||!side.classList.contains('is-open'))return;if(side.contains(e.target)||menu.contains(e.target))return;side.classList.remove('is-open');menu.setAttribute('aria-expanded','false');});
+}
+
 // O runtime da Identificação já reage a routechange/popstate e monta a tela
 // explicitamente. Neutralizamos somente o observer criado por ele para evitar
 // remounts causados pelas próprias mutações do novo sidebar.
