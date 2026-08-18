@@ -7,6 +7,7 @@ namespace VerbumStudio\Core;
 use VerbumStudio\Api\AuthController;
 use VerbumStudio\Api\FoundationIntentionController;
 use VerbumStudio\Api\FoundationLetterSoulController;
+use VerbumStudio\Api\FoundationReaderResultController;
 use VerbumStudio\Api\IdentificationInitialController;
 use VerbumStudio\Api\LibraryController;
 use VerbumStudio\Api\ResponseFactory;
@@ -31,6 +32,7 @@ use VerbumStudio\Integrations\Supabase\SupabaseClient;
 use VerbumStudio\Integrations\Supabase\SupabaseConfig;
 use VerbumStudio\Library\FoundationLetterSoulRepository;
 use VerbumStudio\Library\FoundationIntentionRepository;
+use VerbumStudio\Library\FoundationReaderResultRepository;
 use VerbumStudio\Library\LibraryPostTypes;
 use VerbumStudio\Library\LibraryRepository;
 use VerbumStudio\Library\WorkAuditRepository;
@@ -65,7 +67,7 @@ final class Plugin
     public function register(): void
     {
         foreach ([
-            RestController::class, AuthController::class, LibraryController::class, IdentificationInitialController::class, FoundationLetterSoulController::class, FoundationIntentionController::class, WorkProjectController::class,
+            RestController::class, AuthController::class, LibraryController::class, IdentificationInitialController::class, FoundationLetterSoulController::class, FoundationIntentionController::class, FoundationReaderResultController::class, WorkProjectController::class,
             WorkPlanningController::class, WorkDevelopmentController::class, WorkChapterPreparationController::class,
             WorkChapterResearchController::class, WorkChapterWritingController::class, WorkChapterRevisionController::class,
             WorkGeneralReviewController::class, WorkVersionsController::class, WorkAuditController::class,
@@ -111,6 +113,7 @@ final class Plugin
         $this->container->set(LibraryRepository::class, static fn (): LibraryRepository => new LibraryRepository());
         $this->container->set(FoundationLetterSoulRepository::class, static fn (): FoundationLetterSoulRepository => new FoundationLetterSoulRepository());
         $this->container->set(FoundationIntentionRepository::class, static fn (): FoundationIntentionRepository => new FoundationIntentionRepository());
+        $this->container->set(FoundationReaderResultRepository::class, static fn (): FoundationReaderResultRepository => new FoundationReaderResultRepository());
         $this->container->set(WorkProjectRepository::class, static fn (): WorkProjectRepository => new WorkProjectRepository());
         $this->container->set(WorkPlanningRepository::class, static fn (): WorkPlanningRepository => new WorkPlanningRepository());
         $this->container->set(WorkDevelopmentRepository::class, static fn (): WorkDevelopmentRepository => new WorkDevelopmentRepository());
@@ -130,6 +133,7 @@ final class Plugin
         $this->container->set(IdentificationInitialController::class, static fn (Container $c): IdentificationInitialController => new IdentificationInitialController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class)));
         $this->container->set(FoundationLetterSoulController::class, static fn (Container $c): FoundationLetterSoulController => new FoundationLetterSoulController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(FoundationLetterSoulRepository::class)));
         $this->container->set(FoundationIntentionController::class, static fn (Container $c): FoundationIntentionController => new FoundationIntentionController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(FoundationIntentionRepository::class), $c->get(FoundationLetterSoulRepository::class)));
+        $this->container->set(FoundationReaderResultController::class, static fn (Container $c): FoundationReaderResultController => new FoundationReaderResultController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(FoundationReaderResultRepository::class), $c->get(FoundationLetterSoulRepository::class), $c->get(FoundationIntentionRepository::class)));
         $this->container->set(WorkProjectController::class, static fn (Container $c): WorkProjectController => new WorkProjectController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkProjectRepository::class)));
         $this->container->set(WorkPlanningController::class, static fn (Container $c): WorkPlanningController => new WorkPlanningController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkPlanningRepository::class)));
         $this->container->set(WorkDevelopmentController::class, static fn (Container $c): WorkDevelopmentController => new WorkDevelopmentController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkDevelopmentRepository::class)));
