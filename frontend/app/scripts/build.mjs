@@ -19,7 +19,7 @@ const js = `(function(){
   var stageScripts={
     identification:['identification-initial-prelude.js','identification-runtime.js'],
     project:['project-stage-runtime.js','foundation-intention-runtime.js','foundation-reader-result-runtime.js','foundation-truth-central-runtime.js'],
-    planning:['planning-stage-runtime.js','structure-direction-runtime.js','structure-architecture-runtime.js','structure-elements-runtime.js'],
+    planning:['planning-stage-runtime.js','structure-direction-runtime.js','structure-architecture-runtime.js','structure-elements-runtime.js','structure-index-runtime.js'],
     development:['development-stage-runtime.js','chapter-workflow-runtime.js','chapter-preparation-runtime.js','chapter-research-runtime.js','chapter-writing-runtime.js','writing-hom010-hotfix.js','writing-hom011-hotfix.js','revision-hom012-hotfix.js','chapter-revision-runtime.js','revision-hom013-hotfix.js','navigation-hom014-hotfix.js','editorial-editor-hom016.js','editorial-editor-hom016b.js','editorial-menu-hom016c.js','editorial-writing-hom016d.js','editorial-writing-hom016e.js'],
     general_review:['general-review-runtime.js'],
     versions:['work-versions-runtime.js'],
