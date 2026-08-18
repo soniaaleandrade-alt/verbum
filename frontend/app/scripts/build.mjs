@@ -18,7 +18,7 @@ const js = `(function(){
   var enhancements=['workspace-mobile-runtime.js','workspace-ui-runtime.js','workspace-manager-runtime.js','hom023a-journey-runtime.js','hom027-journey-runtime.js','workspace-book-dialog-runtime.js','project-stage-runtime.js','technical-runtime.js','dashboard-official-runtime.js','sidebar-profile-runtime.js','minhas-obras-runtime.js','profile-polish-runtime.js'];
   var stageScripts={
     identification:['identification-initial-prelude.js','identification-runtime.js'],
-    project:['project-stage-runtime.js','foundation-intention-runtime.js'],
+    project:['project-stage-runtime.js','foundation-intention-runtime.js','foundation-reader-result-runtime.js'],
     planning:['planning-stage-runtime.js'],
     development:['development-stage-runtime.js','chapter-workflow-runtime.js','chapter-preparation-runtime.js','chapter-research-runtime.js','chapter-writing-runtime.js','writing-hom010-hotfix.js','writing-hom011-hotfix.js','revision-hom012-hotfix.js','chapter-revision-runtime.js','revision-hom013-hotfix.js','navigation-hom014-hotfix.js','editorial-editor-hom016.js','editorial-editor-hom016b.js','editorial-menu-hom016c.js','editorial-writing-hom016d.js','editorial-writing-hom016e.js'],
     general_review:['general-review-runtime.js'],
