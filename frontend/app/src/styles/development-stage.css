@@ -1,2 +1,47 @@
 @import url('development-stage-base.css');
 @import url('hom019-workspace.css');
+
+/* HOM-026A — Central de Capítulos: hierarquia editorial e cache-bust no stylesheet lazy ativo. */
+.verbum-development-stage .verbum-development-heading{margin-bottom:18px}
+.verbum-development-stage .verbum-chapters-summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 20px;padding:0;color:#667085;font-size:12px}
+.verbum-development-stage .verbum-chapters-summary>span:nth-child(2),
+.verbum-development-stage .verbum-chapters-summary>span:nth-child(4),
+.verbum-development-stage .verbum-chapters-summary>span:nth-child(6){display:none}
+.verbum-development-stage .verbum-chapters-summary>strong,
+.verbum-development-stage .verbum-chapters-summary>span:nth-child(3),
+.verbum-development-stage .verbum-chapters-summary>span:nth-child(5),
+.verbum-development-stage .verbum-chapters-summary>span:nth-child(7),
+.verbum-development-stage .verbum-chapters-summary>.verbum-chapters-summary-progress{display:inline-flex;align-items:center;min-height:34px;padding:0 12px;border:1px solid #e4e0f5;border-radius:999px;background:#fff;color:#596174;font-weight:650;box-shadow:0 1px 2px rgba(31,42,68,.02)}
+.verbum-development-stage .verbum-chapters-summary>strong{border-color:#d9d1ff;background:#f6f3ff;color:#5232d6;font-weight:800}
+.verbum-development-stage .verbum-chapters-summary>.verbum-chapters-summary-progress{margin-left:auto;border-color:#d8cffc;background:#eee9ff;color:#5632db;font-weight:800}
+
+.verbum-development-stage .verbum-chapters-continue{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:24px;margin:0 0 24px;padding:22px 24px;border:1px solid #dcd3ff;border-radius:16px;background:linear-gradient(135deg,#faf8ff 0%,#f5f1ff 52%,#fff 100%);box-shadow:0 10px 30px rgba(91,53,231,.08);overflow:hidden}
+.verbum-development-stage .verbum-chapters-continue:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;background:#6742e8}
+.verbum-development-stage .verbum-chapters-eyebrow{display:inline-flex;align-items:center;margin:0 0 7px;color:#6844ea;font-size:10px;font-weight:850;letter-spacing:.1em;text-transform:uppercase}
+.verbum-development-stage .verbum-chapters-continue h3{margin:0;color:#111d39;font-family:Georgia,"Times New Roman",serif;font-size:23px;line-height:1.22}
+.verbum-development-stage .verbum-chapters-continue p{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:8px 0 0;color:#6f7890;font-size:12px;line-height:1.45}
+.verbum-development-stage .verbum-chapters-continue p strong{color:#3e475b;font-weight:750}
+.verbum-development-stage .verbum-chapters-continue button{min-width:172px;height:44px;padding:0 18px;border:1px solid #6440e7!important;border-radius:10px!important;background:#6440e7!important;color:#fff!important;font-size:12px;font-weight:800;box-shadow:0 7px 16px rgba(100,64,231,.18);cursor:pointer;transition:transform .15s ease,box-shadow .15s ease,background .15s ease}
+.verbum-development-stage .verbum-chapters-continue button:hover{background:#5634d7!important;border-color:#5634d7!important;box-shadow:0 9px 20px rgba(100,64,231,.24);transform:translateY(-1px)}
+
+.verbum-development-stage .verbum-development-toolbar{margin-top:2px;margin-bottom:12px}
+.verbum-development-stage .verbum-development-filters{margin-bottom:18px}
+.verbum-development-stage .verbum-chapter-card{transition:border-color .15s ease,box-shadow .15s ease,transform .15s ease}
+.verbum-development-stage .verbum-chapter-card:hover{border-color:#d9d1f5;box-shadow:0 7px 18px rgba(31,42,68,.05);transform:translateY(-1px)}
+.verbum-development-stage .verbum-chapter-open{border-color:#d8cffb;color:#5d39e6;background:#fff;font-weight:800}
+.verbum-development-stage .verbum-chapter-open:hover{border-color:#6844ea;background:#f7f4ff;color:#5734d8}
+
+@media(max-width:980px){
+  .verbum-development-stage .verbum-chapters-summary>.verbum-chapters-summary-progress{margin-left:0}
+}
+@media(max-width:720px){
+  .verbum-development-stage .verbum-chapters-summary{gap:6px}
+  .verbum-development-stage .verbum-chapters-summary>strong,
+  .verbum-development-stage .verbum-chapters-summary>span:nth-child(3),
+  .verbum-development-stage .verbum-chapters-summary>span:nth-child(5),
+  .verbum-development-stage .verbum-chapters-summary>span:nth-child(7),
+  .verbum-development-stage .verbum-chapters-summary>.verbum-chapters-summary-progress{min-height:31px;padding:0 10px;font-size:11px}
+  .verbum-development-stage .verbum-chapters-continue{grid-template-columns:1fr;padding:19px 18px}
+  .verbum-development-stage .verbum-chapters-continue h3{font-size:20px}
+  .verbum-development-stage .verbum-chapters-continue button{width:100%;min-width:0}
+}
