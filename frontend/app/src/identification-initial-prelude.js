@@ -20,19 +20,30 @@ window.fetch=function(input,init){
   return nativeFetch.call(this,new Request(next,input),init);
 };
 
-// Força a nova tela a reidratar a obra pelo endpoint enriquecido em vez de
-// reutilizar o snapshot legado já carregado pelo shell.
-if(root&&root.__vs)root.__vs.workspace=null;
+function clearLegacyWorkspace(){if(active()&&root&&root.__vs)root.__vs.workspace=null;}
+clearLegacyWorkspace();
 
 // Menu móvel independente do cabeçalho antigo, que é ocultado nesta referência.
-if(root&&!root.querySelector('.verbum-id-mobile-toggle')){
-  var menu=document.createElement('button');
-  menu.type='button';menu.className='verbum-id-mobile-toggle';menu.setAttribute('aria-label','Abrir navegação da obra');
-  menu.innerHTML='<span></span><span></span><span></span>';
-  menu.onclick=function(){var side=root.querySelector('.verbum-sidebar');if(!side)return;var open=side.classList.toggle('is-open');menu.setAttribute('aria-expanded',open?'true':'false');};
-  root.appendChild(menu);
-  document.addEventListener('click',function(e){if(!active())return;var side=root.querySelector('.verbum-sidebar');if(!side||!side.classList.contains('is-open'))return;if(side.contains(e.target)||menu.contains(e.target))return;side.classList.remove('is-open');menu.setAttribute('aria-expanded','false');});
+var menu=null;
+if(root){
+  menu=root.querySelector('.verbum-id-mobile-toggle');
+  if(!menu){
+    menu=document.createElement('button');
+    menu.type='button';menu.className='verbum-id-mobile-toggle';menu.setAttribute('aria-label','Abrir navegação da obra');menu.setAttribute('aria-expanded','false');
+    menu.innerHTML='<span></span><span></span><span></span>';
+    menu.onclick=function(){var side=root.querySelector('.verbum-sidebar');if(!side)return;var open=side.classList.toggle('is-open');menu.setAttribute('aria-expanded',open?'true':'false');};
+    root.appendChild(menu);
+    document.addEventListener('click',function(e){if(!active())return;var side=root.querySelector('.verbum-sidebar');if(!side||!side.classList.contains('is-open'))return;if(side.contains(e.target)||menu.contains(e.target))return;side.classList.remove('is-open');menu.setAttribute('aria-expanded','false');});
+  }
 }
+function syncRoute(){
+  if(active())clearLegacyWorkspace();
+  if(menu)menu.hidden=!active();
+  if(!active()&&root){var side=root.querySelector('.verbum-sidebar');if(side)side.classList.remove('is-open');if(menu)menu.setAttribute('aria-expanded','false');}
+}
+window.addEventListener('verbum:routechange',syncRoute);
+window.addEventListener('popstate',syncRoute);
+syncRoute();
 
 // O runtime da Identificação já reage a routechange/popstate e monta a tela
 // explicitamente. Neutralizamos somente o observer criado por ele para evitar
