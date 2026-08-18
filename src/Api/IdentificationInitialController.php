@@ -27,7 +27,7 @@ final class IdentificationInitialController
     private const META_KEYS = [
         'subtitle' => '_verbum_subtitle',
         'author_name' => '_verbum_author_name',
-        'theme' => '_verbum_foundation_theme',
+        'theme' => '_verbum_work_project_theme',
         'genre' => '_verbum_genre',
         'approach' => '_verbum_planning_approach',
         'audience' => '_verbum_audience',
