@@ -10,16 +10,11 @@ use VerbumStudio\Exceptions\ValidationError;
 final class WorkChapterPreparationRepository
 {
     private const CHECKLIST = [
-        'title' => 'Título definido',
-        'objective' => 'Objetivo definido',
-        'central_question' => 'Pergunta central definida',
-        'purpose' => 'Finalidade definida',
-        'thesis' => 'Tese definida',
-        'main_message' => 'Mensagem principal definida',
-        'keywords' => 'Palavras-chave definidas',
-        'structure' => 'Estrutura inicial criada',
-        'sources' => 'Fontes selecionadas',
-        'completed' => 'Preparação concluída',
+        'objective' => 'Objetivo do capítulo',
+        'central_question' => 'Pergunta central',
+        'thesis' => 'Tese do capítulo',
+        'structure' => 'Estrutura do capítulo',
+        'sources' => 'Pesquisa necessária',
     ];
 
     private const TEXT_FIELDS = [
@@ -59,35 +54,23 @@ final class WorkChapterPreparationRepository
         $completedStages = is_array($completedStages) ? $completedStages : [];
         $completed = in_array('preparation', $completedStages, true);
 
-        $raw = [
-            'title' => trim((string) get_the_title($chapter)),
-            'objective' => $values['objective'],
-            'central_question' => $values['centralQuestion'],
-            'purpose' => $values['purpose'],
-            'thesis' => $values['thesis'],
-            'main_message' => $values['mainMessage'],
-            'keywords' => count($keywords) > 0,
+        $flags = [
+            'objective' => trim($values['objective']) !== '',
+            'central_question' => trim($values['centralQuestion']) !== '',
+            'thesis' => trim($values['thesis']) !== '',
             'structure' => count($structure) > 0,
             'sources' => count($sources) > 0,
-            'completed' => $completed,
         ];
 
         $checklist = [];
         $completedCount = 0;
         foreach (self::CHECKLIST as $key => $label) {
-            $done = is_bool($raw[$key]) ? $raw[$key] : trim((string) $raw[$key]) !== '';
-            if ($done) {
-                $completedCount++;
-            }
+            $done = (bool) ($flags[$key] ?? false);
+            if ($done) $completedCount++;
             $checklist[] = ['key' => $key, 'label' => $label, 'completed' => $done];
         }
 
-        $ready = trim($values['objective']) !== ''
-            && trim($values['centralQuestion']) !== ''
-            && trim($values['thesis']) !== ''
-            && count($structure) > 0
-            && count($sources) > 0;
-
+        $ready = $completedCount === count(self::CHECKLIST);
         $values['keywords'] = $keywords;
         $values['structureItems'] = $structure;
         $values['sourceCategories'] = $sources;
@@ -146,14 +129,12 @@ final class WorkChapterPreparationRepository
     {
         $data = $this->data($userId, $bookId, $chapterId);
         if (! $data['ready']) {
-            throw new ValidationError('Complete os campos obrigatórios da Preparação antes de liberar a Pesquisa.');
+            throw new ValidationError('Defina objetivo, pergunta central, tese, estrutura do capítulo e pesquisa necessária antes de liberar a Pesquisa.');
         }
 
         $completedStages = get_post_meta($chapterId, '_verbum_chapter_completed_stages', true);
         $completedStages = is_array($completedStages) ? $completedStages : [];
-        if (! in_array('preparation', $completedStages, true)) {
-            $completedStages[] = 'preparation';
-        }
+        if (! in_array('preparation', $completedStages, true)) $completedStages[] = 'preparation';
         update_post_meta($chapterId, '_verbum_chapter_completed_stages', array_values(array_unique($completedStages)));
         update_post_meta($chapterId, '_verbum_chapter_stage', 'research');
         update_post_meta($chapterId, '_verbum_preparation_completed_at', gmdate('c'));
@@ -196,9 +177,7 @@ final class WorkChapterPreparationRepository
     private function touchChapter(int $chapterId): void
     {
         $post = get_post($chapterId);
-        if ($post instanceof \WP_Post) {
-            wp_update_post(['ID' => $chapterId, 'post_content' => $post->post_content]);
-        }
+        if ($post instanceof \WP_Post) wp_update_post(['ID' => $chapterId, 'post_content' => $post->post_content]);
     }
 
     private function camelCase(string $value): string

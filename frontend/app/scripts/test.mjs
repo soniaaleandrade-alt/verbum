@@ -21,35 +21,20 @@ requireAll(workspace, ['IdentificationStage','ProjectStage','PlanningStage','Dev
 const planning = await readFile(resolve(root, 'src/components/PlanningStage.tsx'), 'utf8');
 requireAll(planning, ['getWorkDevelopment','generatedChapterIds.length','Prévia somente leitura','Conclua o Planejamento para editar os capítulos'], 'PlanningStage compatibility');
 const planningRuntime = await readFile(resolve(root, 'src/planning-stage-runtime.js'), 'utf8');
-requireAll(planningRuntime, [
-  'function updateHeader',
-  'Estrutura da Obra',
-  'Fio condutor e movimento da obra',
-  'Observações estruturais',
-  'Elementos iniciais',
-  'Corpo da obra',
-  'Elementos finais',
-  'Capítulo pai',
-  'chapter-sync-preview',
-  'Gerar ou sincronizar capítulos',
-  'Confirmar sincronização',
-  'Continuar para Capítulos',
-  'Conteúdos anteriores preservados',
-  'Salvando...',
-  'Alterações salvas',
-  'Erro ao salvar',
-], 'Structure runtime HOM-025');
+requireAll(planningRuntime, ['function updateHeader','Estrutura da Obra','Fio condutor e movimento da obra','Observações estruturais','Elementos iniciais','Corpo da obra','Elementos finais','Capítulo pai','chapter-sync-preview','Gerar ou sincronizar capítulos','Confirmar sincronização','Continuar para Capítulos','Conteúdos anteriores preservados','Salvando...','Alterações salvas','Erro ao salvar'], 'Structure runtime HOM-025');
 if (planningRuntime.includes("data-generate-preview]').onclick=function(){api('/books/")) throw new Error('Structure synchronization must display preview before mutations');
-const planningCss = await readFile(resolve(root, 'src/styles/planning-stage.css'), 'utf8');
-requireAll(planningCss, ['.verbum-planning-stage','.verbum-outline-item','.verbum-project-progress'], 'Planning compatibility CSS');
-const structureCss = await readFile(resolve(root, 'src/styles/structure-stage.css'), 'utf8');
-requireAll(structureCss, ['.verbum-structure-stage','.verbum-structure-group','.verbum-outline-parent','.verbum-sync-preview','.verbum-structure-progress-stats','@media'], 'Structure CSS HOM-025');
+const planningCss = await readFile(resolve(root, 'src/styles/planning-stage.css'), 'utf8'); requireAll(planningCss, ['.verbum-planning-stage','.verbum-outline-item','.verbum-project-progress'], 'Planning compatibility CSS');
+const structureCss = await readFile(resolve(root, 'src/styles/structure-stage.css'), 'utf8'); requireAll(structureCss, ['.verbum-structure-stage','.verbum-structure-group','.verbum-outline-parent','.verbum-sync-preview','.verbum-structure-progress-stats','@media'], 'Structure CSS HOM-025');
 
 const development = await readFile(resolve(root, 'src/components/DevelopmentStage.tsx'), 'utf8');
-requireAll(development, ['Desenvolvimento da Obra','ChapterPreparationStage','ChapterResearchStage','ChapterWritingStage','ChapterRevisionStage','Preparação','Pesquisa','Redação','Revisão','Abrir capítulo'], 'DevelopmentStage');
+requireAll(development, ['Capítulos','Continuar trabalhando','Continuar capítulo','Continuar para Revisão da Obra','ChapterPreparationStage','ChapterResearchStage','ChapterWritingStage','ChapterRevisionStage','Preparação','Pesquisa','Redação','Revisão'], 'Central de Capítulos HOM-026');
+const developmentRuntime = await readFile(resolve(root, 'src/development-stage-runtime.js'), 'utf8');
+requireAll(developmentRuntime, ['<h2>Capítulos</h2>','Continuar trabalhando','Continuar capítulo','Voltar para Estrutura','Continuar para Revisão da Obra','A Central de Capítulos não recria o índice'], 'Development runtime HOM-026');
+const developmentCss = await readFile(resolve(root, 'src/styles/development-stage-base.css'), 'utf8');
+requireAll(developmentCss, ['.verbum-chapters-summary','.verbum-chapters-continue','.verbum-chapter-part','.verbum-chapters-footer-note'], 'Central de Capítulos CSS HOM-026');
 
 const stages = [
-  ['ChapterPreparationStage.tsx',['Identidade do Capítulo','Direção da Escrita','Concluir Preparação']],
+  ['ChapterPreparationStage.tsx',['Direção do Capítulo','Estrutura do Capítulo','Pesquisa necessária','Intenção espiritual','Aprofundar preparação','Concluir Preparação e ir para Pesquisa']],
   ['ChapterResearchStage.tsx',['Direção da Pesquisa','Central de Pesquisa','Banco de Ideias do capítulo','Concluir Pesquisa']],
   ['ChapterWritingStage.tsx',['Assistente de Escrita','Modo Foco','Salvar agora','Concluir Redação']],
   ['ChapterRevisionStage.tsx',['Direção original','Fontes e Citações','Pendências da Revisão','Concluir Revisão']],
@@ -64,7 +49,7 @@ const stages = [
 for (const [file, expected] of stages) requireAll(await readFile(resolve(root, `src/components/${file}`), 'utf8'), expected, file);
 
 const runtimes = [
-  ['chapter-preparation-runtime.js',['/preparation','/preparation/complete','Concluir Preparação']],
+  ['chapter-preparation-runtime.js',['/preparation','/preparation/complete','Direção do Capítulo','Estrutura do Capítulo','Pesquisa necessária','Aprofundar preparação','Concluir Preparação e ir para Pesquisa']],
   ['chapter-research-runtime.js',['/research','/research/sources','/research/complete','Central de Pesquisa']],
   ['chapter-writing-runtime.js',['/writing','/writing/complete','/writing/assist','Assistente de Escrita']],
   ['chapter-revision-runtime.js',['/revision','/revision/issues','/revision/complete','Assistente de Revisão']],
@@ -78,22 +63,15 @@ const runtimes = [
 ];
 for (const [file, expected] of runtimes) requireAll(await readFile(resolve(root, `src/${file}`), 'utf8'), expected, file);
 
-const hom012 = await readFile(resolve(root, 'src/revision-hom012-hotfix.js'), 'utf8');
-requireAll(hom012, ['latestRevision','pendingIssueCount','data-hom012-issue-status','data-hom012-issue-delete','reconcileChecklist','_verbum_nocache'], 'Revision HOM-012 rehydration');
-
-const legalService = await readFile(resolve(root, 'src/services/legal-stage-service.ts'), 'utf8');
-requireAll(legalService, ['getLegalStage','saveLegalStage','createLegalDocument','createThirdPartyItem','createLegalIssue','registerLegalProof','assistLegalStage','completeLegalStage'], 'Legal stage service');
-const publicationService = await readFile(resolve(root, 'src/services/publication-stage-service.ts'), 'utf8');
-requireAll(publicationService, ['getPublicationStage','savePublicationStage','createPublicationChannel','updatePublicationChannel','createPublicationTask','registerPublicationUpdate','assistPublicationStage','completePublicationStage'], 'Publication stage service');
-const legalCss = await readFile(resolve(root, 'src/styles/legal-stage.css'), 'utf8');
-requireAll(legalCss, ['.verbum-legal-grid','.verbum-legal-card','.verbum-legal-isbn','.verbum-legal-list','.verbum-legal-progress','.verbum-legal-history','@media'], 'Legal stage CSS');
-const publicationCss = await readFile(resolve(root, 'src/styles/publication-stage.css'), 'utf8');
-requireAll(publicationCss, ['.verbum-publication-grid','.verbum-publication-card','.verbum-publication-stats','.verbum-publication-list','.verbum-publication-progress','.verbum-publication-celebration','@media'], 'Publication stage CSS');
-
+const hom012 = await readFile(resolve(root, 'src/revision-hom012-hotfix.js'), 'utf8'); requireAll(hom012, ['latestRevision','pendingIssueCount','data-hom012-issue-status','data-hom012-issue-delete','reconcileChecklist','_verbum_nocache'], 'Revision HOM-012 rehydration');
+const legalService = await readFile(resolve(root, 'src/services/legal-stage-service.ts'), 'utf8'); requireAll(legalService, ['getLegalStage','saveLegalStage','createLegalDocument','createThirdPartyItem','createLegalIssue','registerLegalProof','assistLegalStage','completeLegalStage'], 'Legal stage service');
+const publicationService = await readFile(resolve(root, 'src/services/publication-stage-service.ts'), 'utf8'); requireAll(publicationService, ['getPublicationStage','savePublicationStage','createPublicationChannel','updatePublicationChannel','createPublicationTask','registerPublicationUpdate','assistPublicationStage','completePublicationStage'], 'Publication stage service');
+const legalCss = await readFile(resolve(root, 'src/styles/legal-stage.css'), 'utf8'); requireAll(legalCss, ['.verbum-legal-grid','.verbum-legal-card','.verbum-legal-isbn','.verbum-legal-list','.verbum-legal-progress','.verbum-legal-history','@media'], 'Legal stage CSS');
+const publicationCss = await readFile(resolve(root, 'src/styles/publication-stage.css'), 'utf8'); requireAll(publicationCss, ['.verbum-publication-grid','.verbum-publication-card','.verbum-publication-stats','.verbum-publication-list','.verbum-publication-progress','.verbum-publication-celebration','@media'], 'Publication stage CSS');
 const header = await readFile(resolve(root, 'src/components/Header.tsx'), 'utf8'); if (header.includes('Área atual')) throw new Error('Header must not render Área atual');
 const sidebar = await readFile(resolve(root, 'src/components/Sidebar.tsx'), 'utf8'); if (!sidebar.includes('Minhas Obras')) throw new Error('Sidebar must use Minhas Obras');
 const buildJs = await readFile(resolve(repoRoot, 'build/verbum-app.js'), 'utf8'); requireAll(buildJs, ['layout-stage-runtime.js','legal-stage-runtime.js','publication-stage-runtime.js','script.async=false'], 'Static JS build');
 const buildCss = await readFile(resolve(repoRoot, 'build/verbum-app.css'), 'utf8'); requireAll(buildCss, ['layout-stage.css','legal-stage.css','publication-stage.css','profile-polish.css'], 'Static CSS build');
 const sensitivePattern = /(SUPABASE_SERVICE|SERVICE_KEY|OPENAI_API_KEY|sk-[A-Za-z0-9_-]{10,})/;
 for (const file of requiredFiles) { const contents = await readFile(resolve(root, file), 'utf8'); if (sensitivePattern.test(contents)) throw new Error(`Sensitive value pattern found in ${file}`); }
-console.log('Frontend homologation checks passed for Verbum Studio HOM-025');
+console.log('Frontend homologation checks passed for Verbum Studio HOM-026');
