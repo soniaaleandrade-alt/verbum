@@ -21,7 +21,7 @@ final class FrontendAssets
     ];
 
     private const LAZY_STYLE_FILES = [
-        'frontend/app/src/styles/workspace.css', 'frontend/app/src/styles/workspace-manager.css', 'frontend/app/src/styles/identification.css', 'frontend/app/src/styles/project-stage.css',
+        'frontend/app/src/styles/workspace.css', 'frontend/app/src/styles/workspace-manager.css', 'frontend/app/src/styles/identification.css', 'frontend/app/src/styles/identification-hom027-polish.css', 'frontend/app/src/styles/project-stage.css',
         'frontend/app/src/styles/planning-stage.css', 'frontend/app/src/styles/development-stage.css', 'frontend/app/src/styles/chapter-workflow.css',
         'frontend/app/src/styles/chapter-preparation.css', 'frontend/app/src/styles/chapter-research.css', 'frontend/app/src/styles/chapter-writing.css',
         'frontend/app/src/styles/chapter-revision.css', 'frontend/app/src/styles/general-review.css', 'frontend/app/src/styles/work-versions.css',
@@ -31,8 +31,8 @@ final class FrontendAssets
 
     private const SCRIPT_FILES = [
         'build/verbum-app.js', 'frontend/app/src/auth-profile-runtime.js', 'frontend/app/src/static-runtime.js',
-        'frontend/app/src/workspace-mobile-runtime.js', 'frontend/app/src/workspace-ui-runtime.js', 'frontend/app/src/workspace-manager-runtime.js', 'frontend/app/src/hom023a-journey-runtime.js', 'frontend/app/src/workspace-book-dialog-runtime.js',
-        'frontend/app/src/identification-runtime.js', 'frontend/app/src/project-stage-runtime.js', 'frontend/app/src/foundation-simplification-runtime.js',
+        'frontend/app/src/workspace-mobile-runtime.js', 'frontend/app/src/workspace-ui-runtime.js', 'frontend/app/src/workspace-manager-runtime.js', 'frontend/app/src/hom023a-journey-runtime.js', 'frontend/app/src/hom027-journey-runtime.js', 'frontend/app/src/workspace-book-dialog-runtime.js',
+        'frontend/app/src/identification-initial-prelude.js', 'frontend/app/src/identification-runtime.js', 'frontend/app/src/project-stage-runtime.js', 'frontend/app/src/foundation-simplification-runtime.js',
         'frontend/app/src/planning-stage-runtime.js', 'frontend/app/src/structure-refinement-runtime.js', 'frontend/app/src/development-stage-runtime.js', 'frontend/app/src/chapter-workflow-runtime.js',
         'frontend/app/src/chapter-preparation-runtime.js', 'frontend/app/src/chapter-research-runtime.js', 'frontend/app/src/chapter-writing-runtime.js',
         'frontend/app/src/writing-hom010-hotfix.js', 'frontend/app/src/writing-hom011-hotfix.js', 'frontend/app/src/revision-hom012-hotfix.js',

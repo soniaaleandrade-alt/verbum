@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace VerbumStudio\Core;
 
 use VerbumStudio\Api\AuthController;
+use VerbumStudio\Api\IdentificationInitialController;
 use VerbumStudio\Api\LibraryController;
 use VerbumStudio\Api\ResponseFactory;
 use VerbumStudio\Api\RestController;
@@ -60,7 +61,7 @@ final class Plugin
     public function register(): void
     {
         foreach ([
-            RestController::class, AuthController::class, LibraryController::class, WorkProjectController::class,
+            RestController::class, AuthController::class, LibraryController::class, IdentificationInitialController::class, WorkProjectController::class,
             WorkPlanningController::class, WorkDevelopmentController::class, WorkChapterPreparationController::class,
             WorkChapterResearchController::class, WorkChapterWritingController::class, WorkChapterRevisionController::class,
             WorkGeneralReviewController::class, WorkVersionsController::class, WorkAuditController::class,
@@ -120,6 +121,7 @@ final class Plugin
         $this->container->set(WorkPublicationRepository::class, static fn (): WorkPublicationRepository => new WorkPublicationRepository());
 
         $this->container->set(LibraryController::class, static fn (Container $c): LibraryController => new LibraryController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class)));
+        $this->container->set(IdentificationInitialController::class, static fn (Container $c): IdentificationInitialController => new IdentificationInitialController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class)));
         $this->container->set(WorkProjectController::class, static fn (Container $c): WorkProjectController => new WorkProjectController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkProjectRepository::class)));
         $this->container->set(WorkPlanningController::class, static fn (Container $c): WorkPlanningController => new WorkPlanningController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkPlanningRepository::class)));
         $this->container->set(WorkDevelopmentController::class, static fn (Container $c): WorkDevelopmentController => new WorkDevelopmentController($c->get(Config::class), $c->get(ResponseFactory::class), $c->get(Capabilities::class), $c->get(LibraryRepository::class), $c->get(WorkDevelopmentRepository::class)));
