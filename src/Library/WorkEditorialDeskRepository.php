@@ -587,7 +587,52 @@ final class WorkEditorialDeskRepository
     /** @param array<string,mixed>$version @param array<string,mixed>$fields @return array<string,mixed> */ private function preparationData(int$id,array$version,array$fields):array{$state=$this->preparationState($id,$version,$fields);$checks=[];foreach(['definitive_text','rights','graphic','proofs','final_files']as$step)$checks[$step]=in_array($step,(array)$state['completed'],true)?100:$this->preparationProgress($step,$state);return array_merge($state,['version'=>$version,'progress'=>$checks,'overallProgress'=>(int)round(array_sum($checks)/5)]);}
     /** @param array<string,mixed>$version @param array<string,mixed>$fields @return array<string,mixed> */ private function preparationState(int$id,array$version,array$fields):array{$raw=get_post_meta($id,'_verbum_editorial_preparation',true);$raw=is_array($raw)?$raw:[];$identity=(array)($fields['identity']??[]);$edition=(array)($fields['edition']??[]);$elements=(array)($fields['elements']??[]);$defaults=['active'=>'definitive_text','completed'=>[],'sourceVersionId'=>(string)($version['id']??''),'sourceHash'=>(string)($version['hash']??''),'identity'=>['title'=>(string)($identity['titleFinal']??get_the_title($id)),'subtitle'=>(string)($identity['subtitleFinal']??''),'author'=>(string)($identity['authorDisplay']??''),'confirmed'=>false],'edition'=>['number'=>(string)($edition['edition']??'1ª edição'),'language'=>(string)($identity['language']??'Português'),'formats'=>(array)($edition['formats']??['printed','digital']),'notes'=>'','confirmed'=>false],'elements'=>$elements,'elementOrder'=>(array)($fields['elementOrder']??[]),'contentConfirmed'=>false,'documents'=>[['id'=>'ownership','name'=>'Declaração de titularidade','application'=>'Todos os formatos','status'=>'pending','required'=>true,'responsible'=>'Autoria','deadline'=>'','files'=>[]],['id'=>'permissions','name'=>'Permissões de citações e imagens','application'=>'Todos os formatos','status'=>'pending','required'=>true,'responsible'=>'Autoria','deadline'=>'','files'=>[]],['id'=>'catalog','name'=>'Ficha catalográfica','application'=>'Edição impressa','status'=>'pending','required'=>false,'responsible'=>'','deadline'=>'','files'=>[]],['id'=>'isbn_print','name'=>'ISBN impresso','application'=>'Livro impresso','status'=>'pending','required'=>false,'responsible'=>'','deadline'=>'','files'=>[]],['id'=>'isbn_digital','name'=>'ISBN digital','application'=>'E-book','status'=>'pending','required'=>false,'responsible'=>'','deadline'=>'','files'=>[]],['id'=>'ecclesiastical','name'=>'Orientação ou autorização eclesiástica','application'=>'Conforme orientação recebida','status'=>'pending','required'=>false,'responsible'=>'Autoridade competente','deadline'=>'','files'=>[]]],'permissions'=>[],'graphic'=>['trimSize'=>'14 × 21 cm','orientation'=>'portrait','paper'=>'','print'=>'black_white','margins'=>['top'=>'2','bottom'=>'2','inner'=>'2.5','outer'=>'2'],'bodyFont'=>'','bodySize'=>'11','lineHeight'=>'1.4','headingFont'=>'','chapterSize'=>'22','subtitleSize'=>'15','styles'=>[],'coverDecision'=>'','coverBrief'=>'','coverAvoid'=>'','visualElements'=>[]],'graphicVersions'=>[],'proofs'=>[],'proofNotes'=>[],'formatApprovals'=>[],'finalFiles'=>[],'packages'=>[],'metadata'=>['title'=>(string)($identity['titleFinal']??get_the_title($id)),'subtitle'=>(string)($identity['subtitleFinal']??''),'author'=>(string)($identity['authorDisplay']??''),'edition'=>(string)($edition['edition']??'1ª edição'),'language'=>(string)($identity['language']??'Português'),'keywords'=>'','description'=>'','categories'=>'','isbn'=>'','publisher'=>'','rights'=>'','date'=>''],'integrity'=>['names'=>false,'versions'=>false,'open'=>false,'fonts'=>false,'links'=>false,'backup'=>false,'nonEmpty'=>false,'matchesProof'=>false],'finalConfirmation'=>false,'editorialVersion'=>null,'history'=>[],'updatedAt'=>''];return array_replace($defaults,$raw);}
     /** @param array<string,mixed>$state */ private function assertPreparationStep(string$step,array$state):void{if($step==='definitive_text'){if(empty($state['sourceVersionId'])||empty($state['contentConfirmed'])||empty($state['identity']['confirmed'])||empty($state['edition']['confirmed'])||trim((string)$state['identity']['title'])===''||trim((string)$state['identity']['author'])==='')throw new ValidationError('Confirme a versão validada, título, autoria e dados da edição.');}elseif($step==='rights'){foreach((array)$state['documents']as$d)if(is_array($d)&&!empty($d['required'])&&!in_array(($d['status']??''),['completed','not_applicable'],true))throw new ValidationError('Conclua os documentos obrigatórios ou registre a justificativa de não aplicação.');}elseif($step==='graphic'){$g=(array)$state['graphic'];if(empty($g['trimSize'])||empty($g['paper'])||empty($g['bodyFont'])||empty($g['headingFont'])||empty($g['coverDecision']))throw new ValidationError('Defina formato, papel, tipografia e decisão sobre a capa.');}elseif($step==='proofs'){$formats=(array)$state['edition']['formats'];foreach($formats as$f)if(count(array_filter((array)$state['formatApprovals'],static fn($a):bool=>is_array($a)&&($a['format']??'')===$f&&($a['status']??'')==='approved'))===0)throw new ValidationError('Aprove separadamente cada formato selecionado.');if(count(array_filter((array)$state['proofNotes'],static fn($n):bool=>is_array($n)&&($n['priority']??'')==='critical'&&!in_array(($n['status']??''),['corrected','checked'],true)))>0)throw new ValidationError('Resolva os problemas críticos das provas.');}else{if(empty($state['packages'])||empty($state['finalConfirmation']))throw new ValidationError('Prepare os pacotes finais e confirme o fechamento editorial.');foreach((array)$state['integrity']as$checked)if(!$checked)throw new ValidationError('Conclua todas as verificações de integridade.');foreach(['title','author','edition','language']as$key)if(trim((string)($state['metadata'][$key]??''))==='')throw new ValidationError('Complete os metadados obrigatórios.');}}
-    /** @param array<string,mixed>$state */ private function preparationProgress(string$step,array$state):int{if($step==='definitive_text')$c=[!empty($state['sourceVersionId']),!empty($state['identity']['confirmed']),!empty($state['edition']['confirmed']),!empty($state['contentConfirmed'])];elseif($step==='rights'){$required=array_filter((array)$state['documents'],static fn($d):bool=>is_array($d)&&!empty($d['required']));$c=[count(array_filter($required,static fn($d):bool=>in_array(($d['status']??''),['completed','not_applicable'],true)))===count($required)];}elseif($step==='graphic'){$g=(array)$state['graphic'];$c=[!empty($g['trimSize']),!empty($g['paper']),!empty($g['bodyFont']),!empty($g['headingFont']),!empty($g['coverDecision'])];}elseif($step==='proofs'){$c=[!empty($state['proofs']),count((array)$state['formatApprovals'])>=count((array)$state['edition']['formats'])];}else{$c=[!empty($state['packages']),!empty($state['finalConfirmation']),count(array_filter((array)$state['integrity']))===count((array)$state['integrity'])];return(int)round(count(array_filter($c))*100/max(1,count($c)));}
+    /** @param array<string, mixed> $state */
+    private function preparationProgress(string $step, array $state): int
+    {
+        if ($step === 'definitive_text') {
+            $checks = [
+                ! empty($state['sourceVersionId']),
+                ! empty($state['identity']['confirmed']),
+                ! empty($state['edition']['confirmed']),
+                ! empty($state['contentConfirmed']),
+            ];
+        } elseif ($step === 'rights') {
+            $required = array_filter(
+                (array) $state['documents'],
+                static fn ($document): bool => is_array($document) && ! empty($document['required'])
+            );
+            $checks = [
+                count(array_filter(
+                    $required,
+                    static fn ($document): bool => in_array(($document['status'] ?? ''), ['completed', 'not_applicable'], true)
+                )) === count($required),
+            ];
+        } elseif ($step === 'graphic') {
+            $graphic = (array) $state['graphic'];
+            $checks = [
+                ! empty($graphic['trimSize']),
+                ! empty($graphic['paper']),
+                ! empty($graphic['bodyFont']),
+                ! empty($graphic['headingFont']),
+                ! empty($graphic['coverDecision']),
+            ];
+        } elseif ($step === 'proofs') {
+            $checks = [
+                ! empty($state['proofs']),
+                count((array) $state['formatApprovals']) >= count((array) $state['edition']['formats']),
+            ];
+        } else {
+            $integrity = (array) $state['integrity'];
+            $checks = [
+                ! empty($state['packages']),
+                ! empty($state['finalConfirmation']),
+                count(array_filter($integrity)) === count($integrity),
+            ];
+        }
+
+        return (int) round(count(array_filter($checks)) * 100 / max(1, count($checks)));
+    }
     /** @return array<string,mixed> */ private function preparationEvent(int$user,string$label):array{return['id'=>'editorial-event-'.substr(md5($label.microtime(true)),0,12),'label'=>$label,'userId'=>$user,'at'=>gmdate('c')];}
     private function sanitizePreparationValue(mixed$value):mixed{if(is_string($value))return sanitize_textarea_field($value);if(is_bool($value)||is_int($value)||is_float($value)||$value===null)return$value;if(is_array($value)){foreach($value as$key=>$item)$value[$key]=$this->sanitizePreparationValue($item);return$value;}return'';}
 
