@@ -49,6 +49,10 @@ final class WorkDevelopmentController
                 'permission_callback' => $permission,
             ]);
 
+            register_rest_route($namespace, '/books/(?P<id>\\d+)/development-stage/structure-preview', ['methods'=>'GET','callback'=>[$this,'preview'],'permission_callback'=>$permission]);
+            register_rest_route($namespace, '/books/(?P<id>\\d+)/development-stage/structure-sync', ['methods'=>'POST','callback'=>[$this,'synchronize'],'permission_callback'=>$permission]);
+            register_rest_route($namespace, '/books/(?P<id>\\d+)/development-stage/order', ['methods'=>'PATCH','callback'=>[$this,'saveOrder'],'permission_callback'=>$permission]);
+
             register_rest_route($namespace, '/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)', [
                 'methods' => 'GET',
                 'callback' => [$this, 'chapter'],
@@ -99,6 +103,10 @@ final class WorkDevelopmentController
             return $this->responses->error($exception);
         }
     }
+
+    public function preview(\WP_REST_Request $request):\WP_REST_Response{try{$id=(int)$request['id'];$this->assertOwned($id);return$this->responses->success($this->development->syncPreview(get_current_user_id(),$id));}catch(\Throwable $e){return$this->responses->error($e);}}
+    public function synchronize(\WP_REST_Request $request):\WP_REST_Response{try{$id=(int)$request['id'];$this->assertOwned($id);$payload=$request->get_json_params();return$this->responses->success($this->development->synchronize(get_current_user_id(),$id,is_array($payload)?$payload:[]));}catch(\Throwable $e){return$this->responses->error($e);}}
+    public function saveOrder(\WP_REST_Request $request):\WP_REST_Response{try{$id=(int)$request['id'];$this->assertOwned($id);$payload=$request->get_json_params();return$this->responses->success($this->development->saveOrder(get_current_user_id(),$id,is_array($payload['chapter_ids']??null)?$payload['chapter_ids']:[]));}catch(\Throwable $e){return$this->responses->error($e);}}
 
     private function assertOwned(int $bookId): void
     {

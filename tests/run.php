@@ -74,7 +74,7 @@ test('Sprint 19 REST routes are registered', function (): void {
         'verbum/v1/books/(?P<id>\\d+)/workspace','verbum/v1/books/(?P<id>\\d+)/identification','verbum/v1/books/(?P<id>\\d+)/identification/complete',
         'verbum/v1/books/(?P<id>\\d+)/project-stage','verbum/v1/books/(?P<id>\\d+)/project-stage/complete',
         'verbum/v1/books/(?P<id>\\d+)/planning-stage','verbum/v1/books/(?P<id>\\d+)/planning-stage/generate-chapters','verbum/v1/books/(?P<id>\\d+)/planning-stage/complete',
-        'verbum/v1/books/(?P<id>\\d+)/development-stage','verbum/v1/books/(?P<id>\\d+)/development-stage/complete','verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)',
+        'verbum/v1/books/(?P<id>\\d+)/development-stage','verbum/v1/books/(?P<id>\\d+)/development-stage/complete','verbum/v1/books/(?P<id>\\d+)/development-stage/structure-preview','verbum/v1/books/(?P<id>\\d+)/development-stage/structure-sync','verbum/v1/books/(?P<id>\\d+)/development-stage/order','verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)',
         'verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)/preparation','verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)/preparation/complete',
         'verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)/research','verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)/research/sources','verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)/research/sources/(?P<source_id>\\d+)','verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)/research/complete',
         'verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)/writing','verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)/writing/complete','verbum/v1/books/(?P<id>\\d+)/chapters/(?P<chapter_id>\\d+)/writing/assist',

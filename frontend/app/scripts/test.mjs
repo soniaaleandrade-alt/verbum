@@ -52,9 +52,9 @@ const structureCss = await readFile(resolve(root, 'src/styles/structure-stage.cs
 const development = await readFile(resolve(root, 'src/components/DevelopmentStage.tsx'), 'utf8');
 requireAll(development, ['Capítulos','Continuar trabalhando','Continuar capítulo','Continuar para Revisão da Obra','ChapterPreparationStage','ChapterResearchStage','ChapterWritingStage','ChapterRevisionStage','Preparação','Pesquisa','Redação','Revisão'], 'Central de Capítulos HOM-026');
 const developmentRuntime = await readFile(resolve(root, 'src/development-stage-runtime.js'), 'utf8');
-requireAll(developmentRuntime, ['<h2>Capítulos</h2>','Continuar trabalhando','Continuar capítulo','Voltar para Estrutura','Continuar para Revisão da Obra','A Central de Capítulos não recria o índice'], 'Development runtime HOM-026');
+requireAll(developmentRuntime, ['<h2>Capítulos</h2>','Continuar trabalhando','Continuar capítulo','Voltar para Estrutura','Continuar para Revisão da Obra','A Central de Capítulos não recria o índice','structure-sync','Comparação antes da sincronização','Nenhum texto já escrito será substituído sem confirmação'], 'Development runtime HOM-036');
 const developmentCss = await readFile(resolve(root, 'src/styles/development-stage-base.css'), 'utf8');
-requireAll(developmentCss, ['.verbum-chapters-summary','.verbum-chapters-continue','.verbum-chapter-part','.verbum-chapters-footer-note'], 'Central de Capítulos CSS HOM-026');
+requireAll(developmentCss, ['.verbum-chapters-summary','.verbum-chapters-continue','.verbum-chapter-part','.verbum-chapters-footer-note','.verbum-chapter-sync','.verbum-chapter-sync-comparison'], 'Central de Capítulos CSS HOM-036');
 
 const stages = [
   ['ChapterPreparationStage.tsx',['Direção do Capítulo','Estrutura do Capítulo','Pesquisa necessária','Intenção espiritual','Aprofundar preparação','Concluir Preparação e ir para Pesquisa']],
@@ -97,4 +97,4 @@ const buildJs = await readFile(resolve(repoRoot, 'build/verbum-app.js'), 'utf8')
 const buildCss = await readFile(resolve(repoRoot, 'build/verbum-app.css'), 'utf8'); requireAll(buildCss, ['layout-stage.css','legal-stage.css','publication-stage.css','profile-polish.css'], 'Static CSS build');
 const sensitivePattern = /(SUPABASE_SERVICE|SERVICE_KEY|OPENAI_API_KEY|sk-[A-Za-z0-9_-]{10,})/;
 for (const file of requiredFiles) { const contents = await readFile(resolve(root, file), 'utf8'); if (sensitivePattern.test(contents)) throw new Error(`Sensitive value pattern found in ${file}`); }
-console.log('Frontend homologation checks passed for Verbum Studio through HOM-035');
+console.log('Frontend homologation checks passed for Verbum Studio through HOM-036');
