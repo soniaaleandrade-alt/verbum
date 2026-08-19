@@ -111,6 +111,7 @@ const publishedWork = await readFile(resolve(root, 'src/published-work-runtime.j
 requireAll(publishedWork, ['Visão Geral','Dados da Edição','Canais','Arquivos','Histórico','Publicada','Registrar reimpressão','Criar nova versão','Iniciar nova edição','Duplicar como nova obra','/published-editions/','published_success'], 'Obra Publicada HOM-041');
 const minhasObras = await readFile(resolve(root, 'src/minhas-obras-runtime.js'), 'utf8');
 requireAll(minhasObras, ['Minhas Obras','Identificação','Fundação','Estrutura','Capítulos','Revisão Geral','Validação','Preparação Editorial','Publicação','Publicadas','Pesquisar obras...','Última edição','Maior progresso','Menor progresso','Próxima ação','data-mo-duplicate','data-mo-archive','data-mo-restore','lixeira recuperável','libraryHistory'], 'Minhas Obras HOM-042');
+requireAll(minhasObras, ['preserveDeleteConfirmation',"closest('.mo-confirm')",'stopImmediatePropagation','data-mo-delete-confirm','data-mo-confirm-delete'], 'Confirmação e envio para a lixeira HOM-042');
 const minhasObrasCss = await readFile(resolve(root, 'src/styles/minhas-obras.css'), 'utf8');
 requireAll(minhasObrasCss, ['.mo-work','.mo-card','.mo-next','.mo-path','.mo-filters','.mo-modal-bg','@media'], 'Minhas Obras CSS HOM-042');
 const publishedCss = await readFile(resolve(root, 'src/styles/published-work.css'), 'utf8');
