@@ -24,6 +24,10 @@ final class WorkPublicationController
                 ['methods' => 'GET', 'callback' => [$this, 'show'], 'permission_callback' => $permission],
                 ['methods' => 'PATCH', 'callback' => [$this, 'save'], 'permission_callback' => $permission],
             ]);
+            register_rest_route($ns, '/books/(?P<id>\\d+)/publication-stage/journey', [
+                ['methods' => 'GET', 'callback' => [$this, 'showJourney'], 'permission_callback' => $permission],
+                ['methods' => 'POST', 'callback' => [$this, 'journeyAction'], 'permission_callback' => $permission],
+            ]);
             register_rest_route($ns, '/books/(?P<id>\\d+)/publication-stage/channels', ['methods' => 'POST', 'callback' => [$this, 'createChannel'], 'permission_callback' => $permission]);
             register_rest_route($ns, '/books/(?P<id>\\d+)/publication-stage/channels/(?P<channel_id>[A-Za-z0-9_-]+)', [
                 ['methods' => 'PATCH', 'callback' => [$this, 'updateChannel'], 'permission_callback' => $permission],
@@ -41,6 +45,8 @@ final class WorkPublicationController
     }
 
     public function canAccess(): bool { return $this->capabilities->currentUserCanAccess(); }
+    public function showJourney(\WP_REST_Request $request): \WP_REST_Response { return $this->run($request, fn (int $id) => $this->publication->journeyData(get_current_user_id(), $id)); }
+    public function journeyAction(\WP_REST_Request $request): \WP_REST_Response { return $this->mutation($request, fn (int $id) => $this->publication->journeyAction(get_current_user_id(), $id, $this->payload($request))); }
     public function show(\WP_REST_Request $request): \WP_REST_Response { return $this->run($request, fn (int $id) => $this->publication->data(get_current_user_id(), $id)); }
     public function save(\WP_REST_Request $request): \WP_REST_Response { return $this->mutation($request, fn (int $id) => $this->publication->saveState(get_current_user_id(), $id, $this->payload($request))); }
     public function createChannel(\WP_REST_Request $request): \WP_REST_Response { return $this->mutation($request, fn (int $id) => $this->publication->createChannel(get_current_user_id(), $id, $this->payload($request))); }
