@@ -58,6 +58,18 @@ final class RestController
                 'callback' => [$this, 'deleteBook'],
                 'permission_callback' => [$this, 'canAccess'],
             ]);
+
+            register_rest_route($namespace, '/books/(?P<id>\d+)/trash/restore', [
+                'methods' => 'POST',
+                'callback' => [$this, 'restoreDeletedBook'],
+                'permission_callback' => [$this, 'canAccess'],
+            ]);
+
+            register_rest_route($namespace, '/books/(?P<id>\d+)/permanent', [
+                'methods' => 'DELETE',
+                'callback' => [$this, 'permanentlyDeleteBook'],
+                'permission_callback' => [$this, 'canAccess'],
+            ]);
         });
     }
 
@@ -165,6 +177,8 @@ final class RestController
             $this->ownedBook($userId, $bookId);
             $published=get_post_meta($bookId,'_verbum_published_editions',true);
             if(is_array($published)&&$published!==[]) throw new AuthorizationError('Uma obra publicada não pode ser excluída como obra comum. Arquive-a ou registre uma solicitação administrativa.');
+            update_post_meta($bookId, '_verbum_status_before_trash', (string) (get_post_meta($bookId, '_verbum_status', true) ?: 'active'));
+            update_post_meta($bookId, '_verbum_trashed_at', gmdate('c'));
             $history=get_post_meta($bookId,'_verbum_library_history',true);$history=is_array($history)?$history:[];$history[]=['label'=>'Obra enviada para a lixeira','userId'=>$userId,'at'=>gmdate('c')];update_post_meta($bookId,'_verbum_library_history',$history);
             $deleted = wp_trash_post($bookId);
             if (! $deleted instanceof \WP_Post) {
@@ -179,6 +193,68 @@ final class RestController
         } catch (\Throwable $exception) {
             return $this->responses->error($exception);
         }
+    }
+
+    public function restoreDeletedBook(\WP_REST_Request $request): \WP_REST_Response
+    {
+        try {
+            $userId = get_current_user_id();
+            $bookId = (int) $request['id'];
+            $book = $this->ownedBook($userId, $bookId);
+            if ($book->post_status !== 'trash') {
+                throw new \RuntimeException('Esta obra não está na lixeira.');
+            }
+            $restored = wp_untrash_post($bookId);
+            if (! $restored instanceof \WP_Post) {
+                throw new \RuntimeException('Não foi possível restaurar a obra.');
+            }
+            $previous = sanitize_key((string) get_post_meta($bookId, '_verbum_status_before_trash', true));
+            update_post_meta($bookId, '_verbum_status', in_array($previous, ['active', 'archived'], true) ? $previous : 'active');
+            delete_post_meta($bookId, '_verbum_trashed_at');
+            $this->appendHistory($bookId, $userId, 'Obra restaurada da lixeira');
+            return $this->responses->success(['id' => (string) $bookId, 'restored' => true]);
+        } catch (\Throwable $exception) {
+            return $this->responses->error($exception);
+        }
+    }
+
+    public function permanentlyDeleteBook(\WP_REST_Request $request): \WP_REST_Response
+    {
+        try {
+            $userId = get_current_user_id();
+            $bookId = (int) $request['id'];
+            $book = $this->ownedBook($userId, $bookId);
+            if ($book->post_status !== 'trash') {
+                throw new \RuntimeException('Envie a obra para a lixeira antes da exclusão definitiva.');
+            }
+            $published = get_post_meta($bookId, '_verbum_published_editions', true);
+            if (is_array($published) && $published !== []) {
+                throw new AuthorizationError('Uma edição publicada não pode ser excluída definitivamente.');
+            }
+            $related = new \WP_Query([
+                'post_type' => array_values(get_post_types([], 'names')), 'post_status' => 'any', 'author' => $userId,
+                'posts_per_page' => -1, 'fields' => 'ids', 'no_found_rows' => true,
+                'meta_key' => '_verbum_book_id', 'meta_value' => $bookId,
+            ]);
+            foreach ((array) $related->posts as $relatedId) {
+                wp_delete_post((int) $relatedId, true);
+            }
+            $deleted = wp_delete_post($bookId, true);
+            if (! $deleted instanceof \WP_Post) {
+                throw new \RuntimeException('Não foi possível excluir definitivamente a obra.');
+            }
+            return $this->responses->success(['id' => (string) $bookId, 'permanentlyDeleted' => true]);
+        } catch (\Throwable $exception) {
+            return $this->responses->error($exception);
+        }
+    }
+
+    private function appendHistory(int $bookId, int $userId, string $label): void
+    {
+        $history = get_post_meta($bookId, '_verbum_library_history', true);
+        $history = is_array($history) ? $history : [];
+        $history[] = ['label' => $label, 'userId' => $userId, 'at' => gmdate('c')];
+        update_post_meta($bookId, '_verbum_library_history', $history);
     }
 
     private function ownedBook(int $userId, int $bookId): \WP_Post

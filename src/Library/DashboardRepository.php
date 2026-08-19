@@ -17,7 +17,10 @@ final class DashboardRepository
     public function data(int $userId): array
     {
         $library = $this->library->libraryForUser($userId);
-        $books = array_values(array_filter($library['books'], static fn (array $book): bool => ($book['status'] ?? '') !== 'archived'));
+        $books = array_values(array_filter(
+            $library['books'],
+            static fn (array $book): bool => ! in_array(($book['status'] ?? ''), ['archived', 'trash'], true)
+        ));
         $today = current_time('Y-m-d');
         $goals = get_user_meta($userId, '_verbum_dashboard_goals', true);
         $goals = is_array($goals) ? $goals : ['words'=>1500,'minutes'=>60,'chapters'=>1,'days'=>[1,2,3,4,5,6,7],'preferredTime'=>'','scope'=>'general','bookId'=>'','enabled'=>true];
