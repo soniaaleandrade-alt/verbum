@@ -14,6 +14,7 @@ final class FrontendAssets
         'verbum-studio-dashboard-polish' => 'frontend/app/src/styles/dashboard-polish.css',
         'verbum-studio-sidebar-profile' => 'frontend/app/src/styles/sidebar-profile.css',
         'verbum-studio-minhas-obras' => 'frontend/app/src/styles/minhas-obras.css',
+        'verbum-studio-published-work' => 'frontend/app/src/styles/published-work.css',
         'verbum-studio-auth-profile' => 'frontend/app/src/styles/auth-profile.css',
         'verbum-studio-profile-polish' => 'frontend/app/src/styles/profile-polish.css',
         'verbum-studio-research-layout-hotfix' => 'frontend/app/src/styles/chapter-research-layout-hotfix.css',
@@ -39,7 +40,7 @@ final class FrontendAssets
         'frontend/app/src/chapter-revision-runtime.js', 'frontend/app/src/general-review-runtime.js', 'frontend/app/src/work-versions-runtime.js',
         'frontend/app/src/work-audit-runtime.js', 'frontend/app/src/editorial-desk-runtime.js', 'frontend/app/src/layout-stage-runtime.js',
         'frontend/app/src/legal-stage-runtime.js', 'frontend/app/src/publication-stage-runtime.js', 'frontend/app/src/technical-runtime.js',
-        'frontend/app/src/dashboard-official-runtime.js', 'frontend/app/src/sidebar-profile-runtime.js', 'frontend/app/src/minhas-obras-runtime.js',
+        'frontend/app/src/dashboard-official-runtime.js', 'frontend/app/src/sidebar-profile-runtime.js', 'frontend/app/src/minhas-obras-runtime.js', 'frontend/app/src/published-work-runtime.js',
         'frontend/app/src/profile-polish-runtime.js',
     ];
 

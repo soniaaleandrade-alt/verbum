@@ -214,6 +214,37 @@ final class WorkPublicationRepository
         return $this->journeyData($userId, $bookId);
     }
 
+    /** @return array<string,mixed> */
+    public function publishedDashboard(int $userId,int $bookId,string $editionId): array
+    {
+        $book=get_post($bookId); if(!$book instanceof \WP_Post||$book->post_type!==LibraryPostTypes::BOOK||(int)$book->post_author!==$userId) throw new NotFoundError('Obra não encontrada.');
+        $editions=$this->publicationEditions($bookId); $edition=null;
+        if($editionId==='latest'&&!empty($editions)){$edition=end($editions);$editionId=(string)($edition['id']??'');}
+        else foreach($editions as $item) if(($item['id']??'')===$editionId){$edition=$item;break;}
+        if(!is_array($edition)) throw new NotFoundError('Edição publicada não encontrada.');
+        $ops=get_post_meta($bookId,'_verbum_published_operations',true); $ops=is_array($ops)?$ops:[]; $history=array_values(array_filter((array)get_post_meta($bookId,'_verbum_publication_history',true),'is_array'));
+        $journey=get_post_meta($bookId,'_verbum_publication_journey',true); $journey=is_array($journey)?$journey:[];
+        $publication=(array)($edition['publication']??[]); $availability=array_values(array_filter((array)($edition['availability']??[]),'is_array')); $files=array_values(array_filter((array)($edition['files']??[]),'is_array'));
+        $editionOps=array_values(array_filter($ops,static fn($op):bool=>is_array($op)&&(string)($op['editionId']??'')===$editionId));
+        foreach($editionOps as$op){if(($op['type']??'')!=='update_channel')continue;$channelId=(string)($op['payload']['channel_id']??'');foreach($availability as&$channel){if((string)($channel['id']??$channel['channel']??'')!==$channelId)continue;foreach((array)($op['changes']??[])as$key=>$value)$channel[$key]=$value;break;}unset($channel);}
+        return ['bookId'=>(string)$bookId,'editionId'=>$editionId,'title'=>(string)get_the_title($bookId),'subtitle'=>(string)get_post_meta($bookId,'_verbum_subtitle',true),'author'=>(string)get_post_meta($bookId,'_verbum_author_name',true),'coverUrl'=>(string)get_post_meta($bookId,'_verbum_cover_url',true),'edition'=>$edition,'publication'=>$publication,'availability'=>$availability,'files'=>$files,'packages'=>(array)($edition['packages']??[]),'operations'=>$editionOps,'history'=>array_reverse(array_merge((array)($journey['history']??[]),$history)),'chapterCount'=>(int)get_post_meta($bookId,'_verbum_planned_chapters',true),'wordCount'=>(int)get_post_meta($bookId,'_verbum_word_count',true),'status'=>'published','progress'=>100,'protected'=>true];
+    }
+
+    /** @param array<string,mixed> $payload @return array<string,mixed> */
+    public function publishedAction(int $userId,int $bookId,string $editionId,array $payload): array
+    {
+        $data=$this->publishedDashboard($userId,$bookId,$editionId); $editionId=(string)$data['editionId']; $action=sanitize_key((string)($payload['action']??''));
+        $ops=get_post_meta($bookId,'_verbum_published_operations',true); $ops=is_array($ops)?$ops:[]; $entry=['id'=>'published-operation-'.substr(md5($action.microtime(true)),0,14),'editionId'=>$editionId,'type'=>$action,'createdAt'=>gmdate('c'),'createdBy'=>$userId,'payload'=>$this->sanitizeArray($payload)];
+        if($action==='update_channel'){if(empty($payload['channel_id']))throw new ValidationError('Selecione o canal.');$allowed=['status','url','stock','availability','notes','verified_at'];$entry['changes']=[];foreach($allowed as$key)if(array_key_exists($key,$payload))$entry['changes'][$key]=$this->sanitizeArray(['v'=>$payload[$key]])['v'];}
+        elseif($action==='reprint'){if(empty($payload['date'])||empty($payload['quantity']))throw new ValidationError('Informe data e quantidade da reimpressão.');}
+        elseif(in_array($action,['new_version','new_edition'],true)){$reason=trim(sanitize_textarea_field((string)($payload['reason']??'')));if($reason==='')throw new ValidationError('Registre o motivo.');$this->journeyAction($userId,$bookId,['action'=>'start_edition','kind'=>$action==='new_edition'?'edition':'version','reason'=>$reason]);}
+        elseif($action==='duplicate'){$title=trim(sanitize_text_field((string)($payload['title']??'')));if($title==='')throw new ValidationError('Informe o título provisório da nova obra.');$new=wp_insert_post(['post_type'=>LibraryPostTypes::BOOK,'post_status'=>'publish','post_title'=>$title,'post_author'=>$userId],true);if(is_wp_error($new))throw new ValidationError('Não foi possível duplicar a obra.');update_post_meta((int)$new,'_verbum_status','active');update_post_meta((int)$new,'_verbum_stage','identification');update_post_meta((int)$new,'_verbum_completed_stages',[]);update_post_meta((int)$new,'_verbum_origin_book_id',$bookId);update_post_meta((int)$new,'_verbum_origin_edition_id',$editionId);$entry['newBookId']=(int)$new;}
+        elseif($action==='administrative_correction'){if(empty($payload['reason'])||empty($payload['field']))throw new ValidationError('Informe campo e justificativa da correção administrativa.');}
+        elseif($action==='master_download'){$entry['packageIds']=array_values(array_map(static fn($p):string=>(string)($p['id']??''),(array)$data['packages']));}
+        else throw new ValidationError('Ação da obra publicada não reconhecida.');
+        $ops[]=$entry;update_post_meta($bookId,'_verbum_published_operations',$ops);$history=(array)get_post_meta($bookId,'_verbum_publication_history',true);$history[]=['id'=>$entry['id'],'editionId'=>$editionId,'type'=>$action,'label'=>'Ação pós-publicação registrada: '.$action,'userId'=>$userId,'at'=>gmdate('c')];update_post_meta($bookId,'_verbum_publication_history',$history);return$this->publishedDashboard($userId,$bookId,$editionId);
+    }
+
     /** @param array<string,mixed> $payload @return array<string,mixed> */
     public function saveState(int $userId, int $bookId, array $payload): array
     {
