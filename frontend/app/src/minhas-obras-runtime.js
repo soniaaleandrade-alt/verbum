@@ -40,7 +40,7 @@
   }
 
   function progress(book) {
-    if (book.stage === 'publication' && book.workflowStatus === 'Concluída') return 100;
+    if (book.stage === 'publication' && ['Concluída','Publicada'].indexOf(book.workflowStatus) >= 0) return 100;
     return Math.round((stageIndex(book) / STAGES.length) * 100);
   }
 
@@ -126,8 +126,12 @@
     var local = ui(root);
     var query = local.query.trim().toLocaleLowerCase('pt-BR');
     var books = (state.library.books || []).filter(function (book) {
-      if (local.status !== 'all' && book.status !== local.status) return false;
-      if (local.stage !== 'all' && String(book.stage) !== local.stage) return false;
+      var published = book.status === 'published' || book.workflowStatus === 'Publicada';
+      if (local.stage === 'publication') { if (!published) return false; }
+      else {
+        if (local.status !== 'all' && book.status !== local.status) return false;
+        if (local.stage !== 'all' && String(book.stage) !== local.stage) return false;
+      }
       if (local.project !== 'all' && String(book.projectId) !== local.project) return false;
       if (local.genre !== 'all' && String(book.genre || book.category || '') !== local.genre) return false;
       if (!query) return true;
@@ -151,8 +155,10 @@
     var base = (state.library.books || []).filter(function (book) { return local.status === 'all' || book.status === local.status; });
     var tabs = [['all', 'Todas']].concat(STAGES);
     return tabs.map(function (item) {
-      var count = item[0] === 'all' ? base.length : base.filter(function (book) { return String(book.stage) === item[0]; }).length;
-      return '<button type="button" data-minhas-stage="' + item[0] + '" class="' + (local.stage === item[0] ? 'is-active' : '') + '">' + esc(item[1]) + '<span>' + count + '</span></button>';
+      var published = item[0] === 'publication';
+      var count = item[0] === 'all' ? base.length : published ? (state.library.books || []).filter(function (book) { return book.status === 'published' || book.workflowStatus === 'Publicada'; }).length : base.filter(function (book) { return String(book.stage) === item[0]; }).length;
+      var label = published ? 'Publicadas' : item[1];
+      return '<button type="button" data-minhas-stage="' + item[0] + '" class="' + (local.stage === item[0] ? 'is-active' : '') + '">' + esc(label) + '<span>' + count + '</span></button>';
     }).join('');
   }
 
@@ -190,7 +196,7 @@
         '<div class="verbum-minhas-meta"><span>▤ ' + num(book.plannedChapters) + ' cap.</span><span>T 0 pal.</span><span>▢ ' + esc(relativeDate(book.updatedAt)) + '</span></div>' +
       '</div>' +
       '<div class="verbum-minhas-actions">' +
-        (!archived ? '<button type="button" class="verbum-minhas-open" data-open-work="' + esc(book.id) + '">▣ Abrir Obra</button>' : '') +
+        (!archived ? (book.workflowStatus === 'Publicada' ? '<button type="button" class="verbum-minhas-open" data-open-published="' + esc(book.id) + '">▣ Ver obra publicada</button>' : '<button type="button" class="verbum-minhas-open" data-open-work="' + esc(book.id) + '">▣ Abrir Obra</button>') : '') +
         '<button type="button" class="verbum-minhas-link" data-edit-book="' + esc(book.id) + '">Editar</button>' +
         (!archived ? '<button type="button" class="verbum-minhas-link is-danger" data-archive-book="' + esc(book.id) + '">Arquivar</button>' : '') +
       '</div>' +
@@ -318,12 +324,13 @@
   }
 
   function onClick(event) {
-    var target = event.target.closest('[data-minhas-stage],[data-minhas-filters],[data-minhas-view],[data-minhas-menu],[data-adjust-cover],[data-delete-book],[data-cancel-delete],[data-confirm-delete],[data-cancel-cover],[data-reset-cover],[data-save-cover],[data-minhas-modal-backdrop]');
+    var target = event.target.closest('[data-open-published],[data-minhas-stage],[data-minhas-filters],[data-minhas-view],[data-minhas-menu],[data-adjust-cover],[data-delete-book],[data-cancel-delete],[data-confirm-delete],[data-cancel-cover],[data-reset-cover],[data-save-cover],[data-minhas-modal-backdrop]');
     if (!target) return;
     var root = target.closest('[data-verbum-app]');
     if (!root) return;
     var local = ui(root);
 
+    if (target.hasAttribute('data-open-published')) { var url=new URL(location.href);url.searchParams.set('published_book',target.getAttribute('data-open-published'));url.searchParams.set('published_edition','latest');history.pushState({},'',url);window.dispatchEvent(new PopStateEvent('popstate'));return; }
     if (target.hasAttribute('data-minhas-stage')) local.stage = target.getAttribute('data-minhas-stage') || 'all';
     else if (target.hasAttribute('data-minhas-filters')) local.filtersOpen = !local.filtersOpen;
     else if (target.hasAttribute('data-minhas-view')) {
