@@ -93,6 +93,7 @@ const legalCss = await readFile(resolve(root, 'src/styles/legal-stage.css'), 'ut
 const publicationCss = await readFile(resolve(root, 'src/styles/publication-stage.css'), 'utf8'); requireAll(publicationCss, ['.verbum-publication-journey','.vp-layout','.vp-card','.vp-steps','.vp-ring','.vp-footer','@media'], 'Publication stage CSS');
 const header = await readFile(resolve(root, 'src/components/Header.tsx'), 'utf8'); if (header.includes('Área atual')) throw new Error('Header must not render Área atual');
 const sidebar = await readFile(resolve(root, 'src/components/Sidebar.tsx'), 'utf8'); if (!sidebar.includes('Minhas Obras')) throw new Error('Sidebar must use Minhas Obras');
+if (sidebar.includes('Área de Trabalho') || sidebar.includes('Base de Conhecimento') || sidebar.includes('Citações')) throw new Error('Sidebar must use the consolidated HOM-043 navigation');
 const buildJs = await readFile(resolve(repoRoot, 'build/verbum-app.js'), 'utf8'); requireAll(buildJs, ['identification-initial-prelude.js','hom027-journey-runtime.js','foundation-reader-result-runtime.js','foundation-truth-central-runtime.js','structure-direction-runtime.js','structure-architecture-runtime.js','structure-elements-runtime.js','structure-index-runtime.js','identification-hom027-polish.css','layout-stage-runtime.js','legal-stage-runtime.js','publication-stage-runtime.js','script.async=false'], 'Static JS build');
 const buildCss = await readFile(resolve(repoRoot, 'build/verbum-app.css'), 'utf8'); requireAll(buildCss, ['layout-stage.css','legal-stage.css','publication-stage.css','profile-polish.css'], 'Static CSS build');
 const sensitivePattern = /(SUPABASE_SERVICE|SERVICE_KEY|OPENAI_API_KEY|sk-[A-Za-z0-9_-]{10,})/;
@@ -115,4 +116,10 @@ requireAll(minhasObrasCss, ['.mo-work','.mo-card','.mo-next','.mo-path','.mo-fil
 const publishedCss = await readFile(resolve(root, 'src/styles/published-work.css'), 'utf8');
 requireAll(publishedCss, ['.verbum-published-work','.vpw-hero','.vpw-tabs','.vpw-columns','.vpw-timeline','@media'], 'Obra Publicada CSS HOM-041');
 requireAll(publicationRepository, ['publishedDashboard','publishedAction','_verbum_published_operations','_verbum_publication_history','administrative_correction','master_download'], 'Obra Publicada persistence HOM-041');
-console.log('Frontend homologation checks passed for Verbum Studio through HOM-042');
+const dashboardRuntime = await readFile(resolve(root, 'src/dashboard-official-runtime.js'), 'utf8');
+requireAll(dashboardRuntime, ['Olá, ','Continuar trabalhando','Hoje','Iniciar sessão de escrita','Tarefas do dia','Agenda','Visão do estúdio','Atividades recentes','Acessos rápidos','/dashboard','start_session','pause_session','resume_session','finish_session'], 'Painel principal HOM-043');
+const dashboardCss = await readFile(resolve(root, 'src/styles/dashboard-official.css'), 'utf8');
+requireAll(dashboardCss, ['.verbum-official-dashboard','.vd-work','.vd-goals','.vd-status','.vd-modal-bg','@media'], 'Painel principal CSS HOM-043');
+const dashboardRepository = await readFile(resolve(repoRoot, 'src/Library/DashboardRepository.php'), 'utf8');
+requireAll(dashboardRepository, ['_verbum_dashboard_goals','_verbum_dashboard_tasks','_verbum_writing_sessions','_verbum_editorial_calendar_events','start_session','pause_session','resume_session','finish_session'], 'Painel principal persistence HOM-043');
+console.log('Frontend homologation checks passed for Verbum Studio through HOM-043');
