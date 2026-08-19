@@ -63,6 +63,9 @@ final class WorkVersionsController
             register_rest_route($namespace, '/books/(?P<id>\\d+)/versions-stage/complete', [
                 'methods' => 'POST', 'callback' => [$this, 'complete'], 'permission_callback' => $permission,
             ]);
+            register_rest_route($namespace, '/books/(?P<id>\\d+)/versions-stage/validation', [
+                'methods' => 'POST', 'callback' => [$this, 'validationAction'], 'permission_callback' => $permission,
+            ]);
         });
     }
 
@@ -185,6 +188,13 @@ final class WorkVersionsController
             $this->assertOwned($bookId);
             return $this->versions->complete(get_current_user_id(), $bookId);
         }, (int) $request['id']);
+    }
+
+    public function validationAction(\WP_REST_Request $request): \WP_REST_Response
+    {
+        return $this->mutation(function () use ($request): array {
+            $bookId=(int)$request['id'];$this->assertOwned($bookId);return$this->versions->validationAction(get_current_user_id(),$bookId,$this->json($request));
+        },(int)$request['id']);
     }
 
     private function assertOwned(int $bookId): void
