@@ -121,6 +121,7 @@ requireAll(dashboardRuntime, ['Olá, ','Continuar trabalhando','Hoje','Iniciar s
 requireAll(dashboardRuntime, ['AbortController','O servidor demorou para responder. Tente novamente.'], 'Painel sem carregamento infinito HOM-043');
 const staticRuntime = await readFile(resolve(root, 'src/static-runtime.js'), 'utf8');
 requireAll(staticRuntime, ['AbortController','opts.timeout||15000','O servidor demorou para responder. Tente novamente.'], 'Inicialização sem carregamento infinito HOM-043');
+requireAll(staticRuntime, ['function deadline','function bootError','data-app-retry','watchdog','bootFinished'], 'Recuperação independente da inicialização HOM-043');
 const dashboardCss = await readFile(resolve(root, 'src/styles/dashboard-official.css'), 'utf8');
 requireAll(dashboardCss, ['.verbum-official-dashboard','.vd-work','.vd-goals','.vd-status','.vd-modal-bg','@media'], 'Painel principal CSS HOM-043');
 const dashboardRepository = await readFile(resolve(repoRoot, 'src/Library/DashboardRepository.php'), 'utf8');
