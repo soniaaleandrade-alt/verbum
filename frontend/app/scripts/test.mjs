@@ -76,7 +76,7 @@ const runtimes = [
   ['chapter-research-runtime.js',['/research','/research/sources','/research/complete','Central de Pesquisa']],
   ['chapter-writing-runtime.js',['/writing','/writing/complete','/writing/assist','Assistente de Escrita']],
   ['chapter-revision-runtime.js',['/revision','/revision/issues','/revision/complete','Assistente de Revisão']],
-  ['general-review-runtime.js',['/general-review','/general-review/reading','/general-review/complete','Revisão Geral da Obra']],
+  ['general-review-runtime.js',['/general-review','/general-review/reading','/general-review/complete','/general-review/substeps/','Revisão Geral da Obra','Estrutura','Argumento','Doutrina e Fontes','Unidade e Estilo','Fechamento','versão imutável','Validação da Obra']],
   ['work-versions-runtime.js',['/versions-stage','/versions-stage/compare','/audit-baseline','Controle de Versões']],
   ['work-audit-runtime.js',['/audit-stage','/audit-stage/findings','/audit-stage/report','Aprovar Auditoria']],
   ['editorial-desk-runtime.js',['/editorial-desk','/editorial-desk/adjustments','/editorial-desk/complete','Mesa Editorial']],
@@ -97,4 +97,5 @@ const buildJs = await readFile(resolve(repoRoot, 'build/verbum-app.js'), 'utf8')
 const buildCss = await readFile(resolve(repoRoot, 'build/verbum-app.css'), 'utf8'); requireAll(buildCss, ['layout-stage.css','legal-stage.css','publication-stage.css','profile-polish.css'], 'Static CSS build');
 const sensitivePattern = /(SUPABASE_SERVICE|SERVICE_KEY|OPENAI_API_KEY|sk-[A-Za-z0-9_-]{10,})/;
 for (const file of requiredFiles) { const contents = await readFile(resolve(root, file), 'utf8'); if (sensitivePattern.test(contents)) throw new Error(`Sensitive value pattern found in ${file}`); }
-console.log('Frontend homologation checks passed for Verbum Studio through HOM-036');
+const generalReviewCss = await readFile(resolve(root, 'src/styles/general-review.css'), 'utf8'); requireAll(generalReviewCss, ['.verbum-review-steps','.verbum-review-grid','.verbum-review-ring','.verbum-review-table','@media'], 'Revisão Geral CSS HOM-037');
+console.log('Frontend homologation checks passed for Verbum Studio through HOM-037');
