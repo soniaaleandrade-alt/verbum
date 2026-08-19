@@ -113,7 +113,19 @@ final class WorkEditorialDeskRepository
             'completed' => $completed,
             'status' => (string) ($round['status'] ?? 'in_review'),
             'statusLabel' => $this->statusLabel((string) ($round['status'] ?? 'in_review'), $requiresNewAudit, $openBlocking),
+            'preparation' => $this->preparationData($bookId,$version,$fields),
         ];
+    }
+
+    /** @param array<string,mixed>$payload @return array<string,mixed> */
+    public function preparationAction(int$userId,int$bookId,array$payload):array
+    {
+        $data=$this->data($userId,$bookId);$state=$this->preparationState($bookId,(array)$data['version'],(array)$data['fields']);$action=sanitize_key((string)($payload['action']??'save'));
+        if($action==='save'){$allowed=['identity','edition','elements','elementOrder','documents','permissions','graphic','proofs','proofNotes','formatApprovals','finalFiles','packages','metadata','integrity','finalConfirmation'];foreach($allowed as$key)if(array_key_exists($key,$payload))$state[$key]=$this->sanitizePreparationValue($payload[$key]);$state['history'][]=$this->preparationEvent($userId,'Rascunho editorial salvo');}
+        elseif($action==='complete_step'){$step=sanitize_key((string)($payload['step']??''));$order=['definitive_text','rights','graphic','proofs','final_files'];if(!in_array($step,$order,true))throw new ValidationError('Etapa da Preparação Editorial inválida.');$position=array_search($step,$order,true);if($position>0&&!in_array($order[$position-1],(array)$state['completed'],true))throw new ValidationError('Conclua a etapa anterior antes de avançar.');$this->assertPreparationStep($step,$state);if(!in_array($step,(array)$state['completed'],true))$state['completed'][]=$step;$state['active']=$order[$position+1]??'final_files';$state['history'][]=$this->preparationEvent($userId,'Etapa concluída: '.$step);if($step==='graphic'){$state['graphicVersions'][]=['id'=>'graphic-'.substr(md5((string)microtime(true)),0,12),'number'=>count((array)$state['graphicVersions'])+1,'createdAt'=>gmdate('c'),'createdBy'=>$userId,'settings'=>$state['graphic']];}}
+        elseif($action==='complete'){$this->assertPreparationStep('final_files',$state);foreach(['definitive_text','rights','graphic','proofs']as$required)if(!in_array($required,(array)$state['completed'],true))throw new ValidationError('Conclua as cinco etapas da Preparação Editorial.');$state['completed'][]='final_files';$state['editorialVersion']=['id'=>'editorial-version-'.substr(md5((string)microtime(true)),0,14),'createdAt'=>gmdate('c'),'createdBy'=>$userId,'sourceVersionId'=>$data['version']['id'],'sourceHash'=>$data['version']['hash'],'packages'=>$state['packages'],'metadata'=>$state['metadata'],'integrity'=>$state['integrity']];$state['history'][]=$this->preparationEvent($userId,'Preparação Editorial concluída');$completed=get_post_meta($bookId,'_verbum_completed_stages',true);$completed=is_array($completed)?$completed:[];foreach(['editorial_desk','layout','legal']as$stage)if(!in_array($stage,$completed,true))$completed[]=$stage;update_post_meta($bookId,'_verbum_completed_stages',array_values(array_unique($completed)));update_post_meta($bookId,'_verbum_stage','publication');update_post_meta($bookId,'_verbum_editorial_completed_at',gmdate('c'));}
+        else throw new ValidationError('Ação da Preparação Editorial não reconhecida.');
+        $state['updatedAt']=gmdate('c');update_post_meta($bookId,'_verbum_editorial_preparation',$state);$this->touchBook($bookId);return$this->data($userId,$bookId);
     }
 
     /** @param array<string, mixed> $payload
@@ -302,15 +314,17 @@ final class WorkEditorialDeskRepository
         if (! $book instanceof \WP_Post || $book->post_type !== LibraryPostTypes::BOOK || (int) $book->post_author !== $userId) throw new NotFoundError('Obra não encontrada.');
         $completed = get_post_meta($bookId, '_verbum_completed_stages', true);
         $completed = is_array($completed) ? $completed : [];
-        if (! in_array('audit', $completed, true)) throw new ValidationError('Conclua a Auditoria da Obra antes de iniciar a Mesa Editorial.');
-        if ((string) get_post_meta($bookId, '_verbum_audit_approved_version_id', true) === '') throw new ValidationError('A Auditoria ainda não possui uma versão aprovada para a Mesa Editorial.');
+        if (! in_array('audit', $completed, true)) throw new ValidationError('Conclua a Validação da Obra antes de iniciar a Preparação Editorial.');
+        $validation=get_post_meta($bookId,'_verbum_validation_process',true);$validation=is_array($validation)?$validation:[];
+        if ((string)($validation['validatedVersionId']??get_post_meta($bookId,'_verbum_audit_approved_version_id',true)) === '') throw new ValidationError('A Validação ainda não possui uma versão final protegida para a Preparação Editorial.');
     }
 
     /** @return array<string, mixed> */
     private function approvedAuditVersion(int $bookId): array
     {
-        $id = (string) get_post_meta($bookId, '_verbum_audit_approved_version_id', true);
-        $hash = (string) get_post_meta($bookId, '_verbum_audit_approved_hash', true);
+        $validation=get_post_meta($bookId,'_verbum_validation_process',true);$validation=is_array($validation)?$validation:[];
+        $id=(string)($validation['validatedVersionId']??'');$hash='';
+        if($id===''){$id = (string) get_post_meta($bookId, '_verbum_audit_approved_version_id', true);$hash = (string) get_post_meta($bookId, '_verbum_audit_approved_hash', true);}
         $versions = get_post_meta($bookId, '_verbum_work_versions', true);
         $versions = is_array($versions) ? $versions : [];
         foreach ($versions as $version) {
@@ -569,6 +583,58 @@ final class WorkEditorialDeskRepository
         unset($version);
         update_post_meta($bookId, '_verbum_work_versions', $versions);
     }
+
+    /** @param array<string,mixed>$version @param array<string,mixed>$fields @return array<string,mixed> */ private function preparationData(int$id,array$version,array$fields):array{$state=$this->preparationState($id,$version,$fields);$checks=[];foreach(['definitive_text','rights','graphic','proofs','final_files']as$step)$checks[$step]=in_array($step,(array)$state['completed'],true)?100:$this->preparationProgress($step,$state);return array_merge($state,['version'=>$version,'progress'=>$checks,'overallProgress'=>(int)round(array_sum($checks)/5)]);}
+    /** @param array<string,mixed>$version @param array<string,mixed>$fields @return array<string,mixed> */ private function preparationState(int$id,array$version,array$fields):array{$raw=get_post_meta($id,'_verbum_editorial_preparation',true);$raw=is_array($raw)?$raw:[];$identity=(array)($fields['identity']??[]);$edition=(array)($fields['edition']??[]);$elements=(array)($fields['elements']??[]);$defaults=['active'=>'definitive_text','completed'=>[],'sourceVersionId'=>(string)($version['id']??''),'sourceHash'=>(string)($version['hash']??''),'identity'=>['title'=>(string)($identity['titleFinal']??get_the_title($id)),'subtitle'=>(string)($identity['subtitleFinal']??''),'author'=>(string)($identity['authorDisplay']??''),'confirmed'=>false],'edition'=>['number'=>(string)($edition['edition']??'1ª edição'),'language'=>(string)($identity['language']??'Português'),'formats'=>(array)($edition['formats']??['printed','digital']),'notes'=>'','confirmed'=>false],'elements'=>$elements,'elementOrder'=>(array)($fields['elementOrder']??[]),'contentConfirmed'=>false,'documents'=>[['id'=>'ownership','name'=>'Declaração de titularidade','application'=>'Todos os formatos','status'=>'pending','required'=>true,'responsible'=>'Autoria','deadline'=>'','files'=>[]],['id'=>'permissions','name'=>'Permissões de citações e imagens','application'=>'Todos os formatos','status'=>'pending','required'=>true,'responsible'=>'Autoria','deadline'=>'','files'=>[]],['id'=>'catalog','name'=>'Ficha catalográfica','application'=>'Edição impressa','status'=>'pending','required'=>false,'responsible'=>'','deadline'=>'','files'=>[]],['id'=>'isbn_print','name'=>'ISBN impresso','application'=>'Livro impresso','status'=>'pending','required'=>false,'responsible'=>'','deadline'=>'','files'=>[]],['id'=>'isbn_digital','name'=>'ISBN digital','application'=>'E-book','status'=>'pending','required'=>false,'responsible'=>'','deadline'=>'','files'=>[]],['id'=>'ecclesiastical','name'=>'Orientação ou autorização eclesiástica','application'=>'Conforme orientação recebida','status'=>'pending','required'=>false,'responsible'=>'Autoridade competente','deadline'=>'','files'=>[]]],'permissions'=>[],'graphic'=>['trimSize'=>'14 × 21 cm','orientation'=>'portrait','paper'=>'','print'=>'black_white','margins'=>['top'=>'2','bottom'=>'2','inner'=>'2.5','outer'=>'2'],'bodyFont'=>'','bodySize'=>'11','lineHeight'=>'1.4','headingFont'=>'','chapterSize'=>'22','subtitleSize'=>'15','styles'=>[],'coverDecision'=>'','coverBrief'=>'','coverAvoid'=>'','visualElements'=>[]],'graphicVersions'=>[],'proofs'=>[],'proofNotes'=>[],'formatApprovals'=>[],'finalFiles'=>[],'packages'=>[],'metadata'=>['title'=>(string)($identity['titleFinal']??get_the_title($id)),'subtitle'=>(string)($identity['subtitleFinal']??''),'author'=>(string)($identity['authorDisplay']??''),'edition'=>(string)($edition['edition']??'1ª edição'),'language'=>(string)($identity['language']??'Português'),'keywords'=>'','description'=>'','categories'=>'','isbn'=>'','publisher'=>'','rights'=>'','date'=>''],'integrity'=>['names'=>false,'versions'=>false,'open'=>false,'fonts'=>false,'links'=>false,'backup'=>false,'nonEmpty'=>false,'matchesProof'=>false],'finalConfirmation'=>false,'editorialVersion'=>null,'history'=>[],'updatedAt'=>''];return array_replace($defaults,$raw);}
+    /** @param array<string,mixed>$state */ private function assertPreparationStep(string$step,array$state):void{if($step==='definitive_text'){if(empty($state['sourceVersionId'])||empty($state['contentConfirmed'])||empty($state['identity']['confirmed'])||empty($state['edition']['confirmed'])||trim((string)$state['identity']['title'])===''||trim((string)$state['identity']['author'])==='')throw new ValidationError('Confirme a versão validada, título, autoria e dados da edição.');}elseif($step==='rights'){foreach((array)$state['documents']as$d)if(is_array($d)&&!empty($d['required'])&&!in_array(($d['status']??''),['completed','not_applicable'],true))throw new ValidationError('Conclua os documentos obrigatórios ou registre a justificativa de não aplicação.');}elseif($step==='graphic'){$g=(array)$state['graphic'];if(empty($g['trimSize'])||empty($g['paper'])||empty($g['bodyFont'])||empty($g['headingFont'])||empty($g['coverDecision']))throw new ValidationError('Defina formato, papel, tipografia e decisão sobre a capa.');}elseif($step==='proofs'){$formats=(array)$state['edition']['formats'];foreach($formats as$f)if(count(array_filter((array)$state['formatApprovals'],static fn($a):bool=>is_array($a)&&($a['format']??'')===$f&&($a['status']??'')==='approved'))===0)throw new ValidationError('Aprove separadamente cada formato selecionado.');if(count(array_filter((array)$state['proofNotes'],static fn($n):bool=>is_array($n)&&($n['priority']??'')==='critical'&&!in_array(($n['status']??''),['corrected','checked'],true)))>0)throw new ValidationError('Resolva os problemas críticos das provas.');}else{if(empty($state['packages'])||empty($state['finalConfirmation']))throw new ValidationError('Prepare os pacotes finais e confirme o fechamento editorial.');foreach((array)$state['integrity']as$checked)if(!$checked)throw new ValidationError('Conclua todas as verificações de integridade.');foreach(['title','author','edition','language']as$key)if(trim((string)($state['metadata'][$key]??''))==='')throw new ValidationError('Complete os metadados obrigatórios.');}}
+    /** @param array<string, mixed> $state */
+    private function preparationProgress(string $step, array $state): int
+    {
+        if ($step === 'definitive_text') {
+            $checks = [
+                ! empty($state['sourceVersionId']),
+                ! empty($state['identity']['confirmed']),
+                ! empty($state['edition']['confirmed']),
+                ! empty($state['contentConfirmed']),
+            ];
+        } elseif ($step === 'rights') {
+            $required = array_filter(
+                (array) $state['documents'],
+                static fn ($document): bool => is_array($document) && ! empty($document['required'])
+            );
+            $checks = [
+                count(array_filter(
+                    $required,
+                    static fn ($document): bool => in_array(($document['status'] ?? ''), ['completed', 'not_applicable'], true)
+                )) === count($required),
+            ];
+        } elseif ($step === 'graphic') {
+            $graphic = (array) $state['graphic'];
+            $checks = [
+                ! empty($graphic['trimSize']),
+                ! empty($graphic['paper']),
+                ! empty($graphic['bodyFont']),
+                ! empty($graphic['headingFont']),
+                ! empty($graphic['coverDecision']),
+            ];
+        } elseif ($step === 'proofs') {
+            $checks = [
+                ! empty($state['proofs']),
+                count((array) $state['formatApprovals']) >= count((array) $state['edition']['formats']),
+            ];
+        } else {
+            $integrity = (array) $state['integrity'];
+            $checks = [
+                ! empty($state['packages']),
+                ! empty($state['finalConfirmation']),
+                count(array_filter($integrity)) === count($integrity),
+            ];
+        }
+
+        return (int) round(count(array_filter($checks)) * 100 / max(1, count($checks)));
+    }
+    /** @return array<string,mixed> */ private function preparationEvent(int$user,string$label):array{return['id'=>'editorial-event-'.substr(md5($label.microtime(true)),0,12),'label'=>$label,'userId'=>$user,'at'=>gmdate('c')];}
+    private function sanitizePreparationValue(mixed$value):mixed{if(is_string($value))return sanitize_textarea_field($value);if(is_bool($value)||is_int($value)||is_float($value)||$value===null)return$value;if(is_array($value)){foreach($value as$key=>$item)$value[$key]=$this->sanitizePreparationValue($item);return$value;}return'';}
 
     private function touchBook(int $bookId): void
     {
