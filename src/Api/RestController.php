@@ -163,53 +163,10 @@ final class RestController
             $userId = get_current_user_id();
             $bookId = (int) $request['id'];
             $this->ownedBook($userId, $bookId);
-
-            $chapterIds = get_posts([
-                'post_type' => LibraryPostTypes::CHAPTER,
-                'post_status' => 'any',
-                'author' => $userId,
-                'posts_per_page' => -1,
-                'fields' => 'ids',
-                'meta_key' => '_verbum_book_id',
-                'meta_value' => $bookId,
-            ]);
-            $chapterIds = array_map('intval', is_array($chapterIds) ? $chapterIds : []);
-
-            $researchMeta = [
-                'relation' => 'OR',
-                [
-                    'key' => '_verbum_book_id',
-                    'value' => $bookId,
-                    'compare' => '=',
-                    'type' => 'NUMERIC',
-                ],
-            ];
-            if ($chapterIds !== []) {
-                $researchMeta[] = [
-                    'key' => '_verbum_chapter_id',
-                    'value' => $chapterIds,
-                    'compare' => 'IN',
-                    'type' => 'NUMERIC',
-                ];
-            }
-
-            $researchIds = get_posts([
-                'post_type' => LibraryPostTypes::RESEARCH,
-                'post_status' => 'any',
-                'author' => $userId,
-                'posts_per_page' => -1,
-                'fields' => 'ids',
-                'meta_query' => $researchMeta,
-            ]);
-
-            foreach (is_array($researchIds) ? $researchIds : [] as $researchId) {
-                wp_delete_post((int) $researchId, true);
-            }
-            foreach ($chapterIds as $chapterId) {
-                wp_delete_post($chapterId, true);
-            }
-
-            $deleted = wp_delete_post($bookId, true);
+            $published=get_post_meta($bookId,'_verbum_published_editions',true);
+            if(is_array($published)&&$published!==[]) throw new AuthorizationError('Uma obra publicada não pode ser excluída como obra comum. Arquive-a ou registre uma solicitação administrativa.');
+            $history=get_post_meta($bookId,'_verbum_library_history',true);$history=is_array($history)?$history:[];$history[]=['label'=>'Obra enviada para a lixeira','userId'=>$userId,'at'=>gmdate('c')];update_post_meta($bookId,'_verbum_library_history',$history);
+            $deleted = wp_trash_post($bookId);
             if (! $deleted instanceof \WP_Post) {
                 throw new \RuntimeException('Não foi possível excluir a obra.');
             }
@@ -217,6 +174,7 @@ final class RestController
             return $this->responses->success([
                 'id' => (string) $bookId,
                 'deleted' => true,
+                'recoverable' => true,
             ]);
         } catch (\Throwable $exception) {
             return $this->responses->error($exception);

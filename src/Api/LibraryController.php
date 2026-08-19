@@ -102,6 +102,18 @@ final class LibraryController
                 'callback' => [$this, 'archiveBook'],
                 'permission_callback' => $permission,
             ]);
+
+            register_rest_route($namespace, '/books/(?P<id>\d+)/restore', [
+                'methods' => 'POST',
+                'callback' => [$this, 'restoreBook'],
+                'permission_callback' => $permission,
+            ]);
+
+            register_rest_route($namespace, '/books/(?P<id>\d+)/duplicate', [
+                'methods' => 'POST',
+                'callback' => [$this, 'duplicateBook'],
+                'permission_callback' => $permission,
+            ]);
         });
     }
 
@@ -329,6 +341,18 @@ final class LibraryController
         }
     }
 
+    public function restoreBook(\WP_REST_Request $request): \WP_REST_Response
+    {
+        try { return $this->responses->success($this->library->restoreBook(get_current_user_id(), (int) $request['id'])); }
+        catch (\Throwable $exception) { return $this->responses->error($exception); }
+    }
+
+    public function duplicateBook(\WP_REST_Request $request): \WP_REST_Response
+    {
+        try { return $this->responses->success($this->library->duplicateBook(get_current_user_id(), (int) $request['id']), 201); }
+        catch (\Throwable $exception) { return $this->responses->error($exception); }
+    }
+
     /** @return array<string, mixed> */
     private function payload(\WP_REST_Request $request): array
     {
@@ -370,9 +394,9 @@ final class LibraryController
         $textFields = [
             'title', 'subtitle', 'series', 'category', 'genre', 'audience', 'age_range', 'language', 'country',
             'author_name', 'coauthor_name', 'keyword', 'target_date', 'workflow_status', 'collection', 'priority',
-            'cover_url', 'color', 'icon',
+            'cover_url', 'color', 'icon', 'internal_name', 'format',
         ];
-        $longFields = ['main_objective', 'reader_problem', 'reader_transformation', 'proposal_summary', 'synopsis', 'notes'];
+        $longFields = ['main_objective', 'reader_problem', 'reader_transformation', 'proposal_summary', 'synopsis', 'notes', 'administrative_notes'];
         $numericFields = ['project_id', 'planned_chapters', 'word_goal', 'cover_id'];
 
         $clean = [];
