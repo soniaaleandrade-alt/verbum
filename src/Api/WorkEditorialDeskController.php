@@ -49,6 +49,9 @@ final class WorkEditorialDeskController
             register_rest_route($namespace, '/books/(?P<id>\\d+)/editorial-desk/complete', [
                 'methods' => 'POST', 'callback' => [$this, 'complete'], 'permission_callback' => $permission,
             ]);
+            register_rest_route($namespace, '/books/(?P<id>\\d+)/editorial-desk/preparation', [
+                'methods' => 'POST', 'callback' => [$this, 'preparationAction'], 'permission_callback' => $permission,
+            ]);
         });
     }
 
@@ -133,6 +136,11 @@ final class WorkEditorialDeskController
         } catch (\Throwable $exception) {
             return $this->responses->error($exception);
         }
+    }
+
+    public function preparationAction(\WP_REST_Request $request): \WP_REST_Response
+    {
+        try{$bookId=(int)$request['id'];$this->assertOwned($bookId);$json=$request->get_json_params();$stage=$this->editorial->preparationAction(get_current_user_id(),$bookId,is_array($json)?$json:[]);return$this->responses->success(['editorialDesk'=>$stage,'workspace'=>$this->library->workspaceForBook(get_current_user_id(),$bookId)]);}catch(\Throwable$exception){return$this->responses->error($exception);}
     }
 
     public function assist(\WP_REST_Request $request): \WP_REST_Response
