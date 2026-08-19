@@ -59,6 +59,9 @@ final class LibraryRepository
         'color',
         'icon',
         'notes',
+        'internal_name',
+        'administrative_notes',
+        'format',
     ];
 
     /** @return array{projects: array<int, array<string, mixed>>, books: array<int, array<string, mixed>>} */
@@ -193,6 +196,9 @@ final class LibraryRepository
     public function setBookCover(int $userId, int $bookId, int $attachmentId, string $url): array
     {
         $this->ownedPost($bookId, LibraryPostTypes::BOOK, $userId);
+        if ($this->publishedEditions($bookId) !== []) {
+            throw new ValidationError('A capa da edição publicada está protegida. Crie uma nova edição para alterá-la.');
+        }
         update_post_meta($bookId, '_verbum_cover_id', $attachmentId);
         update_post_meta($bookId, '_verbum_cover_url', esc_url_raw($url));
         $this->touchBook($bookId);
@@ -204,6 +210,9 @@ final class LibraryRepository
     public function removeBookCover(int $userId, int $bookId): array
     {
         $this->ownedPost($bookId, LibraryPostTypes::BOOK, $userId);
+        if ($this->publishedEditions($bookId) !== []) {
+            throw new ValidationError('A capa da edição publicada está protegida. Crie uma nova edição para alterá-la.');
+        }
         update_post_meta($bookId, '_verbum_cover_id', 0);
         update_post_meta($bookId, '_verbum_cover_url', '');
         $this->touchBook($bookId);
@@ -304,6 +313,9 @@ final class LibraryRepository
     public function updateBook(int $userId, int $bookId, array $fields): array
     {
         $this->ownedPost($bookId, LibraryPostTypes::BOOK, $userId);
+        if ($this->publishedEditions($bookId) !== []) {
+            unset($fields['title'], $fields['subtitle']);
+        }
 
         if (array_key_exists('project_id', $fields)) {
             $projectId = (int) $fields['project_id'];
@@ -349,6 +361,29 @@ final class LibraryRepository
         update_post_meta($bookId, '_verbum_status', 'archived');
 
         return $this->bookData($post);
+    }
+
+    /** @return array<string, mixed> */
+    public function restoreBook(int $userId, int $bookId): array
+    {
+        $post = $this->ownedPost($bookId, LibraryPostTypes::BOOK, $userId);
+        $published = $this->publishedEditions($bookId) !== [];
+        update_post_meta($bookId, '_verbum_status', $published ? 'published' : 'active');
+        $this->appendLibraryHistory($bookId, $userId, 'Obra restaurada para a visualização principal');
+        return $this->bookData($post);
+    }
+
+    /** @return array<string, mixed> */
+    public function duplicateBook(int $userId, int $bookId): array
+    {
+        $source = $this->ownedPost($bookId, LibraryPostTypes::BOOK, $userId);
+        $id = wp_insert_post(['post_type'=>LibraryPostTypes::BOOK,'post_status'=>'publish','post_title'=>get_the_title($source).' — cópia','post_content'=>'','post_author'=>$userId], true);
+        if (is_wp_error($id)) throw new \RuntimeException('Não foi possível duplicar a obra.');
+        $newId=(int)$id; update_post_meta($newId,'_verbum_project_id',(int)get_post_meta($bookId,'_verbum_project_id',true));
+        update_post_meta($newId,'_verbum_status','active'); update_post_meta($newId,'_verbum_stage','identification'); update_post_meta($newId,'_verbum_completed_stages',[]);
+        foreach(self::BOOK_META_FIELDS as$field){if(in_array($field,['workflow_status','cover_id','cover_url'],true))continue;$value=get_post_meta($bookId,'_verbum_'.$field,true);if($field==='internal_name'&&trim((string)$value)!=='')$value=trim((string)$value).' — cópia';if($value!==''&&$value!==[])update_post_meta($newId,'_verbum_'.$field,$value);}
+        update_post_meta($newId,'_verbum_origin_book_id',$bookId); $this->appendLibraryHistory($bookId,$userId,'Obra duplicada como novo projeto editorial');
+        return $this->bookData($this->ownedPost($newId, LibraryPostTypes::BOOK, $userId));
     }
 
     /** @return \WP_Post[] */
@@ -476,9 +511,45 @@ final class LibraryRepository
         }
 
         $data['workflowStatus'] = $this->automaticWorkflowStatus($post);
+        $history = get_post_meta($post->ID, '_verbum_library_history', true);
+        $data['libraryHistory'] = is_array($history) ? array_values($history) : [];
+        $official=$this->officialStageData($post);
+        $data=array_merge($data,$official);
 
         return $data;
     }
+
+    /** @return array<string,mixed> */
+    private function officialStageData(\WP_Post $post): array
+    {
+        $id=(int)$post->ID; $stage=(string)(get_post_meta($id,'_verbum_stage',true)?:'identification'); $published=$this->publishedEditions($id);
+        $map=['identification'=>0,'project'=>1,'planning'=>2,'development'=>3,'general_review'=>4,'versions'=>5,'audit'=>5,'editorial_desk'=>6,'layout'=>6,'legal'=>6,'publication'=>7];
+        $index=$map[$stage]??0; $isPublished=$published!==[];
+        $substeps=[]; $substage='Dados principais';
+        if($stage==='project'){$substeps=(array)get_post_meta($id,'_verbum_foundation_substeps',true);$order=['letter-soul'=>'Carta e Alma','intention'=>'Intenção','reader-result'=>'Leitor e Resultado','truth-central'=>'Verdade Central'];$substage=$this->nextSubstage($order,$substeps);}
+        elseif($stage==='planning'){$substeps=(array)get_post_meta($id,'_verbum_structure_substeps',true);$substage=$this->nextSubstage(['direction'=>'Direção','architecture'=>'Arquitetura','elements'=>'Elementos','provisional-index'=>'Índice Provisório'],$substeps);}
+        elseif($stage==='development'){$chapter=$this->nextChapter($id);$substage=$chapter['label'];}
+        elseif($stage==='general_review'){$substeps=(array)get_post_meta($id,'_verbum_general_review_substeps',true);$substage=$this->nextSubstage(['structure'=>'Estrutura','argument'=>'Argumento','doctrine'=>'Doutrina e Fontes','unity'=>'Unidade e Estilo','closing'=>'Fechamento'],$substeps);}
+        elseif(in_array($stage,['versions','audit'],true)){$validation=get_post_meta($id,'_verbum_validation_process',true);$validation=is_array($validation)?$validation:[];$keys=['preparation'=>'Preparação','opinions'=>'Pareceres','corrections'=>'Correções','approval'=>'Aprovação'];$substage=$keys[$validation['active']??'preparation']??'Preparação';$substeps=(array)($validation['completed']??[]);}
+        elseif(in_array($stage,['editorial_desk','layout','legal'],true)){$editorial=get_post_meta($id,'_verbum_editorial_preparation',true);$editorial=is_array($editorial)?$editorial:[];$keys=['definitive_text'=>'Texto Definitivo','rights'=>'Direitos e Registros','graphic'=>'Projeto Gráfico','proofs'=>'Provas','final_files'=>'Arquivos Finais'];$substage=$keys[$editorial['active']??'definitive_text']??'Texto Definitivo';$substeps=(array)($editorial['completed']??[]);}
+        elseif($stage==='publication'){$journey=get_post_meta($id,'_verbum_publication_journey',true);$journey=is_array($journey)?$journey:[];$keys=['planning'=>'Planejamento','channels'=>'Canais e Distribuição','launch'=>'Lançamento','published'=>'Edição Publicada'];$substage=$isPublished?(string)($published[count($published)-1]['number']??'Edição publicada'):($keys[$journey['active']??'planning']??'Planejamento');$substeps=(array)($journey['completed']??[]);}
+        $fractions=[0=>3,1=>4,2=>4,3=>4,4=>5,5=>4,6=>5,7=>4]; $inside=$isPublished?1:min(1,count($substeps)/($fractions[$index]??1));
+        if($index===0){$inside=count(array_filter([trim((string)get_the_title($post)),trim((string)get_post_meta($id,'_verbum_genre',true)),trim((string)get_post_meta($id,'_verbum_language',true))]))/3;}
+        if($stage==='development'){$chap=$this->chapterMetrics($id);$inside=$chap['count']>0?$chap['completed']/$chap['count']:0;}
+        $progress=$isPublished?100:(int)round((($index+$inside)/8)*100); $metrics=$this->chapterMetrics($id);
+        $labels=['Identificação','Fundação','Estrutura','Capítulos','Revisão Geral','Validação','Preparação Editorial','Publicação'];
+        return ['officialStageKey'=>$isPublished?'published':['identification','foundation','structure','chapters','general_review','validation','editorial','publication'][$index],'officialStage'=>$isPublished?'Publicada':$labels[$index],'officialStageIndex'=>$index,'substage'=>$substage,'progress'=>$progress,'chapterCount'=>$metrics['count'],'wordCount'=>$metrics['words'],'completedOfficialStages'=>$isPublished?8:$index,'hasPublishedEdition'=>$published!==[],'publishedEditionCount'=>count($published),'publishedEditionNumber'=>$published!==[]?(string)($published[count($published)-1]['number']??''):'' ,'nextAction'=>$this->nextActionLabel($index,$substage,$isPublished)];
+    }
+
+    /** @param array<string,string> $order @param array<int,mixed> $completed */
+    private function nextSubstage(array$order,array$completed):string{foreach($order as$key=>$label)if(!in_array($key,$completed,true))return$label;return(string)end($order);}
+    /** @return array{label:string,id:int} */
+    private function nextChapter(int$id):array{$chapters=get_posts(['post_type'=>LibraryPostTypes::CHAPTER,'post_status'=>'publish','posts_per_page'=>-1,'fields'=>'ids','meta_key'=>'_verbum_chapter_order','orderby'=>'meta_value_num','order'=>'ASC','meta_query'=>[['key'=>'_verbum_book_id','value'=>$id,'compare'=>'=','type'=>'NUMERIC']]]);$labels=['preparation'=>'Preparação','research'=>'Pesquisa','writing'=>'Redação','revision'=>'Revisão'];foreach((array)$chapters as$chapterId){$completed=(array)get_post_meta((int)$chapterId,'_verbum_chapter_completed_stages',true);$stage=(string)(get_post_meta((int)$chapterId,'_verbum_chapter_stage',true)?:'preparation');if(!in_array('revision',$completed,true)){return['label'=>($labels[$stage]??'Preparação').' do capítulo '.max(1,(int)get_post_meta((int)$chapterId,'_verbum_chapter_order',true)),'id'=>(int)$chapterId];}}return['label'=>'Desenvolvimento dos capítulos','id'=>0];}
+    /** @return array{count:int,completed:int,words:int} */
+    private function chapterMetrics(int$id):array{$chapters=get_posts(['post_type'=>LibraryPostTypes::CHAPTER,'post_status'=>'publish','posts_per_page'=>-1,'fields'=>'ids','meta_key'=>'_verbum_book_id','meta_value'=>$id]);$words=0;$completed=0;foreach((array)$chapters as$chapterId){$words+=(int)get_post_meta((int)$chapterId,'_verbum_chapter_word_count',true);if((bool)get_post_meta((int)$chapterId,'_verbum_chapter_completed',true))$completed++;}return['count'=>count((array)$chapters),'completed'=>$completed,'words'=>$words];}
+    private function nextActionLabel(int$index,string$substage,bool$published):string{if($published)return'Ver edição publicada';$verbs=['Continuar identificação','Continuar fundação','Continuar estrutura','Continuar capítulos','Continuar revisão','Continuar validação','Continuar preparação editorial','Continuar publicação'];if($index===3&&stripos(remove_accents($substage),'preparacao')!==false)return'Preparar capítulo';return$verbs[$index]??'Continuar obra';}
+    /** @return array<int,array<string,mixed>> */ private function publishedEditions(int$id):array{$items=get_post_meta($id,'_verbum_published_editions',true);return is_array($items)?array_values(array_filter($items,'is_array')):[];}
+    private function appendLibraryHistory(int$id,int$userId,string$label):void{$history=get_post_meta($id,'_verbum_library_history',true);$history=is_array($history)?$history:[];$history[]=['label'=>$label,'userId'=>$userId,'at'=>gmdate('c')];update_post_meta($id,'_verbum_library_history',$history);}
 
     private function automaticWorkflowStatus(\WP_Post $post): string
     {
@@ -505,7 +576,7 @@ final class LibraryRepository
             'editorial_desk' => 'Preparação editorial',
             'layout' => 'Preparação editorial',
             'legal' => 'Preparação editorial',
-            'publication' => 'Publicada',
+            'publication' => $this->publishedEditions((int) $post->ID) !== [] ? 'Publicada' : 'Em publicação',
         ];
         $status = $statuses[$stage] ?? 'Identificação';
 

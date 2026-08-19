@@ -108,7 +108,11 @@ const publicationRepository = await readFile(resolve(repoRoot, 'src/Library/Work
 requireAll(publicationRepository, ['_verbum_publication_journey','_verbum_published_editions','confirm_publication','start_edition','confirmationKey','_verbum_editorial_calendar_events',"update_post_meta($bookId, '_verbum_progress', 100)",'preparationComplete'], 'Publicação persistence HOM-040');
 const publishedWork = await readFile(resolve(root, 'src/published-work-runtime.js'), 'utf8');
 requireAll(publishedWork, ['Visão Geral','Dados da Edição','Canais','Arquivos','Histórico','Publicada','Registrar reimpressão','Criar nova versão','Iniciar nova edição','Duplicar como nova obra','/published-editions/','published_success'], 'Obra Publicada HOM-041');
+const minhasObras = await readFile(resolve(root, 'src/minhas-obras-runtime.js'), 'utf8');
+requireAll(minhasObras, ['Minhas Obras','Identificação','Fundação','Estrutura','Capítulos','Revisão Geral','Validação','Preparação Editorial','Publicação','Publicadas','Pesquisar obras...','Última edição','Maior progresso','Menor progresso','Próxima ação','data-mo-duplicate','data-mo-archive','data-mo-restore','lixeira recuperável','libraryHistory'], 'Minhas Obras HOM-042');
+const minhasObrasCss = await readFile(resolve(root, 'src/styles/minhas-obras.css'), 'utf8');
+requireAll(minhasObrasCss, ['.mo-work','.mo-card','.mo-next','.mo-path','.mo-filters','.mo-modal-bg','@media'], 'Minhas Obras CSS HOM-042');
 const publishedCss = await readFile(resolve(root, 'src/styles/published-work.css'), 'utf8');
 requireAll(publishedCss, ['.verbum-published-work','.vpw-hero','.vpw-tabs','.vpw-columns','.vpw-timeline','@media'], 'Obra Publicada CSS HOM-041');
 requireAll(publicationRepository, ['publishedDashboard','publishedAction','_verbum_published_operations','_verbum_publication_history','administrative_correction','master_download'], 'Obra Publicada persistence HOM-041');
-console.log('Frontend homologation checks passed for Verbum Studio through HOM-041');
+console.log('Frontend homologation checks passed for Verbum Studio through HOM-042');
