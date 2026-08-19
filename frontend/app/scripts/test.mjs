@@ -77,7 +77,7 @@ const runtimes = [
   ['chapter-writing-runtime.js',['/writing','/writing/complete','/writing/assist','Assistente de Escrita']],
   ['chapter-revision-runtime.js',['/revision','/revision/issues','/revision/complete','Assistente de Revisão']],
   ['general-review-runtime.js',['/general-review','/general-review/reading','/general-review/complete','/general-review/substeps/','Revisão Geral da Obra','Estrutura','Argumento','Doutrina e Fontes','Unidade e Estilo','Fechamento','versão imutável','Validação da Obra']],
-  ['work-versions-runtime.js',['/versions-stage','/versions-stage/compare','/audit-baseline','Controle de Versões']],
+  ['work-versions-runtime.js',['Validação da Obra','Preparação','Pareceres','Correções','Aprovação','/versions-stage/validation','Texto enviado não será alterado','Aprovação eclesiástica','Não substitui consulta à autoridade competente','Preparação Editorial']],
   ['work-audit-runtime.js',['/audit-stage','/audit-stage/findings','/audit-stage/report','Aprovar Auditoria']],
   ['editorial-desk-runtime.js',['/editorial-desk','/editorial-desk/adjustments','/editorial-desk/complete','Mesa Editorial']],
   ['layout-stage-runtime.js',['/layout-stage','/layout-stage/preview','/layout-stage/proofs','Diagramação da Obra']],
@@ -98,4 +98,6 @@ const buildCss = await readFile(resolve(repoRoot, 'build/verbum-app.css'), 'utf8
 const sensitivePattern = /(SUPABASE_SERVICE|SERVICE_KEY|OPENAI_API_KEY|sk-[A-Za-z0-9_-]{10,})/;
 for (const file of requiredFiles) { const contents = await readFile(resolve(root, file), 'utf8'); if (sensitivePattern.test(contents)) throw new Error(`Sensitive value pattern found in ${file}`); }
 const generalReviewCss = await readFile(resolve(root, 'src/styles/general-review.css'), 'utf8'); requireAll(generalReviewCss, ['.verbum-review-steps','.verbum-review-grid','.verbum-review-ring','.verbum-review-table','@media'], 'Revisão Geral CSS HOM-037');
-console.log('Frontend homologation checks passed for Verbum Studio through HOM-037');
+const validationCss = await readFile(resolve(root, 'src/styles/work-versions.css'), 'utf8'); requireAll(validationCss, ['.verbum-validation','.vv-steps','.vv-reading','.vv-corrections','.vv-ring','@media'], 'Validação da Obra CSS HOM-038');
+const validationRepository = await readFile(resolve(repoRoot, 'src/Library/WorkVersionsRepository.php'), 'utf8'); requireAll(validationRepository, ['_verbum_validation_process','validation_corrections:','validation_final:','_verbum_validation_report',"update_post_meta($bookId,'_verbum_stage','editorial_desk')",'ecclesiastical'], 'Validação da Obra persistence HOM-038');
+console.log('Frontend homologation checks passed for Verbum Studio through HOM-038');
