@@ -119,6 +119,8 @@ requireAll(publicationRepository, ['publishedDashboard','publishedAction','_verb
 const dashboardRuntime = await readFile(resolve(root, 'src/dashboard-official-runtime.js'), 'utf8');
 requireAll(dashboardRuntime, ['Olá, ','Continuar trabalhando','Hoje','Iniciar sessão de escrita','Tarefas do dia','Agenda','Visão do estúdio','Atividades recentes','Acessos rápidos','/dashboard','start_session','pause_session','resume_session','finish_session'], 'Painel principal HOM-043');
 requireAll(dashboardRuntime, ['AbortController','O servidor demorou para responder. Tente novamente.'], 'Painel sem carregamento infinito HOM-043');
+requireAll(dashboardRuntime, [".observe(root,{childList:true})"], 'Painel sem ciclo de renderização HOM-043');
+if (dashboardRuntime.includes('.observe(root,{childList:true,subtree:true})')) throw new Error('Painel principal não pode observar as próprias mutações internas');
 const staticRuntime = await readFile(resolve(root, 'src/static-runtime.js'), 'utf8');
 requireAll(staticRuntime, ['AbortController','opts.timeout||15000','O servidor demorou para responder. Tente novamente.'], 'Inicialização sem carregamento infinito HOM-043');
 requireAll(staticRuntime, ['function deadline','function bootError','data-app-retry','watchdog','bootFinished'], 'Recuperação independente da inicialização HOM-043');
