@@ -70,7 +70,7 @@ test('private storage types exist for projects books chapters and research', fun
 test('Sprint 19 REST routes are registered', function (): void {
     global $verbum_test_actions, $verbum_test_routes; $verbum_test_actions = []; $verbum_test_routes = []; $plugin = new Plugin(new Container(), new Config()); $plugin->register(); foreach ($verbum_test_actions['rest_api_init'] ?? [] as $callback) $callback();
     foreach([
-        'verbum/v1/auth/login','verbum/v1/profile','verbum/v1/library','verbum/v1/projects','verbum/v1/books',
+        'verbum/v1/auth/login','verbum/v1/profile','verbum/v1/dashboard','verbum/v1/library','verbum/v1/projects','verbum/v1/books',
         'verbum/v1/books/(?P<id>\\d+)/workspace','verbum/v1/books/(?P<id>\\d+)/identification','verbum/v1/books/(?P<id>\\d+)/identification/complete',
         'verbum/v1/books/(?P<id>\\d+)/project-stage','verbum/v1/books/(?P<id>\\d+)/project-stage/complete',
         'verbum/v1/books/(?P<id>\\d+)/planning-stage','verbum/v1/books/(?P<id>\\d+)/planning-stage/generate-chapters','verbum/v1/books/(?P<id>\\d+)/planning-stage/complete',

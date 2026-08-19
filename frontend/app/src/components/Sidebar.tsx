@@ -1,4 +1,4 @@
-export type AppSection = 'dashboard' | 'workspace' | 'library';
+export type AppSection = 'dashboard' | 'library';
 
 type SidebarProps = {
   open: boolean;
@@ -13,25 +13,13 @@ type NavGroup = { label: string; items: NavItem[] };
 const groups: NavGroup[] = [
   { label: 'Principal', items: [
     { label: 'Painel', section: 'dashboard' },
-    { label: 'Área de Trabalho', section: 'workspace' },
     { label: 'Minhas Obras', section: 'library' },
   ] },
-  { label: 'Escrita', items: [
-    { label: 'Base de Conhecimento' },
-    { label: 'Ideias' },
-    { label: 'Citações' },
-  ] },
+  { label: 'Criação', items: [{ label: 'Ideias' }] },
   { label: 'Planejamento', items: [
     { label: 'Calendário Editorial' },
     { label: 'Cronograma' },
   ] },
-  { label: 'Análise', items: [{ label: 'Relatórios' }] },
-  { label: 'Sistema', items: [
-    { label: 'Verbum Cloud' },
-    { label: 'Backup' },
-    { label: 'Preferências de Escrita' },
-  ] },
-  { label: 'Final', items: [{ label: 'Lixeira' }] },
 ];
 
 export function Sidebar({ open, activeSection, onClose, onNavigate }: SidebarProps) {

@@ -7,7 +7,6 @@ import { archiveBook, archiveProject, createBook, createProject, getLibrary, get
 import type { CreateBookInput, CreateProjectInput, CurrentUser, LibraryData, VerbumBook, VerbumProject, WorkStageKey, WorkWorkspaceData } from '../types/verbum';
 import { Dashboard } from './Dashboard';
 import { LibraryPage } from './LibraryPage';
-import { WorkspacePage } from './WorkspacePage';
 import { WorkWorkspace } from './WorkWorkspace';
 import '../styles/verbum.css';
 import '../styles/library.css';
@@ -57,7 +56,6 @@ export function VerbumApp() {
   return <div className="verbum-app"><AppShell user={user} activeSection={activeSection} onNavigate={navigateGlobal} customHeader={workspaceHeader} hideHeader={!workspaceBookId && activeSection === 'dashboard'}>
     {workspaceBookId ? (workspaceLoading ? <section className="verbum-workspace-state">Carregando a obra...</section> : workspaceError || !workspace ? <section className="verbum-workspace-state is-error"><h2>Não foi possível carregar esta obra</h2><p>{workspaceError || 'Obra não encontrada.'}</p><button type="button" className="verbum-primary-button" onClick={() => loadWorkspace(workspaceBookId, requestedStage)}>Tentar novamente</button><button type="button" className="verbum-secondary-button" onClick={closeWorkspace}>Voltar para Obras</button></section> : <WorkWorkspace workspace={workspace} selectedStage={selectedStage} onStageChange={changeStage} onBackToLibrary={closeWorkspace} onWorkspaceChange={setWorkspace} onPersisted={refreshLibrary} />)
       : activeSection === 'dashboard' ? <Dashboard userName={user.name} library={library} onOpenLibrary={() => setActiveSection('library')} onOpenBook={openBook} />
-      : activeSection === 'workspace' ? <WorkspacePage data={library} loading={libraryLoading} error={libraryError} onReload={refreshLibrary} onCreateProject={createProjectAndRefresh} onOpenLibrary={() => setActiveSection('library')} />
       : <LibraryPage data={library} loading={libraryLoading} error={libraryError} onReload={refreshLibrary} onOpenBook={openBook} onCreateProject={createProjectAndRefresh} onUpdateProject={updateProjectAndRefresh} onArchiveProject={archiveProjectAndRefresh} onCreateBook={createBookAndRefresh} onUpdateBook={updateBookAndRefresh} onArchiveBook={archiveBookAndRefresh} />}
   </AppShell></div>;
 }
