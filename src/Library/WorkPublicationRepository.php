@@ -102,6 +102,118 @@ final class WorkPublicationRepository
         ];
     }
 
+    /** @return array<string, mixed> */
+    public function journeyData(int $userId, int $bookId): array
+    {
+        $book = get_post($bookId);
+        if (! $book instanceof \WP_Post || $book->post_type !== LibraryPostTypes::BOOK || (int) $book->post_author !== $userId) {
+            throw new NotFoundError('Obra não encontrada.');
+        }
+
+        $preparation = get_post_meta($bookId, '_verbum_editorial_preparation', true);
+        $preparation = is_array($preparation) ? $preparation : [];
+        $completedPreparation = in_array('final_files', (array) ($preparation['completed'] ?? []), true)
+            && is_array($preparation['editorialVersion'] ?? null);
+        $state = $this->publicationJourneyState($bookId, $preparation);
+        $steps = ['planning', 'channels', 'launch', 'published'];
+        $progress = [];
+        foreach ($steps as $step) {
+            $progress[$step] = in_array($step, (array) $state['completed'], true)
+                ? 100
+                : $this->publicationJourneyProgress($step, $state, $completedPreparation);
+        }
+
+        return array_merge($state, [
+            'bookId' => (string) $bookId,
+            'bookTitle' => (string) get_the_title($bookId),
+            'preparationComplete' => $completedPreparation,
+            'preparation' => [
+                'version' => $preparation['editorialVersion'] ?? null,
+                'packages' => array_values(array_filter((array) ($preparation['packages'] ?? []), 'is_array')),
+                'files' => array_values(array_filter((array) ($preparation['finalFiles'] ?? []), 'is_array')),
+                'metadata' => is_array($preparation['metadata'] ?? null) ? $preparation['metadata'] : [],
+            ],
+            'progress' => $progress,
+            'overallProgress' => (int) round(array_sum($progress) / 4),
+            'publishedEditions' => $this->publicationEditions($bookId),
+            'locked' => (bool) ($state['locked'] ?? false),
+        ]);
+    }
+
+    /** @param array<string, mixed> $payload @return array<string, mixed> */
+    public function journeyAction(int $userId, int $bookId, array $payload): array
+    {
+        $data = $this->journeyData($userId, $bookId);
+        $state = $this->publicationJourneyState($bookId, (array) get_post_meta($bookId, '_verbum_editorial_preparation', true));
+        $action = sanitize_key((string) ($payload['action'] ?? 'save'));
+
+        if ($action === 'save') {
+            if (! empty($state['locked'])) throw new ValidationError('A edição publicada está protegida. Inicie uma nova versão ou edição para continuar.');
+            foreach (['planning', 'tasks', 'channels', 'distribution', 'prices', 'channelMetadata', 'launchActions', 'event', 'messages', 'materials', 'publication', 'availability', 'memory', 'finalChecklist', 'finalConfirmation'] as $key) {
+                if (array_key_exists($key, $payload)) $state[$key] = $this->sanitizeArray(is_array($payload[$key]) ? $payload[$key] : ['value' => $payload[$key]])['value'] ?? $this->sanitizeArray((array) $payload[$key]);
+            }
+            $state['history'][] = $this->publicationJourneyEvent($userId, 'Rascunho da Publicação salvo');
+            $this->syncPublicationCalendar($bookId, (array) $state['launchActions']);
+        } elseif ($action === 'complete_step') {
+            if (! $data['preparationComplete']) throw new ValidationError('Conclua a Preparação Editorial e seus pacotes finais antes de avançar.');
+            if (! empty($state['locked'])) throw new ValidationError('A edição publicada está protegida.');
+            $step = sanitize_key((string) ($payload['step'] ?? ''));
+            $order = ['planning', 'channels', 'launch'];
+            if (! in_array($step, $order, true)) throw new ValidationError('Etapa da Publicação inválida.');
+            $position = array_search($step, $order, true);
+            if ($position > 0 && ! in_array($order[$position - 1], (array) $state['completed'], true)) throw new ValidationError('Conclua a etapa anterior antes de avançar.');
+            $this->assertPublicationJourneyStep($step, $state, $data);
+            if (! in_array($step, (array) $state['completed'], true)) $state['completed'][] = $step;
+            $state['active'] = $order[$position + 1] ?? 'published';
+            $state['history'][] = $this->publicationJourneyEvent($userId, 'Etapa concluída: ' . $step);
+            if ($step === 'launch') $this->syncPublicationCalendar($bookId, (array) $state['launchActions']);
+        } elseif ($action === 'confirm_publication') {
+            foreach (['planning', 'channels', 'launch'] as $required) if (! in_array($required, (array) $state['completed'], true)) throw new ValidationError('Conclua Planejamento, Canais e Lançamento antes de confirmar a edição.');
+            $this->assertPublicationJourneyStep('published', $state, $data);
+            $confirmationKey = hash('sha256', wp_json_encode([$state['publication'], $state['availability'], $data['preparation']['version']], JSON_UNESCAPED_UNICODE));
+            foreach ($this->publicationEditions($bookId) as $edition) if (($edition['confirmationKey'] ?? '') === $confirmationKey) return $this->journeyData($userId, $bookId);
+            $edition = [
+                'id' => 'published-edition-' . substr($confirmationKey, 0, 16),
+                'confirmationKey' => $confirmationKey,
+                'number' => (string) ($state['publication']['editionNumber'] ?? ''),
+                'publishedAt' => (string) ($state['publication']['date'] ?? ''),
+                'confirmedAt' => gmdate('c'), 'confirmedBy' => $userId,
+                'sourceEditorialVersion' => $data['preparation']['version'],
+                'publication' => $state['publication'], 'availability' => $state['availability'],
+                'packages' => $data['preparation']['packages'], 'files' => $data['preparation']['files'],
+                'memory' => $state['memory'], 'checklist' => $state['finalChecklist'],
+            ];
+            $editions = $this->publicationEditions($bookId); $editions[] = $edition;
+            update_post_meta($bookId, '_verbum_published_editions', $editions);
+            $state['completed'][] = 'published'; $state['active'] = 'published'; $state['locked'] = true; $state['publishedEditionId'] = $edition['id'];
+            $state['history'][] = $this->publicationJourneyEvent($userId, 'Edição publicada confirmada');
+            update_post_meta($bookId, '_verbum_status', 'published');
+            update_post_meta($bookId, '_verbum_workflow_status', 'Publicada');
+            update_post_meta($bookId, '_verbum_progress', 100);
+            update_post_meta($bookId, '_verbum_published_at', $edition['publishedAt']);
+            $completed = get_post_meta($bookId, '_verbum_completed_stages', true); $completed = is_array($completed) ? $completed : [];
+            if (! in_array('publication', $completed, true)) $completed[] = 'publication';
+            update_post_meta($bookId, '_verbum_completed_stages', array_values(array_unique($completed)));
+        } elseif ($action === 'start_edition') {
+            if (empty($state['locked'])) throw new ValidationError('Confirme a edição atual antes de iniciar outra.');
+            $kind = sanitize_key((string) ($payload['kind'] ?? 'version'));
+            if (! in_array($kind, ['version', 'edition'], true)) throw new ValidationError('Escolha nova versão ou nova edição.');
+            $reason = trim(sanitize_textarea_field((string) ($payload['reason'] ?? '')));
+            if ($reason === '') throw new ValidationError('Registre o motivo da nova versão ou edição.');
+            $previous = (string) ($state['publishedEditionId'] ?? '');
+            $state['locked'] = false; $state['completed'] = []; $state['active'] = 'planning'; $state['finalConfirmation'] = false;
+            $state['finalChecklist'] = array_fill_keys(array_keys((array) $state['finalChecklist']), false);
+            $state['origin'] = ['kind' => $kind, 'reason' => $reason, 'previousEditionId' => $previous, 'createdAt' => gmdate('c'), 'createdBy' => $userId];
+            $state['history'][] = $this->publicationJourneyEvent($userId, ($kind === 'edition' ? 'Nova edição iniciada' : 'Nova versão iniciada') . ': ' . $reason);
+        } else {
+            throw new ValidationError('Ação da Publicação não reconhecida.');
+        }
+
+        $state['updatedAt'] = gmdate('c');
+        update_post_meta($bookId, '_verbum_publication_journey', $state);
+        return $this->journeyData($userId, $bookId);
+    }
+
     /** @param array<string,mixed> $payload @return array<string,mixed> */
     public function saveState(int $userId, int $bookId, array $payload): array
     {
@@ -351,6 +463,72 @@ final class WorkPublicationRepository
     /** @return array<int,array{key:string,label:string}> */ private function options(array $items): array { $out = []; foreach ($items as $key => $label) $out[] = ['key' => $key, 'label' => $label]; return $out; }
     /** @return array<string,mixed> */ private function roundSummary(array $round): array { return ['id' => (string) ($round['id'] ?? ''), 'number' => (int) ($round['number'] ?? 0), 'status' => (string) ($round['status'] ?? ''), 'startedAt' => (string) ($round['startedAt'] ?? ''), 'updatedAt' => (string) ($round['updatedAt'] ?? ''), 'completedAt' => (string) ($round['completedAt'] ?? ''), 'publishedAt' => (string) ($round['publishedAt'] ?? ''), 'editionHash' => (string) ($round['editionHash'] ?? '')]; }
     /** @param array<string,mixed> $legal @return array<string,mixed> */ private function legalSummary(array $legal): array { $s = is_array($legal['snapshot'] ?? null) ? $legal['snapshot'] : []; return ['snapshotHash' => (string) $legal['snapshotHash'], 'version' => $s['version'] ?? [], 'layout' => $s['layout'] ?? [], 'identity' => $s['state']['identity'] ?? [], 'finalFiles' => $s['state']['finalFiles'] ?? [], 'isbn' => $s['state']['isbn'] ?? [], 'completedAt' => (string) ($legal['completedAt'] ?? '')]; }
+
+    /** @param array<string,mixed> $preparation @return array<string,mixed> */
+    private function publicationJourneyState(int $bookId, array $preparation): array
+    {
+        $stored = get_post_meta($bookId, '_verbum_publication_journey', true); $stored = is_array($stored) ? $stored : [];
+        $metadata = is_array($preparation['metadata'] ?? null) ? $preparation['metadata'] : [];
+        $formats = is_array($preparation['edition']['formats'] ?? null) ? array_values($preparation['edition']['formats']) : ['printed', 'digital'];
+        $defaults = [
+            'active'=>'planning','completed'=>[],'locked'=>false,'publishedEditionId'=>'','origin'=>null,
+            'planning'=>['model'=>'','publisherName'=>'','responsible'=>'','contract'=>'','responsibilities'=>'','plannedDate'=>'','territory'=>'Brasil','language'=>(string)($metadata['language']??'Português'),'availability'=>'national','formats'=>$formats,'printOnDemand'=>false,'printRun'=>'','printPrice'=>'','digitalPrice'=>'','currency'=>'BRL','priceDecision'=>'','notes'=>''],
+            'tasks'=>[],'channels'=>[],'distribution'=>[],'prices'=>[],'channelMetadata'=>[],'launchActions'=>[],
+            'event'=>['format'=>'','date'=>'','time'=>'','location'=>'','responsible'=>'','capacity'=>'','registration'=>'','broadcast'=>'','script'=>'','suppliers'=>'','notes'=>'','decision'=>''],
+            'messages'=>['main'=>'','short'=>'','invitation'=>'','social'=>'','institutional'=>'','versions'=>[]],'materials'=>[],
+            'publication'=>['status'=>'','editionNumber'=>(string)($metadata['edition']??'1ª edição'),'date'=>'','publisher'=>(string)($metadata['publisher']??''),'formats'=>$formats,'isbnPrint'=>(string)($metadata['isbn']??''),'isbnDigital'=>'','identifiers'=>'','proofs'=>[]],
+            'availability'=>[],'memory'=>['decisions'=>'','futureCorrections'=>'','distributionNotes'=>'','documents'=>[]],
+            'finalChecklist'=>['publicAvailable'=>false,'bibliographicChecked'=>false,'filesPreserved'=>false,'channelsVerified'=>false,'permissionsArchived'=>false],
+            'finalConfirmation'=>false,'history'=>[],'updatedAt'=>'',
+        ];
+        return array_replace_recursive($defaults, $stored);
+    }
+
+    /** @param array<string,mixed> $state */
+    private function publicationJourneyProgress(string $step, array $state, bool $preparationComplete): int
+    {
+        if ($step === 'planning') { $plan=(array)$state['planning']; $checks=[$preparationComplete,!empty($plan['model']),!empty($plan['formats']),!empty($plan['plannedDate']),!empty($plan['responsible']),!empty($plan['priceDecision'])]; }
+        elseif ($step === 'channels') { $channels=(array)$state['channels']; $checks=[!empty($channels),count(array_filter($channels,static fn($c):bool=>is_array($c)&&!empty($c['formats'])))===count($channels),count(array_filter($channels,static fn($c):bool=>is_array($c)&&!empty($c['responsible'])))===count($channels),!empty($state['prices'])]; }
+        elseif ($step === 'launch') { $checks=[!empty($state['planning']['plannedDate']),!empty($state['messages']['main']),!empty($state['materials']),!empty($state['event']['decision']),!empty($state['launchActions'])]; }
+        else { $checks=[!empty($state['publication']['status']),!empty($state['publication']['date']),!empty($state['availability']),count(array_filter((array)$state['finalChecklist']))===count((array)$state['finalChecklist']),!empty($state['finalConfirmation'])]; }
+        return (int) round(count(array_filter($checks))*100/max(1,count($checks)));
+    }
+
+    /** @param array<string,mixed> $state @param array<string,mixed> $data */
+    private function assertPublicationJourneyStep(string $step, array $state, array $data): void
+    {
+        if ($step === 'planning') { $p=(array)$state['planning']; if(empty($p['model'])||empty($p['formats'])||empty($p['plannedDate'])||empty($p['responsible'])||empty($p['priceDecision'])) throw new ValidationError('Defina modelo, formatos, data, pessoa responsável e decisão sobre preços.'); }
+        elseif ($step === 'channels') {
+            $channels=array_values(array_filter((array)$state['channels'],'is_array')); if($channels===[]) throw new ValidationError('Cadastre ao menos um canal de publicação.');
+            foreach((array)$state['planning']['formats'] as $format) if(count(array_filter($channels,static fn(array$c):bool=>in_array($format,(array)($c['formats']??[]),true)))===0) throw new ValidationError('Cadastre ao menos um canal para cada formato selecionado.');
+            foreach($channels as $channel) if(empty($channel['responsible'])) throw new ValidationError('Defina a pessoa responsável por cada canal.');
+            $run=(int)($state['planning']['printRun']??0); $distributed=array_sum(array_map('intval',(array)$state['distribution'])); if($run>0&&$distributed>$run) throw new ValidationError('A distribuição não pode ultrapassar a tiragem inicial.');
+            if(empty($state['prices'])&&empty($state['planning']['priceDecision'])) throw new ValidationError('Defina preços ou registre a justificativa correspondente.');
+        } elseif ($step === 'launch') {
+            if(empty($state['planning']['plannedDate'])||empty($state['messages']['main'])||empty($state['materials'])||empty($state['event']['decision'])||empty($state['launchActions'])) throw new ValidationError('Defina data, mensagem, materiais, decisão sobre evento e ações principais.');
+            foreach((array)$state['launchActions'] as $item) if(is_array($item)&&empty($item['notApplicable'])&&empty($item['responsible'])) throw new ValidationError('Defina a pessoa responsável pelas ações principais ou registre a não aplicação.');
+        } else {
+            if(empty($state['publication']['status'])||empty($state['publication']['editionNumber'])||empty($state['publication']['date'])) throw new ValidationError('Informe situação, número e data da edição efetivamente publicada.');
+            if(empty($state['availability'])) throw new ValidationError('Registre a disponibilidade confirmada em ao menos um canal.');
+            foreach((array)$state['availability'] as $channel) if(is_array($channel)&&($channel['status']??'')==='available'&&empty($channel['confirmed'])) throw new ValidationError('Confirme explicitamente os canais marcados como disponíveis.');
+            if(empty($data['preparation']['packages'])||empty($data['preparation']['files'])) throw new ValidationError('Os pacotes e arquivos finais aprovados precisam estar preservados.');
+            foreach((array)$state['finalChecklist'] as $checked) if(!$checked) throw new ValidationError('Conclua toda a conferência final.');
+            if(empty($state['finalConfirmation'])) throw new ValidationError('Confirme que os dados correspondem à edição efetivamente publicada.');
+        }
+    }
+
+    /** @return array<int,array<string,mixed>> */
+    private function publicationEditions(int $bookId): array { $items=get_post_meta($bookId,'_verbum_published_editions',true); return is_array($items)?array_values(array_filter($items,'is_array')):[]; }
+    /** @return array<string,mixed> */
+    private function publicationJourneyEvent(int $userId,string $label): array { return ['id'=>'publication-event-'.substr(md5($label.microtime(true)),0,14),'label'=>$label,'userId'=>$userId,'at'=>gmdate('c')]; }
+    /** @param array<int,mixed> $actions */
+    private function syncPublicationCalendar(int $bookId,array $actions): void
+    {
+        $calendar=get_post_meta($bookId,'_verbum_editorial_calendar_events',true); $calendar=is_array($calendar)?$calendar:[];
+        $next=array_values(array_filter($calendar,static fn($item):bool=>!is_array($item)||($item['source']??'')!=='publication'));
+        foreach($actions as $action) if(is_array($action)&&!empty($action['title'])&&!empty($action['date'])) $next[]=['id'=>(string)($action['id']??'publication-calendar-'.substr(md5((string)$action['title'].$action['date']),0,12)),'bookId'=>$bookId,'source'=>'publication','title'=>(string)$action['title'],'date'=>(string)$action['date'],'responsible'=>(string)($action['responsible']??''),'status'=>(string)($action['status']??'planned'),'updatedAt'=>gmdate('c')];
+        update_post_meta($bookId,'_verbum_editorial_calendar_events',$next);
+    }
 
     /** @return array<string,mixed> */
     private function sanitizeArray(array $value): array
