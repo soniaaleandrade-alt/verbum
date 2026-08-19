@@ -118,6 +118,9 @@ requireAll(publishedCss, ['.verbum-published-work','.vpw-hero','.vpw-tabs','.vpw
 requireAll(publicationRepository, ['publishedDashboard','publishedAction','_verbum_published_operations','_verbum_publication_history','administrative_correction','master_download'], 'Obra Publicada persistence HOM-041');
 const dashboardRuntime = await readFile(resolve(root, 'src/dashboard-official-runtime.js'), 'utf8');
 requireAll(dashboardRuntime, ['Olá, ','Continuar trabalhando','Hoje','Iniciar sessão de escrita','Tarefas do dia','Agenda','Visão do estúdio','Atividades recentes','Acessos rápidos','/dashboard','start_session','pause_session','resume_session','finish_session'], 'Painel principal HOM-043');
+requireAll(dashboardRuntime, ['AbortController','O servidor demorou para responder. Tente novamente.'], 'Painel sem carregamento infinito HOM-043');
+const staticRuntime = await readFile(resolve(root, 'src/static-runtime.js'), 'utf8');
+requireAll(staticRuntime, ['AbortController','opts.timeout||15000','O servidor demorou para responder. Tente novamente.'], 'Inicialização sem carregamento infinito HOM-043');
 const dashboardCss = await readFile(resolve(root, 'src/styles/dashboard-official.css'), 'utf8');
 requireAll(dashboardCss, ['.verbum-official-dashboard','.vd-work','.vd-goals','.vd-status','.vd-modal-bg','@media'], 'Painel principal CSS HOM-043');
 const dashboardRepository = await readFile(resolve(repoRoot, 'src/Library/DashboardRepository.php'), 'utf8');
