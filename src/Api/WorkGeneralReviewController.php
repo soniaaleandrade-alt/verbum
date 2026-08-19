@@ -57,6 +57,7 @@ final class WorkGeneralReviewController
             register_rest_route($namespace, '/books/(?P<id>\\d+)/general-review/assist', [
                 'methods' => 'POST', 'callback' => [$this, 'assist'], 'permission_callback' => $permission,
             ]);
+            register_rest_route($namespace, '/books/(?P<id>\\d+)/general-review/substeps/(?P<substep>[a-z-]+)/complete', ['methods'=>'POST','callback'=>[$this,'completeSubstep'],'permission_callback'=>$permission]);
         });
     }
 
@@ -146,6 +147,8 @@ final class WorkGeneralReviewController
             return $this->responses->error($exception);
         }
     }
+
+    public function completeSubstep(\WP_REST_Request$request):\WP_REST_Response{try{$id=(int)$request['id'];$this->assertOwned($id);$review=$this->review->completeSubstep(get_current_user_id(),$id,sanitize_key((string)$request['substep']));return$this->responses->success(['generalReview'=>$review,'workspace'=>$this->library->workspaceForBook(get_current_user_id(),$id)]);}catch(\Throwable$e){return$this->responses->error($e);}}
 
     public function assist(\WP_REST_Request $request): \WP_REST_Response
     {

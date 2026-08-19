@@ -9,6 +9,7 @@ use VerbumStudio\Exceptions\ValidationError;
 
 final class WorkGeneralReviewRepository
 {
+    private const SUBSTEPS = ['structure','argument','doctrine','unity','closing'];
     private const MANUAL_FLAGS = [
         'objective_checked' => 'Objetivo geral conferido',
         'central_question_answered' => 'Pergunta Central respondida',
@@ -87,6 +88,9 @@ final class WorkGeneralReviewRepository
         $flagsReady = count(array_filter(array_keys(self::MANUAL_FLAGS), static fn (string $key): bool => (bool) ($flags[$key] ?? false))) === count(self::MANUAL_FLAGS);
         $finalConfirmation = (bool) get_post_meta($bookId, '_verbum_general_review_final_confirmation', true);
         $ready = $allChaptersCompleted && $flagsReady && $pendingCritical === 0 && $finalConfirmation;
+        $substepsRaw=get_post_meta($bookId,'_verbum_general_review_substeps',true);$substeps=is_array($substepsRaw)?array_values(array_intersect(self::SUBSTEPS,$substepsRaw)):[];
+        $references=$this->references($userId,$bookId);$structure=$this->structureSummary($bookId,$chapterData);$elements=$this->closingElements($bookId);
+        $substepProgress=[];foreach(self::SUBSTEPS as $key)$substepProgress[$key]=in_array($key,$substeps,true)?100:$this->substepProgress($key,$flags,$issues,$transitions,$evaluations,$terms,$elements,$finalConfirmation);
 
         return [
             'bookId' => (string) $bookId,
@@ -122,7 +126,16 @@ final class WorkGeneralReviewRepository
             'lastSavedAt' => (string) get_post_meta($bookId, '_verbum_general_review_last_saved_at', true),
             'alteredAfterCompletion' => (bool) get_post_meta($bookId, '_verbum_general_review_altered_after_completion', true),
             'snapshots' => $this->snapshotList($bookId),
+            'substeps'=>$substeps,'activeSubstep'=>$this->activeSubstep($substeps),'substepProgress'=>$substepProgress,
+            'structureSummary'=>$structure,'references'=>$references,'referenceSummary'=>$this->referenceSummary($references),'closingElements'=>$elements,
+            'validationVersions'=>$this->validationVersionList($bookId),
         ];
+    }
+
+    /** @return array<string,mixed> */
+    public function completeSubstep(int $userId,int $bookId,string $substep):array
+    {
+        $this->assertAvailable($userId,$bookId);if(!in_array($substep,self::SUBSTEPS,true))throw new ValidationError('Subetapa da Revisão Geral inválida.');$data=$this->data($userId,$bookId);$position=array_search($substep,self::SUBSTEPS,true);$completed=(array)$data['substeps'];if($position>0&&!in_array(self::SUBSTEPS[$position-1],$completed,true))throw new ValidationError('Conclua a subetapa anterior antes de avançar.');if((int)$data['substepProgress'][$substep]<100)throw new ValidationError('Conclua os critérios essenciais desta subetapa antes de avançar.');if(!in_array($substep,$completed,true))$completed[]=$substep;update_post_meta($bookId,'_verbum_general_review_substeps',array_values(array_unique($completed)));update_post_meta($bookId,'_verbum_general_review_'.$substep.'_completed_at',gmdate('c'));$this->touchBook($bookId);return$this->data($userId,$bookId);
     }
 
     /** @param array<string, mixed> $fields
@@ -278,11 +291,13 @@ final class WorkGeneralReviewRepository
         if (! $data['ready']) {
             throw new ValidationError('Complete o checklist, confirme a versão da obra e resolva todas as pendências críticas antes de concluir a Revisão Geral.');
         }
+        $substeps=(array)$data['substeps'];if(array_diff(self::SUBSTEPS,$substeps)!==[])throw new ValidationError('Conclua as cinco subetapas da Revisão Geral antes de enviar a obra para Validação.');
         $this->snapshot($userId, $bookId, 'general_review_pre_completion');
         $completed = get_post_meta($bookId, '_verbum_completed_stages', true);
         $completed = is_array($completed) ? $completed : [];
         if (! in_array('general_review', $completed, true)) $completed[] = 'general_review';
         update_post_meta($bookId, '_verbum_completed_stages', array_values(array_unique($completed)));
+        $this->validationVersion($userId,$bookId,$data);
         update_post_meta($bookId, '_verbum_stage', 'versions');
         update_post_meta($bookId, '_verbum_general_review_completed_at', gmdate('c'));
         update_post_meta($bookId, '_verbum_general_review_altered_after_completion', 0);
@@ -535,7 +550,8 @@ final class WorkGeneralReviewRepository
      */
     private function outline(int $bookId, array $chapters): array
     {
-        $items = get_post_meta($bookId, '_verbum_planning_structure_items', true);
+        $items = get_post_meta($bookId, '_verbum_structure_index_items', true);
+        if (! is_array($items) || $items === []) $items = get_post_meta($bookId, '_verbum_planning_structure_items', true);
         $items = is_array($items) ? $items : [];
         $byPlanning = [];
         foreach ($chapters as $chapter) {
@@ -548,7 +564,11 @@ final class WorkGeneralReviewRepository
             $title = trim(sanitize_text_field((string) ($item['title'] ?? '')));
             $id = (string) ($item['id'] ?? '');
             if ($title === '') continue;
-            if ($type === 'chapter' && isset($byPlanning[$id])) $result[] = ['type' => 'chapter', 'chapter' => $byPlanning[$id]];
+            $realChapterId = (string) ($item['realChapterId'] ?? $item['linkedChapterId'] ?? '');
+            if ($type === 'chapter' && $realChapterId !== '') {
+                $match = array_values(array_filter($chapters, static fn (array $chapter): bool => (string) ($chapter['id'] ?? '') === $realChapterId));
+                if ($match !== []) $result[] = ['type' => 'chapter', 'chapter' => $match[0]];
+            } elseif ($type === 'chapter' && isset($byPlanning[$id])) $result[] = ['type' => 'chapter', 'chapter' => $byPlanning[$id]];
             elseif ($type === 'part') $result[] = ['type' => 'part', 'title' => $title];
             elseif ($type === 'subchapter') $result[] = ['type' => 'subchapter', 'title' => $title];
         }
@@ -591,6 +611,15 @@ final class WorkGeneralReviewRepository
         if (count($snapshots) > 10) $snapshots = array_slice($snapshots, -10);
         update_post_meta($bookId, '_verbum_general_review_snapshots', $snapshots);
     }
+
+    /** @return array<int,array<string,mixed>> */ private function references(int$userId,int$bookId):array{$chapterIds=array_map(static fn(\WP_Post$p):int=>(int)$p->ID,$this->chaptersForBook($userId,$bookId));if($chapterIds===[])return[];$q=new \WP_Query(['post_type'=>LibraryPostTypes::RESEARCH,'post_status'=>'publish','author'=>$userId,'posts_per_page'=>-1,'meta_query'=>[['key'=>'_verbum_chapter_id','value'=>$chapterIds,'compare'=>'IN','type'=>'NUMERIC']],'no_found_rows'=>true]);$out=[];foreach((array)$q->posts as$p){if(!$p instanceof \WP_Post)continue;$category=sanitize_key((string)get_post_meta($p->ID,'_verbum_research_category',true));$out[]=['id'=>(string)$p->ID,'chapterId'=>(string)get_post_meta($p->ID,'_verbum_chapter_id',true),'source'=>trim((string)get_post_meta($p->ID,'_verbum_research_reference',true))?:trim((string)get_post_meta($p->ID,'_verbum_research_title',true)),'author'=>trim((string)get_post_meta($p->ID,'_verbum_research_author',true)),'category'=>$category,'status'=>(bool)get_post_meta($p->ID,'_verbum_research_used',true)?'confirmed':'review'];}return$out;}
+    /** @param array<int,array<string,mixed>>$r @return array<string,int> */ private function referenceSummary(array$r):array{$s=['total'=>count($r),'scripture'=>0,'catechism'=>0,'magisterium'=>0,'saints'=>0,'complementary'=>0];foreach($r as$x){$c=(string)$x['category'];if($c==='scripture')$s['scripture']++;elseif($c==='catechism')$s['catechism']++;elseif(in_array($c,['magisterium','tradition'],true))$s['magisterium']++;elseif($c==='saints')$s['saints']++;else$s['complementary']++;}return$s;}
+    /** @param array<int,array<string,mixed>>$chapters @return array<string,mixed> */ private function structureSummary(int$id,array$chapters):array{$items=get_post_meta($id,'_verbum_structure_index_items',true);$items=is_array($items)?$items:[];return['parts'=>count(array_filter($items,static fn($x):bool=>is_array($x)&&($x['type']??'')==='part')),'chapters'=>count($chapters),'completedChapters'=>count(array_filter($chapters,static fn($x):bool=>!empty($x['completed']))),'elements'=>count(array_filter($items,static fn($x):bool=>is_array($x)&&in_array(($x['type']??''),['element_initial','element_final'],true)))];}
+    /** @return array<int,array<string,mixed>> */ private function closingElements(int$id):array{$items=get_post_meta($id,'_verbum_structure_elements_items',true);$items=is_array($items)?$items:[];$out=[];foreach($items as$x)if(is_array($x)&&!empty($x['active']))$out[]=['id'=>(string)($x['id']??''),'type'=>(string)($x['type']??''),'title'=>(string)($x['title']??($x['type']??'Elemento')),'group'=>(string)($x['group']??'initial'),'status'=>(string)($x['status']??'pending'),'updatedAt'=>(string)($x['updatedAt']??'')];return$out;}
+    /** @param array<string,bool>$f @param array<int,array<string,mixed>>$i @param array<int,array<string,mixed>>$t @param array<string,string>$e @param array<int,array<string,string>>$terms @param array<int,array<string,mixed>>$elements */ private function substepProgress(string$k,array$f,array$i,array$t,array$e,array$terms,array$elements,bool$confirm):int{$checks=[];if($k==='structure')$checks=[!empty($f['structure_reviewed']),!empty($f['continuity_reviewed']),count(array_filter($t,static fn($x):bool=>($x['status']??'unreviewed')!=='unreviewed'))===count($t)];elseif($k==='argument')$checks=[!empty($f['objective_checked']),!empty($f['central_question_answered']),!empty($f['thesis_developed']),!empty($f['repetitions_reviewed']),!empty($f['gaps_reviewed'])];elseif($k==='doctrine')$checks=[!empty($f['references_checked']),count(array_filter($i,static fn($x):bool=>($x['priority']??'')==='critical'&&($x['status']??'')==='pending'))===0];elseif($k==='unity')$checks=[!empty($f['language_reviewed']),$terms!==[]];else$checks=[!empty($f['front_back_matter_reviewed']),$elements!==[],$confirm];return(int)round(count(array_filter($checks))*100/max(1,count($checks)));}
+    /** @param array<int,string>$done */ private function activeSubstep(array$done):string{foreach(self::SUBSTEPS as$k)if(!in_array($k,$done,true))return$k;return'closing';}
+    /** @param array<string,mixed>$data */ private function validationVersion(int$userId,int$id,array$data):void{$reading=$this->reading($userId,$id);$versions=get_post_meta($id,'_verbum_validation_versions',true);$versions=is_array($versions)?$versions:[];$number=count($versions)+1;$versions[]=['id'=>'validation-v'.$number.'-'.substr(md5((string)microtime(true)),0,8),'number'=>$number,'createdAt'=>gmdate('c'),'userId'=>$userId,'bookId'=>$id,'title'=>get_the_title($id),'subtitle'=>(string)get_post_meta($id,'_verbum_book_subtitle',true),'chapters'=>$reading['chapters'],'outline'=>$reading['outline'],'frontMatter'=>$data['frontMatter'],'references'=>$data['references'],'issues'=>array_values(array_filter($data['issues'],static fn($x):bool=>($x['status']??'')==='pending')),'hash'=>hash('sha256',wp_json_encode([$reading,$data['frontMatter'],$data['references']]))];update_post_meta($id,'_verbum_validation_versions',$versions);update_post_meta($id,'_verbum_active_validation_version',(string)$versions[count($versions)-1]['id']);}
+    /** @return array<int,array<string,mixed>> */ private function validationVersionList(int$id):array{$v=get_post_meta($id,'_verbum_validation_versions',true);if(!is_array($v))return[];return array_map(static fn($x):array=>['id'=>(string)($x['id']??''),'number'=>(int)($x['number']??0),'createdAt'=>(string)($x['createdAt']??''),'hash'=>(string)($x['hash']??'')],array_values(array_filter($v,'is_array')));}
 
     /** @return array<int, array<string, mixed>> */
     private function snapshotList(int $bookId): array
