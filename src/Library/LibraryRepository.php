@@ -68,7 +68,10 @@ final class LibraryRepository
     public function libraryForUser(int $userId): array
     {
         $projects = $this->queryUserPosts(LibraryPostTypes::PROJECT, $userId);
-        $books = $this->queryUserPosts(LibraryPostTypes::BOOK, $userId);
+        $books = array_merge(
+            $this->queryUserPosts(LibraryPostTypes::BOOK, $userId),
+            $this->queryUserPosts(LibraryPostTypes::BOOK, $userId, 'trash')
+        );
 
         return [
             'projects' => array_map(fn (\WP_Post $post): array => $this->projectData($post), $projects),
@@ -387,11 +390,11 @@ final class LibraryRepository
     }
 
     /** @return \WP_Post[] */
-    private function queryUserPosts(string $postType, int $userId): array
+    private function queryUserPosts(string $postType, int $userId, string $postStatus = 'publish'): array
     {
         $query = new \WP_Query([
             'post_type' => $postType,
-            'post_status' => 'publish',
+            'post_status' => $postStatus,
             'author' => $userId,
             'posts_per_page' => -1,
             'orderby' => 'modified',
@@ -496,14 +499,16 @@ final class LibraryRepository
     /** @return array<string, mixed> */
     private function bookData(\WP_Post $post): array
     {
+        $inTrash = $post->post_status === 'trash';
         $data = [
             'id' => (string) $post->ID,
             'projectId' => (string) get_post_meta($post->ID, '_verbum_project_id', true),
             'title' => get_the_title($post),
-            'status' => (string) (get_post_meta($post->ID, '_verbum_status', true) ?: 'active'),
+            'status' => $inTrash ? 'trash' : (string) (get_post_meta($post->ID, '_verbum_status', true) ?: 'active'),
             'stage' => (string) (get_post_meta($post->ID, '_verbum_stage', true) ?: 'identification'),
             'createdAt' => mysql_to_rfc3339($post->post_date_gmt ?: $post->post_date),
             'updatedAt' => mysql_to_rfc3339($post->post_modified_gmt ?: $post->post_modified),
+            'trashedAt' => $inTrash ? (string) (get_post_meta($post->ID, '_verbum_trashed_at', true) ?: mysql_to_rfc3339($post->post_modified_gmt ?: $post->post_modified)) : '',
         ];
 
         foreach (self::BOOK_META_FIELDS as $field) {
@@ -553,6 +558,9 @@ final class LibraryRepository
 
     private function automaticWorkflowStatus(\WP_Post $post): string
     {
+        if ($post->post_status === 'trash') {
+            return 'Na lixeira';
+        }
         $recordStatus = strtolower(trim((string) get_post_meta($post->ID, '_verbum_status', true)));
         $savedStatus = trim((string) get_post_meta($post->ID, '_verbum_workflow_status', true));
         $normalized = strtolower(remove_accents($savedStatus));
