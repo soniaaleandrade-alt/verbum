@@ -116,6 +116,8 @@ const trashRuntime = await readFile(resolve(root, 'src/trash-runtime.js'), 'utf8
 requireAll(trashRuntime, ['Lixeira','Restaurar obra','Excluir definitivamente','data-vt-confirm','/trash/restore','/permanent','data-trash-ready'], 'Gestão da Lixeira HOM-044');
 const trashCss = await readFile(resolve(root, 'src/styles/trash.css'), 'utf8');
 requireAll(trashCss, ['.verbum-trash','.vt-card','.vt-modal-bg','.vt-confirm','@media'], 'Lixeira CSS HOM-044');
+const technicalRuntime = await readFile(resolve(root, 'src/technical-runtime.js'), 'utf8');
+requireAll(technicalRuntime, ['projectLabel.hidden=true','ambiente da obra'], 'Cadastro de obra sem projeto visível HOM-045');
 const minhasObrasCss = await readFile(resolve(root, 'src/styles/minhas-obras.css'), 'utf8');
 requireAll(minhasObrasCss, ['.mo-work','.mo-card','.mo-next','.mo-path','.mo-filters','.mo-modal-bg','@media'], 'Minhas Obras CSS HOM-042');
 const publishedCss = await readFile(resolve(root, 'src/styles/published-work.css'), 'utf8');

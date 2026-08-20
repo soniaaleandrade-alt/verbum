@@ -87,7 +87,7 @@ export function BookDialog({ open, projects, book, defaultProjectId, onClose, on
               <input value={form.subtitle} onChange={(event) => set('subtitle', event.target.value)} maxLength={220} />
             </label>
           </div>
-          <p className="verbum-form-helper">Cadastre apenas os dados iniciais. A identificação editorial completa será preenchida dentro do Workspace da Obra.</p>
+          <p className="verbum-form-helper">Cadastre apenas os dados iniciais. A identificação editorial completa será preenchida dentro do ambiente da obra.</p>
           {error && <p className="verbum-form-error" role="alert">{error}</p>}
           <div className="verbum-dialog-actions">
             <button type="button" className="verbum-secondary-button" onClick={onClose} disabled={saving}>Cancelar</button>
