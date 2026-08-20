@@ -36,6 +36,8 @@ function patchIdentificationRequest(input,init){
   try{
     var body=JSON.parse(init.body);
     if(keywordBookId===bookId())body.keywords=normalizeKeywords(keywordDraft);
+    var statusSelect=root.querySelector('.verbum-identification-initial select[name="workflow_status"]');
+    if(statusSelect)body.workflow_status=statusSelect.value;
     return{input:input,init:Object.assign({},init,{body:JSON.stringify(body)})};
   }catch(e){return{input:input,init:init};}
 }
@@ -59,10 +61,16 @@ function patchKeywords(page){
 function patchSelect(select,config){
   if(!select||select.dataset.referenceOptions==='1')return;
   var current=select.value;
+  var workspace=root.__vs&&root.__vs.workspace;
+  var sourceStatus=workspace&&workspace.book?String(workspace.book.workflowStatus||workspace.book.workflow_status||''):'';
+  if(select.name==='workflow_status'&&current==='Rascunho'&&sourceStatus==='Identificação')current='';
   var items=config.items.slice();
   if(current&&items.indexOf(current)<0)items.unshift(current);
   select.innerHTML='<option value="">'+esc(config.placeholder)+'</option>'+items.map(function(item){return'<option value="'+esc(item)+'"'+(item===current?' selected':'')+'>'+esc(item)+'</option>';}).join('');
   select.dataset.referenceOptions='1';
+  if(select.name==='workflow_status'){
+    select.addEventListener('change',function(){select.removeAttribute('aria-invalid');var error=select.parentElement&&select.parentElement.querySelector('#id-error-workflow_status');if(error)error.remove();});
+  }
 }
 function patchStatus(){
   var status=root.querySelector('.verbum-id-status');if(!status)return;
@@ -85,7 +93,26 @@ function patch(){
   var message=page.querySelector('.verbum-id-form-message');
   if(message&&message.textContent.trim()==='Rascunho salvo')message.textContent='Rascunho salvo com sucesso.';
   var button=root.querySelector('.verbum-identification-initial-footer [data-save-continue]');
-  if(button){var span=button.querySelector('span');if(span&&span.textContent!=='Salvando...'&&span.textContent!=='Salvar e continuar')span.textContent='Salvar e continuar';button.setAttribute('aria-label','Salvar a Identificação e continuar para Fundação');}
+  if(button){
+    var span=button.querySelector('span');if(span&&span.textContent!=='Salvando...'&&span.textContent!=='Salvar e continuar')span.textContent='Salvar e continuar';
+    button.setAttribute('aria-label','Salvar a Identificação e continuar para Fundação');
+    if(button.dataset.referenceContinue!=='1'){
+      var originalContinue=button.onclick;
+      button.onclick=function(event){
+        var statusSelect=page.querySelector('select[name="workflow_status"]');
+        if(statusSelect&&!statusSelect.value){
+          statusSelect.setAttribute('aria-invalid','true');
+          var label=statusSelect.parentElement;var error=label&&label.querySelector('#id-error-workflow_status');
+          if(!error&&label){error=document.createElement('small');error.className='verbum-id-error';error.id='id-error-workflow_status';error.setAttribute('role','alert');label.appendChild(error);}
+          if(error)error.textContent=errorMessages.workflow_status;
+          statusSelect.focus();statusSelect.scrollIntoView({behavior:'smooth',block:'center'});
+          return;
+        }
+        if(typeof originalContinue==='function')return originalContinue.call(this,event);
+      };
+      button.dataset.referenceContinue='1';
+    }
+  }
 }
 function schedule(){if(scheduled)return;scheduled=true;(window.requestAnimationFrame||function(cb){return setTimeout(cb,16);})(patch);}
 window.addEventListener('verbum:routechange',function(){keywordBookId='';keywordDraft='';schedule();});
