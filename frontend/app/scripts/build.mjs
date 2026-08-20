@@ -15,7 +15,7 @@ const js = `(function(){
   var loadedScripts={};
   var loadedStyles={};
   var core=['auth-profile-runtime.js','static-runtime.js'];
-  var enhancements=['workspace-mobile-runtime.js','workspace-ui-runtime.js','workspace-manager-runtime.js','hom023a-journey-runtime.js','hom027-journey-runtime.js','workspace-book-dialog-runtime.js','project-stage-runtime.js','technical-runtime.js','dashboard-official-runtime.js','sidebar-profile-runtime.js','minhas-obras-runtime.js','trash-runtime.js','profile-polish-runtime.js'];
+  var enhancements=['workspace-mobile-runtime.js','workspace-ui-runtime.js','workspace-manager-runtime.js','hom023a-journey-runtime.js','hom027-journey-runtime.js','workspace-book-dialog-runtime.js','project-stage-runtime.js','technical-runtime.js','dashboard-official-runtime.js','sidebar-profile-runtime.js','minhas-obras-runtime.js','minhas-obras-identification-complete-hotfix.js','trash-runtime.js','profile-polish-runtime.js'];
   var stageScripts={
     identification:['identification-initial-prelude.js','identification-runtime.js','identification-complete-hotfix.js'],
     project:['project-stage-runtime.js','foundation-intention-runtime.js','foundation-reader-result-runtime.js','foundation-truth-central-runtime.js'],
