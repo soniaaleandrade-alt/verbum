@@ -53,6 +53,7 @@ final class FrontendAssets
             wp_enqueue_style($handle, VERBUM_STUDIO_URL . $relativePath, [], $assetVersion);
         }
         wp_enqueue_script('verbum-studio-app', VERBUM_STUDIO_URL . 'build/verbum-app.js', [], $assetVersion, true);
+        wp_enqueue_script('verbum-identification-navigation-clarity', VERBUM_STUDIO_URL . 'frontend/app/src/identification-navigation-clarity.js', ['verbum-studio-app'], $assetVersion, true);
         wp_enqueue_script('verbum-foundation-simplification', VERBUM_STUDIO_URL . 'frontend/app/src/foundation-simplification-runtime.js', ['verbum-studio-app'], $assetVersion, true);
         wp_enqueue_script('verbum-structure-refinement', VERBUM_STUDIO_URL . 'frontend/app/src/structure-refinement-runtime.js', ['verbum-studio-app'], $assetVersion, true);
         $charset = function_exists('get_bloginfo') ? (string) get_bloginfo('charset') : 'UTF-8';
