@@ -19,13 +19,13 @@ const workspace = await readFile(resolve(root, 'src/pages/WorkWorkspace.tsx'), '
 requireAll(workspace, ['IdentificationStage','ProjectStage','PlanningStage','DevelopmentStage','GeneralReviewStage','WorkVersionsStage','WorkAuditStage','EditorialDeskStage','LayoutStage','LegalStage','PublicationStage','WorkWorkflow','WorkspaceFooter','beforeunload'], 'WorkWorkspace');
 
 const identificationRuntime = await readFile(resolve(root, 'src/identification-runtime.js'), 'utf8');
-requireAll(identificationRuntime, ['Identificação Inicial','Dados principais','Posicionamento inicial','Formato e planejamento','Salvar rascunho','Salvar e continuar','Etapa 1 de 8','Validação','Digite palavras-chave separadas por vírgula','cover_position_x','Adicionar imagem','Reposicionar'], 'Identification Initial runtime HOM-027');
+requireAll(identificationRuntime, ['Identificação da Obra','Título provisório','Gênero','Idioma','Descrição inicial da obra','Capa provisória','Cor de identificação no sistema','Continuar para Fundação','Salvando...','Alterações salvas','Erro ao salvar','cover_position_x','Reposicionar'], 'Identificação simplificada HOM-027');
 const identificationPrelude = await readFile(resolve(root, 'src/identification-initial-prelude.js'), 'utf8');
 requireAll(identificationPrelude, ['identification-initial','identification-initial/complete','workspace','MutationObserver','verbum-id-mobile-toggle'], 'Identification Initial bridge HOM-027');
 const identificationCss = await readFile(resolve(root, 'src/styles/identification.css'), 'utf8');
 requireAll(identificationCss, ['.verbum-identification-nav','.verbum-id-page-header','.verbum-id-card','.verbum-id-cover-empty','.verbum-identification-initial-footer','grid-template-columns:244px'], 'Identification Initial CSS HOM-027');
 const journey027 = await readFile(resolve(root, 'src/hom027-journey-runtime.js'), 'utf8');
-requireAll(journey027, ['Revisão Geral','Validação','repeat(8','versions','audit','Preparação Editorial'], 'Eight-stage journey HOM-027');
+requireAll(journey027, ['Fundação','Estrutura','Capítulos','Revisão','Preparação Editorial','Publicação','repeat(7','versions','audit'], 'Jornada visual de sete etapas HOM-027');
 const intentionRuntime = await readFile(resolve(root, 'src/foundation-intention-runtime.js'), 'utf8');
 const readerResultRuntime = await readFile(resolve(root, 'src/foundation-reader-result-runtime.js'), 'utf8');
 const truthCentralRuntime = await readFile(resolve(root, 'src/foundation-truth-central-runtime.js'), 'utf8');

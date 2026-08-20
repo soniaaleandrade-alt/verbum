@@ -12,16 +12,9 @@ use VerbumStudio\Library\LibraryRepository;
 final class IdentificationInitialController
 {
     private const REQUIRED = [
-        'title' => 'Título provisório da obra',
-        'author_name' => 'Nome da autoria',
-        'theme' => 'Tema central',
-        'genre' => 'Gênero da obra',
-        'approach' => 'Abordagem',
-        'audience' => 'Público principal',
-        'language_tone' => 'Linguagem e tom',
-        'intended_format' => 'Formato pretendido',
-        'estimated_extent' => 'Extensão estimada',
-        'workflow_status' => 'Status da obra',
+        'title' => 'Título provisório',
+        'genre' => 'Gênero',
+        'language' => 'Idioma',
     ];
 
     private const META_KEYS = [
@@ -29,6 +22,9 @@ final class IdentificationInitialController
         'author_name' => '_verbum_author_name',
         'theme' => '_verbum_work_project_theme',
         'genre' => '_verbum_genre',
+        'language' => '_verbum_language',
+        'synopsis' => '_verbum_synopsis',
+        'color' => '_verbum_color',
         'approach' => '_verbum_planning_approach',
         'audience' => '_verbum_audience',
         'language_tone' => '_verbum_language_tone',
@@ -139,7 +135,16 @@ final class IdentificationInitialController
                     continue;
                 }
 
-                update_post_meta($bookId, $metaKey, sanitize_textarea_field((string) $payload[$field]));
+                if ($field === 'color') {
+                    $color = sanitize_text_field((string) $payload[$field]);
+                    update_post_meta($bookId, $metaKey, preg_match('/^#[0-9a-fA-F]{6}$/', $color) ? strtolower($color) : '');
+                    continue;
+                }
+
+                $value = $field === 'synopsis'
+                    ? sanitize_textarea_field((string) $payload[$field])
+                    : sanitize_text_field((string) $payload[$field]);
+                update_post_meta($bookId, $metaKey, $value);
             }
 
             if (trim((string) get_post_meta($bookId, '_verbum_language', true)) === '') {
@@ -186,9 +191,6 @@ final class IdentificationInitialController
     {
         $manualStatus = trim((string) get_post_meta($bookId, '_verbum_workflow_status', true));
         $workspace = $this->library->workspaceForBook($userId, $bookId);
-        if ($manualStatus !== '') {
-            update_post_meta($bookId, '_verbum_workflow_status', $manualStatus);
-        }
         return $this->enrichWorkspace($bookId, $workspace, $manualStatus);
     }
 
