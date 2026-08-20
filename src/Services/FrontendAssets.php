@@ -14,7 +14,6 @@ final class FrontendAssets
         'verbum-studio-dashboard-polish' => 'frontend/app/src/styles/dashboard-polish.css',
         'verbum-studio-sidebar-profile' => 'frontend/app/src/styles/sidebar-profile.css',
         'verbum-studio-minhas-obras' => 'frontend/app/src/styles/minhas-obras.css',
-        'verbum-studio-minhas-obras-reference' => 'frontend/app/src/styles/minhas-obras-reference.css',
         'verbum-studio-published-work' => 'frontend/app/src/styles/published-work.css',
         'verbum-studio-auth-profile' => 'frontend/app/src/styles/auth-profile.css',
         'verbum-studio-profile-polish' => 'frontend/app/src/styles/profile-polish.css',
