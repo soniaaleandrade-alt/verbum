@@ -6,8 +6,7 @@ var groups=[
   {key:'foundation',label:'Fundação',legacy:['project'],route:'project'},
   {key:'structure',label:'Estrutura',legacy:['planning'],route:'planning'},
   {key:'chapters',label:'Capítulos',legacy:['development'],route:'development'},
-  {key:'review',label:'Revisão Geral',legacy:['general_review'],route:'general_review'},
-  {key:'validation',label:'Validação',legacy:['versions','audit'],route:'versions'},
+  {key:'review',label:'Revisão',legacy:['general_review','versions','audit'],route:'general_review'},
   {key:'preparation',label:'Preparação Editorial',legacy:['editorial_desk','layout','legal'],route:'editorial_desk'},
   {key:'publication',label:'Publicação',legacy:['publication'],route:'publication'}
 ];
@@ -15,10 +14,10 @@ var scheduled=false;
 function ensureStyle(){
   if(document.getElementById('verbum-hom027-journey-style'))return;
   var s=document.createElement('style');s.id='verbum-hom027-journey-style';s.textContent='\
-.verbum-workflow[data-hom027="1"]{grid-template-columns:repeat(8,minmax(0,1fr))!important}\
-.verbum-workflow[data-hom027="1"]:before{left:calc(100% / 16)!important;right:calc(100% / 16)!important}\
-@media(max-width:820px){.verbum-workflow[data-hom027="1"]{grid-template-columns:repeat(8,118px)!important}.verbum-workflow[data-hom027="1"]:before{left:75px!important;right:auto!important;width:calc(7 * 125px)!important}}\
-@media(max-width:520px){.verbum-workflow[data-hom027="1"]{grid-template-columns:repeat(8,108px)!important}.verbum-workflow[data-hom027="1"]:before{left:70px!important;width:calc(7 * 115px)!important}}';document.head.appendChild(s);
+.verbum-workflow[data-hom027="1"]{grid-template-columns:repeat(7,minmax(0,1fr))!important}\
+.verbum-workflow[data-hom027="1"]:before{left:calc(100% / 14)!important;right:calc(100% / 14)!important}\
+@media(max-width:820px){.verbum-workflow[data-hom027="1"]{grid-template-columns:repeat(7,118px)!important;overflow-x:auto}.verbum-workflow[data-hom027="1"]:before{left:75px!important;right:auto!important;width:calc(6 * 125px)!important}}\
+@media(max-width:520px){.verbum-workflow[data-hom027="1"]{grid-template-columns:repeat(7,108px)!important}.verbum-workflow[data-hom027="1"]:before{left:70px!important;width:calc(6 * 115px)!important}}';document.head.appendChild(s);
 }
 function currentLegacy(){var p=new URLSearchParams(location.search);return p.get('verbum_stage')||'identification';}
 function visual(stage){return groups.find(function(g){return g.legacy.indexOf(stage)>=0;})||groups[0];}
