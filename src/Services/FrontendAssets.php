@@ -41,7 +41,7 @@ final class FrontendAssets
         'frontend/app/src/chapter-revision-runtime.js', 'frontend/app/src/general-review-runtime.js', 'frontend/app/src/work-versions-runtime.js',
         'frontend/app/src/work-audit-runtime.js', 'frontend/app/src/editorial-desk-runtime.js', 'frontend/app/src/layout-stage-runtime.js',
         'frontend/app/src/legal-stage-runtime.js', 'frontend/app/src/publication-stage-runtime.js', 'frontend/app/src/technical-runtime.js',
-        'frontend/app/src/dashboard-official-runtime.js', 'frontend/app/src/sidebar-profile-runtime.js', 'frontend/app/src/minhas-obras-runtime.js', 'frontend/app/src/minhas-obras-open-work-runtime.js', 'frontend/app/src/published-work-runtime.js',
+        'frontend/app/src/dashboard-official-runtime.js', 'frontend/app/src/sidebar-profile-runtime.js', 'frontend/app/src/minhas-obras-runtime.js', 'frontend/app/src/minhas-obras-identificacao-bridge.js', 'frontend/app/src/published-work-runtime.js',
         'frontend/app/src/profile-polish-runtime.js',
     ];
 
@@ -56,7 +56,7 @@ final class FrontendAssets
         wp_enqueue_script('verbum-studio-app', VERBUM_STUDIO_URL . 'build/verbum-app.js', [], $assetVersion, true);
         wp_enqueue_script('verbum-foundation-simplification', VERBUM_STUDIO_URL . 'frontend/app/src/foundation-simplification-runtime.js', ['verbum-studio-app'], $assetVersion, true);
         wp_enqueue_script('verbum-structure-refinement', VERBUM_STUDIO_URL . 'frontend/app/src/structure-refinement-runtime.js', ['verbum-studio-app'], $assetVersion, true);
-        wp_enqueue_script('verbum-minhas-obras-open-work', VERBUM_STUDIO_URL . 'frontend/app/src/minhas-obras-open-work-runtime.js', ['verbum-studio-app'], $assetVersion, true);
+        wp_enqueue_script('verbum-minhas-obras-identificacao-bridge', VERBUM_STUDIO_URL . 'frontend/app/src/minhas-obras-identificacao-bridge.js', ['verbum-studio-app'], $assetVersion, true);
         $charset = function_exists('get_bloginfo') ? (string) get_bloginfo('charset') : 'UTF-8';
         $logoutUrl = html_entity_decode(wp_logout_url(home_url('/')), ENT_QUOTES, $charset !== '' ? $charset : 'UTF-8');
         wp_localize_script('verbum-studio-app', 'VerbumStudioConfig', ['apiRoot' => esc_url_raw(rest_url('verbum/v1')), 'nonce' => wp_create_nonce('wp_rest'), 'version' => VERBUM_STUDIO_VERSION, 'logoutUrl' => esc_url_raw($logoutUrl), 'appUrl' => esc_url_raw(home_url('/')), 'authenticated' => is_user_logged_in()]);
